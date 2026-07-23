@@ -51,6 +51,11 @@ return function(GH)
 		GH.Disconnect("ESP_Added")
 		GH.Disconnect("ESP_Removing")
 		GH.Disconnect("ESP_TeamChanged")
+		for name, _ in pairs(GH.Connections) do
+			if name:sub(1, 10) == "ESP_Team_" then
+				GH.Disconnect(name)
+			end
+		end
 
 		for _, p in ipairs(Players:GetPlayers()) do
 			if p ~= LocalPlayer and p.Character then
@@ -182,6 +187,18 @@ return function(GH)
 					end
 				end)
 			end)
+			for _, p in ipairs(Players:GetPlayers()) do
+				if p ~= LocalPlayer then
+					p:GetPropertyChangedSignal("Team"):Connect(function()
+						if GH.States.ESP and p.Character then
+							for _, obj in ipairs(p.Character:GetChildren()) do
+								if obj.Name:sub(1, 6) == "GH_ESP" then obj:Destroy() end
+							end
+							if p.Character then setupPlayer(p) end
+						end
+					end)
+				end
+			end
 
 			-- Render loop
 			GH.RegisterMasterLoop("ESP", "Render", function()

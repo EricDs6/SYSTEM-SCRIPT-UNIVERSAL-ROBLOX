@@ -145,7 +145,6 @@ return function(GH)
 			elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then vert = -speed end
 
 			bv.Velocity = Vector3.new(vel.X, vert, vel.Z)
-			r.AssemblyLinearVelocity = bv.Velocity
 		end)
 	end
 
@@ -406,14 +405,6 @@ return function(GH)
 		GH.Connections.TeleportPlayerRemoving = Players.PlayerRemoving:Connect(function()
 			if GH.States.TeleportPlayer then refreshList() end
 		end)
-	end
-
-	-- ==========================================
-	-- NO FALL DAMAGE (State-based loop)
-	-- ==========================================
-	function Cheats_ToggleNoFallDamageLoop(state, btn)
-		btn.Text = state and "Desativar NoFallDmg" or "No Fall Damage"
-		-- Master Namecall hook handles TakeDamage blocking
 	end
 
 	-- ==========================================

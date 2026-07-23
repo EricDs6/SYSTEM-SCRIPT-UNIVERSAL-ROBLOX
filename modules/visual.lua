@@ -156,6 +156,19 @@ return function(GH)
 		end
 		if not state then return end
 
+		local function ensureTracer(player)
+			if player == LocalPlayer then return end
+			if not CacheTracers.Lines[player] then
+				CacheTracers.Lines[player] = TracerPool:get()
+			end
+		end
+
+		if GH.States.ESP then
+			for player, _ in pairs(GH.Cache.ESPPlayers) do
+				if player and player.Parent then ensureTracer(player) end
+			end
+		end
+
 		GH.Connections.TracersLoop = RunService.RenderStepped:Connect(function()
 			if GH.isClosing or not GH.States.Tracers then return end
 			local cam = workspace.CurrentCamera

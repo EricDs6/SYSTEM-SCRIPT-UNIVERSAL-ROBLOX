@@ -46,10 +46,23 @@ return function(GH)
 					end
 					return
 				end
-				if not LocalPlayer.Character or hum.Health <= 0 then
+				local c = LocalPlayer.Character
+				local h = c and c:FindFirstChildOfClass("Humanoid")
+				local r = c and c:FindFirstChild("HumanoidRootPart")
+				if not r or not h or h.Health <= 0 then
 					GH.UnregisterMasterLoop("TrollFling"); return
 				end
-				hrp.AssemblyLinearVelocity = Vector3.new(hrp.AssemblyLinearVelocity.X, 3, hrp.AssemblyLinearVelocity.Z)
+				local spin = r:FindFirstChild("GH_TrollSpin")
+				if not spin then
+					spin = Instance.new("AngularVelocity")
+					spin.Name = "GH_TrollSpin"
+					spin.AngularVelocity = Vector3.new(0, 100, 0)
+					spin.MaxTorque = math.huge
+					spin.Attachment0 = r:FindFirstChildOfClass("Attachment") or Instance.new("Attachment", r)
+					spin.Parent = r
+				end
+				h.AutoRotate = false
+				r.AssemblyLinearVelocity = Vector3.new(r.AssemblyLinearVelocity.X, 3, r.AssemblyLinearVelocity.Z)
 			end)
 		else
 			if hum then hum.AutoRotate = true end

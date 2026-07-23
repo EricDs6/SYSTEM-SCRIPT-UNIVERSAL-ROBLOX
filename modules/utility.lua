@@ -130,7 +130,7 @@ return function(GH)
 				if GH.isClosing or not GH.States.Freecam then return end
 				local cam = workspace.CurrentCamera
 				if not cam then return end
-				local speed = CacheFreecam.Speed * (UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) and 3 or 1)
+				local speed = CacheFreecam.Speed * dt * 60 * (UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) and 3 or 1)
 				local cf = cam.CFrame
 				if UserInputService:IsKeyDown(Enum.KeyCode.W) then cf = cf + cf.LookVector * speed end
 				if UserInputService:IsKeyDown(Enum.KeyCode.S) then cf = cf - cf.LookVector * speed end
@@ -277,7 +277,12 @@ return function(GH)
 		btn.Text = state and "Desativar AntiAFK" or "Anti-AFK"
 		GH.Disconnect("AntiAFK")
 		if state then
-			GH.Connections.AntiAFK = task.spawn(function()
+			GH.Connections.AntiAFK = RunService.Heartbeat:Connect(function()
+				if not GH.States.AntiAFK then
+					GH.Disconnect("AntiAFK"); return
+				end
+			end)
+			task.spawn(function()
 				while GH.States.AntiAFK do
 					task.wait(math.random(120, 300))
 					if not GH.States.AntiAFK then break end

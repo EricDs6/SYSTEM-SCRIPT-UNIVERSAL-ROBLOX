@@ -936,6 +936,7 @@ function GH.Initialize()
 			end
 			return data
 		end)
+		if ok then return result end
 		return nil
 	end
 
