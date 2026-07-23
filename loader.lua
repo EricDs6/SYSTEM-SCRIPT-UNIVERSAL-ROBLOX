@@ -53,9 +53,17 @@ local modules = {
 for _, mod in ipairs(modules) do
 	local fn = fetch_module(mod.path)
 	if fn then
-		local ok, err = pcall(fn, Core)
+		-- Módulos retornam uma função que recebe GH
+		-- Precisamos chamá-la passando o Core
+		local ok, result = pcall(fn, Core)
 		if not ok then
-			warn("[SYSTEM] Erro no módulo " .. mod.name .. ": " .. tostring(err))
+			warn("[SYSTEM] Erro no módulo " .. mod.name .. ": " .. tostring(result))
+		elseif type(result) == "function" then
+			-- Se retornou uma função, chamá-la com Core
+			local ok2, err2 = pcall(result, Core)
+			if not ok2 then
+				warn("[SYSTEM] Erro ao executar módulo " .. mod.name .. ": " .. tostring(err2))
+			end
 		end
 	else
 		warn("[SYSTEM] Módulo não encontrado: " .. mod.path)
