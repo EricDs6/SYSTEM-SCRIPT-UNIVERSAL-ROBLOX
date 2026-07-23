@@ -10,12 +10,12 @@ return function(GH)
 	local LocalPlayer = GH.LocalPlayer
 
 	-- ==========================================
-	-- FLY (Anchored CFrame — zero physics jitter)
+	-- FLY (BodyVelocity + BodyGyro — Infinite Yield model)
 	-- ==========================================
 	local FlyNoclipParts = {}
 	local FlySpeedMult = 1
 
-	local function FlyNoclip(char, enable)
+	local function FlySetNoclip(char, enable)
 		for _, part in ipairs(char:GetDescendants()) do
 			if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
 				if enable then
@@ -30,25 +30,21 @@ return function(GH)
 		if not enable then table.clear(FlyNoclipParts) end
 	end
 
-	local function FlyDisable()
-		local char = LocalPlayer.Character
-		local hrp = char and char:FindFirstChild("HumanoidRootPart")
-		local hum = char and char:FindFirstChildOfClass("Humanoid")
-
-		if hum then
-			hum.PlatformStand = false
-			hum.AutoRotate = true
-			hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
-		end
+	local function FlyCleanup(char, hum, hrp)
 		if hrp then
+			local bv = hrp:FindFirstChild("GH_FlyBV")
+			if bv then bv:Destroy() end
+			local bg = hrp:FindFirstChild("GH_FlyBG")
+			if bg then bg:Destroy() end
 			hrp.AssemblyLinearVelocity = Vector3.zero
 			hrp.AssemblyAngularVelocity = Vector3.zero
-			hrp.Anchored = false
 		end
 		if hum then
+			hum.AutoRotate = true
+			hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
 			hum:ChangeState(Enum.HumanoidStateType.GettingUp)
 		end
-		if char then FlyNoclip(char, false) end
+		if char then FlySetNoclip(char, false) end
 		FlySpeedMult = 1
 	end
 
@@ -56,7 +52,11 @@ return function(GH)
 		btn.Text = state and "Desativar Fly" or "Ativar Fly"
 		GH.Disconnect("Fly")
 		GH.Disconnect("FlyScroll")
-		FlyDisable()
+
+		local oldChar = LocalPlayer.Character
+		local oldHum = oldChar and oldChar:FindFirstChildOfClass("Humanoid")
+		local oldHrp = oldChar and oldChar:FindFirstChild("HumanoidRootPart")
+		FlyCleanup(oldChar, oldHum, oldHrp)
 
 		if not state then return end
 
@@ -66,8 +66,8 @@ return function(GH)
 		if not hum or not hrp or hum.Health <= 0 then return end
 
 		hum.AutoRotate = false
-		hum.PlatformStand = true
-		hrp.Anchored = true
+		hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, false)
+		hum:ChangeState(Enum.HumanoidStateType.Running)
 
 		GH.Connections.FlyScroll = UserInputService.InputChanged:Connect(function(input)
 			if not GH.States.Fly then return end
@@ -77,8 +77,13 @@ return function(GH)
 			end
 		end)
 
-		GH.Connections.Fly = RunService.Stepped:Connect(function(dt)
-			if GH.isClosing then FlyDisable(); return end
+		GH.Connections.Fly = RunService.Stepped:Connect(function()
+			if GH.isClosing then
+				GH.Disconnect("Fly")
+				GH.Disconnect("FlyScroll")
+				FlyCleanup(LocalPlayer.Character, LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid"), LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart"))
+				return
+			end
 
 			local c = LocalPlayer.Character
 			local h = c and c:FindFirstChildOfClass("Humanoid")
@@ -86,44 +91,50 @@ return function(GH)
 			if not c or not r or not h or h.Health <= 0 then
 				GH.Disconnect("Fly")
 				GH.Disconnect("FlyScroll")
-				FlyDisable()
+				FlyCleanup(c, h, r)
 				return
 			end
+
+			h.PlatformStand = false
+
+			local bv = r:FindFirstChild("GH_FlyBV")
+			if not bv then
+				bv = Instance.new("BodyVelocity")
+				bv.Name = "GH_FlyBV"
+				bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+				bv.Parent = r
+			end
+
+			local bg = r:FindFirstChild("GH_FlyBG")
+			if not bg then
+				bg = Instance.new("BodyGyro")
+				bg.Name = "GH_FlyBG"
+				bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+				bg.P = 9e4
+				bg.Parent = r
+			end
+
+			FlySetNoclip(c, true)
 
 			local cam = workspace.CurrentCamera
 			if not cam then return end
 
-			r.Anchored = true
-			FlyNoclip(c, true)
-
 			local speed = GH.FlySpeed * FlySpeedMult
-			local camCF = cam.CFrame
-			local flatLook = Vector3.new(camCF.LookVector.X, 0, camCF.LookVector.Z)
-			if flatLook.Magnitude > 0.001 then flatLook = flatLook.Unit end
-			local flatRight = Vector3.new(camCF.RightVector.X, 0, camCF.RightVector.Z)
-			if flatRight.Magnitude > 0.001 then flatRight = flatRight.Unit end
 
-			local moveInput = Vector3.zero
-			if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveInput += flatLook end
-			if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveInput -= flatLook end
-			if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveInput -= flatRight end
-			if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveInput += flatRight end
+			local camLook = cam.CFrame.LookVector
+			bg.CFrame = CFrame.new(r.Position, r.Position + Vector3.new(camLook.X, 0, camLook.Z))
+
+			local vel = Vector3.zero
+			if h.MoveDirection.Magnitude > 0 then
+				vel = h.MoveDirection * speed
+			end
 
 			local vert = 0
 			if UserInputService:IsKeyDown(Enum.KeyCode.Space) then vert = speed
 			elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then vert = -speed end
 
-			if moveInput.Magnitude > 0.01 then
-				moveInput = moveInput.Unit
-			end
-
-			local velocity = Vector3.new(moveInput.X * speed, vert, moveInput.Z * speed)
-			local targetPos = r.Position + velocity * dt
-
-			local facing = (moveInput.Magnitude > 0.01) and moveInput or flatLook
-			local targetCF = CFrame.lookAt(targetPos, targetPos + facing)
-
-			r.CFrame = r.CFrame:Lerp(targetCF, math.clamp(dt * 16, 0, 1))
+			bv.Velocity = Vector3.new(vel.X, vert, vel.Z)
+			r.AssemblyLinearVelocity = bv.Velocity
 		end)
 	end
 
