@@ -10,81 +10,108 @@ return function(GH)
 	local LocalPlayer = GH.LocalPlayer
 
 	-- ==========================================
-	-- FLY (Camera-relative)
+	-- FLY (Camera-relative + CFrame + Noclip)
 	-- ==========================================
+	local FlyNoclipParts = {}
+	local FlySpeedMultiplier = 1
+
+	local function FlySetNoclip(char, state)
+		for _, part in ipairs(char:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.CanCollide = not state
+				if state then FlyNoclipParts[part] = true end
+			end
+		end
+	end
+
+	local function FlyRestoreNoclip()
+		for p, _ in pairs(FlyNoclipParts) do
+			if p and p.Parent then pcall(function() p.CanCollide = true end) end
+		end
+		table.clear(FlyNoclipParts)
+	end
+
 	function Cheats_ToggleFly(state, btn)
 		btn.Text = state and "Desativar Fly" or "Ativar Fly"
 		GH.Disconnect("Fly")
+		GH.Disconnect("FlyScroll")
+		FlyRestoreNoclip()
+		FlySpeedMultiplier = 1
+
+		if not state then return end
 
 		local char = LocalPlayer.Character
 		local hum = char and char:FindFirstChildOfClass("Humanoid")
 		local hrp = char and char:FindFirstChild("HumanoidRootPart")
+		if not hum or not hrp then return end
 
-		if state and hum and hrp then
-			hum.AutoRotate = false
-			hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, false)
-			hum:ChangeState(Enum.HumanoidStateType.Running)
+		hum.AutoRotate = false
+		hum.PlatformStand = true
+		hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
+		hum:ChangeState(Enum.HumanoidStateType.Freefall)
 
-			local lv = Instance.new("LinearVelocity")
-			lv.Name = "GH_FlyLV"
-			lv.MaxForce = math.huge
-			lv.Attachment0 = hrp:FindFirstChildOfClass("Attachment") or Instance.new("Attachment", hrp)
-			lv.VectorVelocity = Vector3.zero
-			lv.VelocityConstraintMode = Enum.VelocityConstraintMode.Vector
-			lv.Parent = hrp
-
-			local av = Instance.new("AngularVelocity")
-			av.Name = "GH_FlyAV"
-			av.MaxTorque = math.huge
-			av.Attachment0 = lv.Attachment0
-			av.AngularVelocity = Vector3.zero
-			av.Parent = hrp
-
-			GH.Connections.Fly = RunService.Stepped:Connect(function()
-				if GH.isClosing then return end
-				if not LocalPlayer.Character or not hrp.Parent or hum.Health <= 0 then
-					GH.Disconnect("Fly"); return
-				end
-				hum.PlatformStand = false
-				av.AngularVelocity = Vector3.zero
-
-				local vel = Vector3.zero
-				local cam = workspace.CurrentCamera
-				if cam then
-					local lookVector = cam.CFrame.LookVector
-					local rightVector = cam.CFrame.RightVector
-					local moveDir = Vector3.zero
-					if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + lookVector end
-					if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - lookVector end
-					if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - rightVector end
-					if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + rightVector end
-					if moveDir.Magnitude > 0 then
-						moveDir = Vector3.new(moveDir.X, 0, moveDir.Z).Unit
-						vel = moveDir * GH.FlySpeed
-					end
-				end
-
-				local vert = 0
-				if UserInputService:IsKeyDown(Enum.KeyCode.Space) then vert = GH.FlySpeed
-				elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then vert = -GH.FlySpeed end
-
-				lv.VectorVelocity = Vector3.new(vel.X, vert, vel.Z)
-			end)
-		else
-			if hrp then
-				local lv = hrp:FindFirstChild("GH_FlyLV")
-				local av = hrp:FindFirstChild("GH_FlyAV")
-				if lv then lv:Destroy() end
-				if av then av:Destroy() end
-				hrp.AssemblyLinearVelocity = Vector3.zero
-				hrp.AssemblyAngularVelocity = Vector3.zero
+		GH.Connections.FlyScroll = UserInputService.InputChanged:Connect(function(input)
+			if not GH.States.Fly then return end
+			if input.UserInputType == Enum.UserInputType.MouseWheel then
+				local delta = input.Position.Z > 0 and 1 or -1
+				FlySpeedMultiplier = math.clamp(FlySpeedMultiplier + delta * 0.25, 0.25, 5)
 			end
-			if hum then
-				hum.AutoRotate = true
-				hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
-				hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+		end)
+
+		GH.Connections.Fly = RunService.Stepped:Connect(function(dt)
+			if GH.isClosing then
+				FlyRestoreNoclip()
+				return
 			end
-		end
+			if not LocalPlayer.Character or not hrp.Parent or hum.Health <= 0 then
+				GH.Disconnect("Fly")
+				GH.Disconnect("FlyScroll")
+				FlyRestoreNoclip()
+				return
+			end
+
+			local cam = workspace.CurrentCamera
+			if not cam then return end
+
+			FlySetNoclip(LocalPlayer.Character, true)
+
+			local speed = GH.FlySpeed * FlySpeedMultiplier
+			local look = cam.CFrame.LookVector
+			local right = cam.CFrame.RightVector
+
+			local moveDir = Vector3.zero
+			if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + look end
+			if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - look end
+			if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - right end
+			if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + right end
+
+			local vert = 0
+			if UserInputService:IsKeyDown(Enum.KeyCode.Space) then vert = speed
+			elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then vert = -speed end
+
+			if moveDir.Magnitude > 0 then
+				moveDir = Vector3.new(moveDir.X, 0, moveDir.Z).Unit
+			end
+
+			local targetVel = moveDir * speed + Vector3.new(0, vert, 0)
+			local currentVel = hrp.AssemblyLinearVelocity
+			local smoothVel = currentVel:Lerp(targetVel, math.clamp(dt * 14, 0, 1))
+
+			if targetVel.Magnitude < 0.1 and vert == 0 then
+				smoothVel = smoothVel * 0.8
+				if smoothVel.Magnitude < 0.5 then smoothVel = Vector3.zero end
+			end
+
+			hrp.AssemblyLinearVelocity = smoothVel
+
+			local flatVel = Vector3.new(smoothVel.X, 0, smoothVel.Z)
+			if flatVel.Magnitude > 0.5 then
+				local targetCF = CFrame.lookAt(hrp.Position, hrp.Position + flatVel.Unit)
+				hrp.CFrame = hrp.CFrame:Lerp(targetCF, math.clamp(dt * 12, 0, 1))
+			end
+
+			hrp.RotVelocity = Vector3.zero
+		end)
 	end
 
 	-- ==========================================
