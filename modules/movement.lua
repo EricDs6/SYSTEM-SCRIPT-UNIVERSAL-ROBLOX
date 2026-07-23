@@ -98,30 +98,32 @@ return function(GH)
 
 			local speed = GH.FlySpeed * FlySpeedMult
 			local camCF = cam.CFrame
-			local look = camCF.LookVector
-			local right = camCF.RightVector
+			local flatLook = Vector3.new(camCF.LookVector.X, 0, camCF.LookVector.Z)
+			if flatLook.Magnitude > 0.001 then flatLook = flatLook.Unit end
+			local flatRight = Vector3.new(camCF.RightVector.X, 0, camCF.RightVector.Z)
+			if flatRight.Magnitude > 0.001 then flatRight = flatRight.Unit end
 
-			local dir = Vector3.zero
-			if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir += look end
-			if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir -= look end
-			if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir -= right end
-			if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir += right end
+			local moveInput = Vector3.zero
+			if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveInput += flatLook end
+			if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveInput -= flatLook end
+			if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveInput -= flatRight end
+			if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveInput += flatRight end
 
 			local vert = 0
 			if UserInputService:IsKeyDown(Enum.KeyCode.Space) then vert = speed
 			elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then vert = -speed end
 
-			if dir.Magnitude > 0 then
-				dir = Vector3.new(dir.X, 0, dir.Z).Unit
+			if moveInput.Magnitude > 0.01 then
+				moveInput = moveInput.Unit
 			end
 
-			local targetPos = r.Position + dir * speed * dt + Vector3.new(0, vert * dt, 0)
+			local velocity = Vector3.new(moveInput.X * speed, vert, moveInput.Z * speed)
+			local targetPos = r.Position + velocity * dt
 
-			local targetLook = (dir.Magnitude > 0.01)
-				and CFrame.lookAt(targetPos, targetPos + dir)
-				or CFrame.lookAt(targetPos, targetPos + camCF.LookVector)
+			local facing = (moveInput.Magnitude > 0.01) and moveInput or flatLook
+			local targetCF = CFrame.lookAt(targetPos, targetPos + facing)
 
-			r.CFrame = r.CFrame:Lerp(targetLook, math.clamp(dt * 16, 0, 1))
+			r.CFrame = r.CFrame:Lerp(targetCF, math.clamp(dt * 16, 0, 1))
 		end)
 	end
 
