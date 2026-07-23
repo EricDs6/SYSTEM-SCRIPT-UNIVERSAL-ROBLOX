@@ -49,6 +49,7 @@ return function(GH)
 			hrp.AssemblyAngularVelocity = Vector3.zero
 		end
 		if hum then
+			hum.PlatformStand = false
 			hum.AutoRotate = true
 			hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
 			hum:ChangeState(Enum.HumanoidStateType.GettingUp)
@@ -104,6 +105,8 @@ return function(GH)
 				FlyCleanup(c, h, r)
 				return
 			end
+
+			h.PlatformStand = true
 
 			local bv = r:FindFirstChild("GH_FlyBV")
 			if not bv then
