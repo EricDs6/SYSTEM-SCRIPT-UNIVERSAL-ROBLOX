@@ -35,15 +35,17 @@ return function(GH)
 		local hrp = char and char:FindFirstChild("HumanoidRootPart")
 		local hum = char and char:FindFirstChildOfClass("Humanoid")
 
+		if hum then
+			hum.PlatformStand = false
+			hum.AutoRotate = true
+			hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
+		end
 		if hrp then
-			hrp.Anchored = false
 			hrp.AssemblyLinearVelocity = Vector3.zero
 			hrp.AssemblyAngularVelocity = Vector3.zero
+			hrp.Anchored = false
 		end
 		if hum then
-			hum.AutoRotate = true
-			hum.PlatformStand = false
-			hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
 			hum:ChangeState(Enum.HumanoidStateType.GettingUp)
 		end
 		if char then FlyNoclip(char, false) end
