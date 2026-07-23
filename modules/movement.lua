@@ -30,6 +30,15 @@ return function(GH)
 		if not enable then table.clear(FlyNoclipParts) end
 	end
 
+	local function FlySetFrozen(char, frozen)
+		if not char then return end
+		for _, desc in ipairs(char:GetDescendants()) do
+			if desc:IsA("Motor6D") then
+				pcall(function() desc:SetJointFrozen(Enum.JointType.Motor, frozen) end)
+			end
+		end
+	end
+
 	local function FlyCleanup(char, hum, hrp)
 		if hrp then
 			local bv = hrp:FindFirstChild("GH_FlyBV")
@@ -44,7 +53,7 @@ return function(GH)
 			hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
 			hum:ChangeState(Enum.HumanoidStateType.GettingUp)
 		end
-		if char then FlySetNoclip(char, false) end
+		if char then FlySetNoclip(char, false); FlySetFrozen(char, false) end
 		FlySpeedMult = 1
 	end
 
@@ -68,6 +77,7 @@ return function(GH)
 		hum.AutoRotate = false
 		hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, false)
 		hum:ChangeState(Enum.HumanoidStateType.Running)
+		FlySetFrozen(char, true)
 
 		GH.Connections.FlyScroll = UserInputService.InputChanged:Connect(function(input)
 			if not GH.States.Fly then return end
@@ -94,8 +104,6 @@ return function(GH)
 				FlyCleanup(c, h, r)
 				return
 			end
-
-			h.PlatformStand = false
 
 			local bv = r:FindFirstChild("GH_FlyBV")
 			if not bv then
