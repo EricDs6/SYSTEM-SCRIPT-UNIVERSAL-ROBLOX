@@ -974,6 +974,25 @@ function GH.Initialize()
 	end)
 
 	-- ==========================================
+	-- SETTINGS TOGGLE
+	-- ==========================================
+	local settingsOpen = false
+	SettingsBtn.MouseButton1Click:Connect(function()
+		settingsOpen = not settingsOpen
+		if settingsOpen then
+			for _, container in pairs(GH.TabContainers) do
+				container.Visible = false
+			end
+			TabBar.Visible = false
+		else
+			TabBar.Visible = true
+			if GH.TabContainers[GH.ActiveTab] then
+				GH.TabContainers[GH.ActiveTab].Visible = true
+			end
+		end
+	end)
+
+	-- ==========================================
 	-- INPUT MANAGER GLOBAL CONNECTIONS
 	-- ==========================================
 	GH.TrackGlobalConnection("InputManager_Began", UserInputService.InputBegan:Connect(function(input, gpe)
