@@ -168,6 +168,11 @@ end
 -- ==========================================
 UpdateStatus("Construindo Interface...")
 
+Core.Initialize()
+
+-- Delay de 5 segundos antes de fechar o loading
+task.wait(5)
+
 -- Transição suave para desaparecer (Fade Out)
 TweenService:Create(LoadFrame, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
 TweenService:Create(TitleLabel, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
@@ -176,6 +181,4 @@ TweenService:Create(SpinnerStroke, TweenInfo.new(0.3), {Transparency = 1}):Play(
 LoadFrame.UIStroke.Transparency = 1
 
 task.wait(0.3)
-LoadGui:Destroy() -- Libera a memória da tela de load
-
-Core.Initialize()
+LoadGui:Destroy()
