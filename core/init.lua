@@ -823,8 +823,15 @@ function GH.Initialize()
 	end)
 
 	-- ==========================================
-	-- PROCESSAR BOTÕES PENDENTES DOS MÓDULOS
+	-- PROCESSAR BOTÕES PENDENTES DOS MÓDULOS (ordenados)
 	-- ==========================================
+	table.sort(GH.PendingButtons, function(a, b)
+		if a.category == b.category then
+			return a.text:lower() < b.text:lower()
+		end
+		return a.category < b.category
+	end)
+
 	for _, pending in ipairs(GH.PendingButtons) do
 		GH.States[pending.name] = false
 		GH.CreateToggleButton(pending.name, pending.text, pending.callback, pending.category, pending.description)
