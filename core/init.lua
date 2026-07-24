@@ -794,12 +794,130 @@ function GH.Initialize()
 	end)
 
 	-- ==========================================
+	-- FULL CLEANUP
+	-- ==========================================
+	function GH.FullCleanup()
+		GH.isClosing = true
+
+		-- Desativar todos os states (ativa os callbacks de limpeza)
+		local statesToClean = {}
+		for name, state in pairs(GH.States) do
+			if state then table.insert(statesToClean, name) end
+		end
+		for _, name in ipairs(statesToClean) do
+			GH.States[name] = false
+			if GH.Callbacks[name] and GH.Buttons[name] then
+				pcall(GH.Callbacks[name], false, GH.Buttons[name])
+			end
+		end
+
+		-- Desregistrar todos os master loops
+		for phase, callbacks in pairs(GH.MasterCallbacks) do
+			for name, _ in pairs(callbacks) do
+				callbacks[name] = nil
+			end
+		end
+
+		-- Desconectar todas as conexoes locais
+		for name, conn in pairs(GH.Connections) do
+			if conn and typeof(conn) == "RBXScriptConnection" then
+				pcall(function() conn:Disconnect() end)
+			end
+			GH.Connections[name] = nil
+		end
+
+		-- Limpar conexoes globais
+		GH.CleanupGlobalConnections()
+
+		-- Limpar input manager
+		table.clear(GH.InputManager._bindings)
+
+		-- Destruir todas as GUIs auxiliares
+		for key, obj in pairs(GH.Objects) do
+			if obj and typeof(obj) == "Instance" then
+				pcall(function() obj:Destroy() end)
+			end
+			GH.Objects[key] = nil
+		end
+
+		-- Limpar float pad
+		pcall(function()
+			local pad = workspace:FindFirstChild("GH_FloatPad")
+			if pad then pad:Destroy() end
+		end)
+
+		-- Restaurar workspace
+		pcall(function()
+			workspace.Gravity = GH.Cache.OrigGravity or 196.2
+		end)
+
+		-- Restaurar humanoid
+		pcall(function()
+			local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+			if hum then
+				hum.WalkSpeed = GH.Cache.OrigWalkSpeed or 16
+				hum.JumpHeight = 7.2
+				hum.JumpPower = 50
+				hum.PlatformStand = false
+				hum.AutoRotate = true
+				local enums = Enum.HumanoidStateType:GetEnumItems()
+				table.remove(enums, table.find(enums, Enum.HumanoidStateType.None))
+				for _, v in ipairs(enums) do hum:SetStateEnabled(v, true) end
+			end
+		end)
+
+		-- Limpar HRP sizes
+		for player, origSize in pairs(GH.Cache.OrigHRPSizes) do
+			pcall(function()
+				if player.Character then
+					local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+					if hrp and origSize then
+						hrp.Size = origSize
+						hrp.Transparency = 1
+						hrp.CanCollide = false
+					end
+				end
+			end)
+		end
+		table.clear(GH.Cache.OrigHRPSizes)
+
+		-- Limpar SelectionBoxes
+		pcall(function()
+			for _, obj in ipairs(GH.TargetGui:GetChildren()) do
+				if obj:IsA("SelectionBox") and obj.Name:sub(1, 12) == "GH_Hitbox_SB" then
+					obj.Adornee = nil
+					obj:Destroy()
+				end
+			end
+		end)
+
+		-- Limpar ESP
+		for _, p in ipairs(Players:GetPlayers()) do
+			if p ~= LocalPlayer and p.Character then
+				for _, obj in ipairs(p.Character:GetChildren()) do
+					if obj.Name:sub(1, 6) == "GH_ESP" then
+						pcall(function() obj:Destroy() end)
+					end
+				end
+			end
+		end
+
+		-- Limpar animacoes
+		pcall(function()
+			if GH.Cache.SpasmTrack then GH.Cache.SpasmTrack:Stop(); GH.Cache.SpasmTrack = nil end
+			if GH.Cache.SpasmAnim then GH.Cache.SpasmAnim:Destroy(); GH.Cache.SpasmAnim = nil end
+		end)
+
+		-- Limpar tabelas
+		table.clear(GH.Cache.HitboxAdornments)
+		table.clear(GH.Cache.ESPPlayers)
+	end
+
+	-- ==========================================
 	-- CLOSE
 	-- ==========================================
 	CloseBtn.MouseButton1Click:Connect(function()
-		GH.isClosing = true
-		GH.CleanupGlobalConnections()
-		table.clear(GH.InputManager._bindings)
+		GH.FullCleanup()
 		GH.ScreenGui:Destroy()
 	end)
 
@@ -1026,9 +1144,7 @@ function GH.Initialize()
 	Players.PlayerRemoving:Connect(function(player)
 		if player == GH.LocalPlayer then
 			pcall(function()
-				GH.isClosing = true
-				GH.CleanupGlobalConnections()
-				table.clear(GH.InputManager._bindings)
+				GH.FullCleanup()
 				if GH.ScreenGui and GH.ScreenGui.Parent then GH.ScreenGui:Destroy() end
 			end)
 		end
