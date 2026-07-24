@@ -24,6 +24,8 @@ end
 local LoadingGui = Instance.new("ScreenGui")
 LoadingGui.Name = "SystemScript_Loading"
 LoadingGui.ResetOnSpawn = false
+LoadingGui.IgnoreGuiInset = true
+LoadingGui.DisplayOrder = 999
 LoadingGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 LoadingGui.Parent = TargetGui
 
@@ -123,17 +125,20 @@ StatusText.Parent = Center
 -- ==========================================
 local fadeInInfo = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
--- Fade in titulo
-TweenService:Create(Title, fadeInInfo, {TextTransparency = 0.2}):Play()
-
--- Fade in status
-task.delay(0.2, function()
-	TweenService:Create(StatusText, fadeInInfo, {TextTransparency = 0.2}):Play()
+pcall(function()
+	TweenService:Create(Title, fadeInInfo, {TextTransparency = 0.2}):Play()
 end)
 
--- Fade in barra
+task.delay(0.2, function()
+	pcall(function()
+		TweenService:Create(StatusText, fadeInInfo, {TextTransparency = 0.2}):Play()
+	end)
+end)
+
 task.delay(0.3, function()
-	TweenService:Create(ProgressBG, fadeInInfo, {BackgroundTransparency = 0.2}):Play()
+	pcall(function()
+		TweenService:Create(ProgressBG, fadeInInfo, {BackgroundTransparency = 0.2}):Play()
+	end)
 end)
 
 -- Spinner rotation loop
@@ -166,9 +171,11 @@ local function UpdateLoading(step)
 		local data = loadSteps[step]
 		if data then
 			StatusText.Text = data.text
-			TweenService:Create(ProgressBar, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				Size = UDim2.new(data.progress, 0, 1, 0)
-			}):Play()
+			pcall(function()
+				TweenService:Create(ProgressBar, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+					Size = UDim2.new(data.progress, 0, 1, 0)
+				}):Play()
+			end)
 		end
 	end
 end
@@ -176,11 +183,12 @@ end
 -- ==========================================
 -- FETCH MODULE (original)
 -- ==========================================
+local CACHE_BUST = tostring(os.clock()):gsub("%.", "")
 local BASE_URL = "https://raw.githubusercontent.com/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/main/"
 
 local function fetch_module(path)
 	local ok, content = pcall(function()
-		return game:HttpGet(BASE_URL .. path, true)
+		return game:HttpGet(BASE_URL .. path .. "?v=" .. CACHE_BUST, true)
 	end)
 	if not ok or not content or content == "" then
 		warn("[SYSTEM] Falha ao baixar: " .. path)
@@ -263,11 +271,13 @@ task.wait(1.2)
 -- Fade out suave da tela de loading
 spinning = false
 local fadeOutInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-TweenService:Create(Title, fadeOutInfo, {TextTransparency = 1}):Play()
-TweenService:Create(StatusText, fadeOutInfo, {TextTransparency = 1}):Play()
-TweenService:Create(ProgressBG, fadeOutInfo, {BackgroundTransparency = 1}):Play()
-TweenService:Create(ProgressBar, fadeOutInfo, {BackgroundTransparency = 1}):Play()
-TweenService:Create(BG, fadeOutInfo, {BackgroundTransparency = 1}):Play()
+pcall(function()
+	TweenService:Create(Title, fadeOutInfo, {TextTransparency = 1}):Play()
+	TweenService:Create(StatusText, fadeOutInfo, {TextTransparency = 1}):Play()
+	TweenService:Create(ProgressBG, fadeOutInfo, {BackgroundTransparency = 1}):Play()
+	TweenService:Create(ProgressBar, fadeOutInfo, {BackgroundTransparency = 1}):Play()
+	TweenService:Create(BG, fadeOutInfo, {BackgroundTransparency = 1}):Play()
+end)
 
 task.delay(0.6, function()
 	LoadingGui:Destroy()
