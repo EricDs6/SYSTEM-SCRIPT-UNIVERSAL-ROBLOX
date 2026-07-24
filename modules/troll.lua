@@ -243,9 +243,15 @@ return function(GH)
 				return
 			end
 
+			local animator = hum:FindFirstChildOfClass("Animator")
+			if not animator then
+				animator = Instance.new("Animator")
+				animator.Parent = hum
+			end
+
 			GH.Cache.SpasmAnim = Instance.new("Animation")
 			GH.Cache.SpasmAnim.AnimationId = "rbxassetid://33796059"
-			GH.Cache.SpasmTrack = hum:LoadAnimation(GH.Cache.SpasmAnim)
+			GH.Cache.SpasmTrack = animator:LoadAnimation(GH.Cache.SpasmAnim)
 			GH.Cache.SpasmTrack:Play()
 			GH.Cache.SpasmTrack:AdjustSpeed(99)
 		else

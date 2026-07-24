@@ -467,11 +467,9 @@ return function(GH)
 		GH.Disconnect("FloatKey")
 		GH.Disconnect("FloatLoop")
 
-		local char = LocalPlayer.Character
-		if char then
-			local old = char:FindFirstChild("GH_FloatPad")
-			if old then old:Destroy() end
-		end
+		-- Limpar pad antigo
+		local oldPad = workspace:FindFirstChild("GH_FloatPad")
+		if oldPad then oldPad:Destroy() end
 
 		if state then
 			local char = LocalPlayer.Character
@@ -484,13 +482,13 @@ return function(GH)
 			pad.Size = Vector3.new(2, 0.2, 1.5)
 			pad.Transparency = 1
 			pad.Anchored = true
-			pad.CanCollide = false
-			pad.Parent = char
+			pad.CanCollide = true
+			pad.Parent = workspace
 
 			GH.Connections.FloatKey = UserInputService.InputBegan:Connect(function(input, gpe)
 				if gpe or not GH.States.Float then return end
-				if input.KeyCode == Enum.KeyCode.Q then FloatValue = FloatValue - 0.5
-				elseif input.KeyCode == Enum.KeyCode.E then FloatValue = FloatValue + 0.5 end
+				if input.KeyCode == Enum.KeyCode.Q then FloatValue = FloatValue + 0.5
+				elseif input.KeyCode == Enum.KeyCode.E then FloatValue = FloatValue - 0.5 end
 			end)
 
 			GH.Connections.FloatLoop = RunService.Heartbeat:Connect(function()
@@ -500,22 +498,19 @@ return function(GH)
 				end
 				local c = LocalPlayer.Character
 				local r = c and c:FindFirstChild("HumanoidRootPart")
-				local p = c and c:FindFirstChild("GH_FloatPad")
+				local p = workspace:FindFirstChild("GH_FloatPad")
 				if r and p then
 					p.CFrame = r.CFrame * CFrame.new(0, FloatValue, 0)
 				end
 			end)
 		else
-			local char = LocalPlayer.Character
-			if char then
-				local pad = char:FindFirstChild("GH_FloatPad")
-				if pad then pad:Destroy() end
-			end
+			local p = workspace:FindFirstChild("GH_FloatPad")
+			if p then p:Destroy() end
 		end
 	end
 
 	-- ==========================================
-	-- SWIM (Natação no ar)
+	-- SWIM (Natacao no ar)
 	-- ==========================================
 	function Cheats_ToggleSwim(state, btn)
 		btn.Text = state and "Desativar Swim" or "Swim"
@@ -551,6 +546,21 @@ return function(GH)
 					end
 					return
 				end
+				-- Manter estado Swimming e controlar velocidade
+				pcall(function()
+					local c = LocalPlayer.Character
+					local h = c and c:FindFirstChildOfClass("Humanoid")
+					local r = c and c:FindFirstChild("HumanoidRootPart")
+					if h and r then
+						h:ChangeState(Enum.HumanoidStateType.Swimming)
+						local moveDir = h.MoveDirection
+						local isMoving = moveDir.Magnitude > 0
+						local isJumping = UserInputService:IsKeyDown(Enum.KeyCode.Space)
+						if not isMoving and not isJumping then
+							r.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+						end
+					end
+				end)
 			end)
 		else
 			workspace.Gravity = GH.Cache.SwimOldGravity or 196.2
