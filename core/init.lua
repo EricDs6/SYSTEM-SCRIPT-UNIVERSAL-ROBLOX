@@ -977,8 +977,168 @@ function GH.Initialize()
 	-- SETTINGS TOGGLE
 	-- ==========================================
 	local settingsOpen = false
+	local SettingsFrame = Instance.new("Frame")
+	SettingsFrame.Name = "SettingsPanel"
+	SettingsFrame.Size = UDim2.new(1, 0, 1, -GH.TopbarHeight)
+	SettingsFrame.Position = UDim2.new(0, 0, 0, GH.TopbarHeight)
+	SettingsFrame.BackgroundColor3 = GH.Theme.BG
+	SettingsFrame.BackgroundTransparency = 0.15
+	SettingsFrame.BorderSizePixel = 0
+	SettingsFrame.Visible = false
+	SettingsFrame.ZIndex = 5
+	SettingsFrame.Parent = MainFrame
+
+	local SettingsScroll = Instance.new("ScrollingFrame")
+	SettingsScroll.Size = UDim2.new(1, -12, 1, -8)
+	SettingsScroll.Position = UDim2.new(0, 6, 0, 4)
+	SettingsScroll.BackgroundTransparency = 1
+	SettingsScroll.ScrollBarThickness = 3
+	SettingsScroll.ScrollBarImageColor3 = GH.Theme.Accent
+	SettingsScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	SettingsScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+	SettingsScroll.BorderSizePixel = 0
+	SettingsScroll.ZIndex = 5
+	SettingsScroll.Parent = SettingsFrame
+	Instance.new("UIListLayout", SettingsScroll).Padding = UDim.new(0, 4)
+	Instance.new("UIPadding", SettingsScroll).PaddingTop = UDim.new(0, 2)
+
+	local function CreateSettingToggle(text, key, default)
+		local row = Instance.new("Frame")
+		row.Size = UDim2.new(1, 0, 0, 28)
+		row.BackgroundColor3 = GH.Theme.Card
+		row.BorderSizePixel = 0
+		row.ZIndex = 6
+		row.Parent = SettingsScroll
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(0.7, 0, 1, 0)
+		label.Position = UDim2.new(0, 8, 0, 0)
+		label.BackgroundTransparency = 1
+		label.Text = text
+		label.TextColor3 = GH.Theme.Text
+		label.Font = Enum.Font.GothamMedium
+		label.TextSize = 11
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.ZIndex = 6
+		label.Parent = row
+
+		local toggle = Instance.new("TextButton")
+		toggle.Size = UDim2.new(0, 36, 0, 18)
+		toggle.Position = UDim2.new(1, -44, 0.5, -9)
+		toggle.BackgroundColor3 = GH.Settings[key] and GH.Theme.On or GH.Theme.OffBG
+		toggle.Text = GH.Settings[key] and "ON" or "OFF"
+		toggle.TextColor3 = GH.Settings[key] and Color3.new(1, 1, 1) or GH.Theme.Off
+		toggle.Font = Enum.Font.GothamBold
+		toggle.TextSize = 9
+		toggle.AutoButtonColor = false
+		toggle.ZIndex = 6
+		toggle.Parent = row
+
+		local corner = Instance.new("UICorner", toggle)
+		corner.CornerRadius = UDim.new(0, 4)
+
+		toggle.MouseButton1Click:Connect(function()
+			GH.Settings[key] = not GH.Settings[key]
+			toggle.Text = GH.Settings[key] and "ON" or "OFF"
+			TweenService:Create(toggle, GH.TI, {
+				BackgroundColor3 = GH.Settings[key] and GH.Theme.On or GH.Theme.OffBG,
+				TextColor3 = GH.Settings[key] and Color3.new(1, 1, 1) or GH.Theme.Off,
+			}):Play()
+		end)
+	end
+
+	local function CreateSettingSlider(text, key, min, max, step)
+		local row = Instance.new("Frame")
+		row.Size = UDim2.new(1, 0, 0, 36)
+		row.BackgroundColor3 = GH.Theme.Card
+		row.BorderSizePixel = 0
+		row.ZIndex = 6
+		row.Parent = SettingsScroll
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(0.5, 0, 0, 16)
+		label.Position = UDim2.new(0, 8, 0, 2)
+		label.BackgroundTransparency = 1
+		label.Text = text
+		label.TextColor3 = GH.Theme.Text
+		label.Font = Enum.Font.GothamMedium
+		label.TextSize = 11
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.ZIndex = 6
+		label.Parent = row
+
+		local valueLabel = Instance.new("TextLabel")
+		valueLabel.Size = UDim2.new(0.5, 0, 0, 16)
+		valueLabel.Position = UDim2.new(0.5, 0, 0, 2)
+		valueLabel.BackgroundTransparency = 1
+		valueLabel.Text = tostring(GH.Settings[key])
+		valueLabel.TextColor3 = GH.Theme.Accent
+		valueLabel.Font = Enum.Font.GothamBold
+		valueLabel.TextSize = 11
+		valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+		valueLabel.ZIndex = 6
+		valueLabel.Parent = row
+
+		local barBG = Instance.new("Frame")
+		barBG.Size = UDim2.new(1, -16, 0, 6)
+		barBG.Position = UDim2.new(0, 8, 0, 24)
+		barBG.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+		barBG.BorderSizePixel = 0
+		barBG.ZIndex = 6
+		barBG.Parent = row
+		Instance.new("UICorner", barBG).CornerRadius = UDim.new(1, 0)
+
+		local fill = Instance.new("Frame")
+		fill.Size = UDim2.new((GH.Settings[key] - min) / (max - min), 0, 1, 0)
+		fill.BackgroundColor3 = GH.Theme.Accent
+		fill.BorderSizePixel = 0
+		fill.ZIndex = 7
+		fill.Parent = barBG
+		Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+
+		local slider = Instance.new("TextButton")
+		slider.Size = UDim2.new(1, 0, 1, 0)
+		slider.BackgroundTransparency = 1
+		slider.Text = ""
+		slider.ZIndex = 8
+		slider.Parent = barBG
+
+		local dragging = false
+		slider.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				dragging = true
+			end
+		end)
+		UserInputService.InputEnded:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				dragging = false
+			end
+		end)
+		RunService.RenderStepped:Connect(function()
+			if dragging then
+				local mouse = UserInputService:GetMouseLocation()
+				local rel = math.clamp((mouse.X - barBG.AbsolutePosition.X) / barBG.AbsoluteSize.X, 0, 1)
+				local val = math.floor((min + rel * (max - min)) / step + 0.5) * step
+				GH.Settings[key] = val
+				fill.Size = UDim2.new((val - min) / (max - min), 0, 1, 0)
+				valueLabel.Text = tostring(val)
+			end
+		end)
+	end
+
+	-- Criar settings
+	CreateSettingToggle("Debug Mode", "DebugMode", false)
+	CreateSettingToggle("Mostrar Distancia", "ESPShowDistance", true)
+	CreateSettingToggle("Mostrar Vida", "ESPShowHealth", true)
+	CreateSettingToggle("Mostrar Tag", "ESPShowTag", true)
+	CreateSettingToggle("Mostrar Nome", "ESPShowName", true)
+	CreateSettingSlider("Tamanho Hitbox", "HitboxSize", 5, 50, 1)
+	CreateSettingSlider("Distancia Max ESP", "ESPMaxDistance", 50, 2000, 50)
+	CreateSettingSlider("Raio NoClip", "NoClipRadius", 1, 20, 0.5)
+
 	SettingsBtn.MouseButton1Click:Connect(function()
 		settingsOpen = not settingsOpen
+		SettingsFrame.Visible = settingsOpen
 		if settingsOpen then
 			for _, container in pairs(GH.TabContainers) do
 				container.Visible = false
