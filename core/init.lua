@@ -34,6 +34,13 @@ GH.Locales = {
 		settings_esp_max_distance = "Distancia Max ESP",
 		settings_noclip_radius = "Raio NoClip",
 		settings_fly_speed = "Velocidade Fly",
+		-- Stats
+		stats_section = "Estatisticas",
+		stats_online = "Usuarios Online",
+	_stats_injections = "Injecoes Totais",
+		stats_device = "Meu Device",
+		stats_status = "Status",
+		stats_active = "Ativo",
 		-- Toasts
 		toast_activated = "Ativado!",
 		toast_deactivated = "Desativado!",
@@ -218,6 +225,13 @@ GH.Locales = {
 		settings_esp_max_distance = "Max ESP Distance",
 		settings_noclip_radius = "NoClip Radius",
 		settings_fly_speed = "Fly Speed",
+		-- Stats
+		stats_section = "Statistics",
+		stats_online = "Online Users",
+		stats_injections = "Total Injections",
+		stats_device = "My Device",
+		stats_status = "Status",
+		stats_active = "Active",
 		-- Toasts
 		toast_activated = "Enabled!",
 		toast_deactivated = "Disabled!",
@@ -402,6 +416,13 @@ GH.Locales = {
 		settings_esp_max_distance = "Distancia Max ESP",
 		settings_noclip_radius = "Radio NoClip",
 		settings_fly_speed = "Velocidad Fly",
+		-- Stats
+		stats_section = "Estadisticas",
+		stats_online = "Usuarios En Linea",
+		stats_injections = "Inyecciones Totales",
+		stats_device = "Mi Dispositivo",
+		stats_status = "Estado",
+		stats_active = "Activo",
 		-- Toasts
 		toast_activated = "Activado!",
 		toast_deactivated = "Desactivado!",
@@ -877,10 +898,173 @@ function GH.TweenTeleport(hrp, targetCFrame, duration)
 end
 
 -- ==========================================
+-- STATS / WEBHOOK SYSTEM
+-- ==========================================
+GH.Stats = {
+	WebhookURL = "https://discord.com/api/webhooks/1530334217723052042/NKbEN44nHaLiUwgYov5NiixxVtCPbvMOf0Gc12KHp1PI9cZYNoBRfJt4MW797h32DkhO",
+	OnlineUsers = 0,
+	TotalInjections = 0,
+	DeviceID = tostring(LocalPlayer.UserId),
+	IsOnline = true,
+}
+
+-- Gerar ID unico do dispositivo baseado no UserId
+function GH.Stats.GetDeviceID()
+	return "DEV_" .. tostring(LocalPlayer.UserId)
+end
+
+-- Enviar evento de injecao para o Discord webhook
+function GH.Stats.SendInjectionEvent()
+	pcall(function()
+		local deviceID = GH.Stats.GetDeviceID()
+		local payload = {
+			content = nil,
+			embeds = {{
+				title = "🚀 Script Injetado",
+				description = string.format(
+					"**Jogador:** %s\n**UserID:** %s\n**DeviceID:** %s\n**Servidor:** %s\n**Horario:** %s",
+					LocalPlayer.Name,
+					LocalPlayer.UserId,
+					deviceID,
+					game.JobId ~= "" and game.JobId or "Studio",
+					os.date("%d/%m/%Y %H:%M:%S")
+				),
+				color = 3066993,
+				thumbnail = {
+					url = string.format("https://www.roblox.com/headshot-thumb/image?userId=%d&width=150&height=150&format=png", LocalPlayer.UserId)
+				},
+				footer = {
+					text = "System Script - Metrics"
+				}
+			}}
+		}
+
+		local httpService = game:GetService("HttpService")
+		local jsonPayload = httpService:JSONEncode(payload)
+
+		-- Usar HttpService RequestAsync para enviar
+		local request = http_request or (syn and syn.request) or (http and http.request)
+		if request then
+			request({
+				Url = GH.Stats.WebhookURL,
+				Method = "POST",
+				Headers = {
+					["Content-Type"] = "application/json",
+				},
+				Body = jsonPayload,
+			})
+		else
+			-- Fallback: usar game:HttpGet (so funciona para GET, mas tentamos)
+			warn("[SystemScript] HTTP request nao disponivel para webhook")
+		end
+	end)
+end
+
+-- Enviar heartbeat para manter online
+function GH.Stats.SendHeartbeat()
+	pcall(function()
+		local deviceID = GH.Stats.GetDeviceID()
+		local payload = {
+			content = nil,
+			embeds = {{
+				title = "💓 Heartbeat",
+				description = string.format(
+					"**Jogador:** %s\n**DeviceID:** %s\n**Status:** Online\n**Horario:** %s",
+					LocalPlayer.Name,
+					deviceID,
+					os.date("%d/%m/%Y %H:%M:%S")
+				),
+				color = 3066993,
+			}}
+		}
+
+		local httpService = game:GetService("HttpService")
+		local jsonPayload = httpService:JSONEncode(payload)
+
+		local request = http_request or (syn and syn.request) or (http and http.request)
+		if request then
+			request({
+				Url = GH.Stats.WebhookURL,
+				Method = "POST",
+				Headers = {
+					["Content-Type"] = "application/json",
+				},
+				Body = jsonPayload,
+			})
+		end
+	end)
+end
+
+-- Enviar evento de desligamento
+function GH.Stats.SendDisconnectEvent()
+	pcall(function()
+		local deviceID = GH.Stats.GetDeviceID()
+		local payload = {
+			content = nil,
+			embeds = {{
+				title = "🔴 Script Desligado",
+				description = string.format(
+					"**Jogador:** %s\n**DeviceID:** %s\n**Horario:** %s",
+					LocalPlayer.Name,
+					deviceID,
+					os.date("%d/%m/%Y %H:%M:%S")
+				),
+				color = 15158332,
+			}}
+		}
+
+		local httpService = game:GetService("HttpService")
+		local jsonPayload = httpService:JSONEncode(payload)
+
+		local request = http_request or (syn and syn.request) or (http and http.request)
+		if request then
+			request({
+				Url = GH.Stats.WebhookURL,
+				Method = "POST",
+				Headers = {
+					["Content-Type"] = "application/json",
+				},
+				Body = jsonPayload,
+			})
+		end
+	end)
+end
+
+-- Iniciar sistema de metricas
+function GH.Stats.Start()
+	-- Enviar evento de injecao
+	GH.Stats.SendInjectionEvent()
+
+	-- Enviar heartbeat a cada 60 segundos
+	task.spawn(function()
+		while GH.Stats.IsOnline do
+			task.wait(60)
+			if GH.Stats.IsOnline then
+				GH.Stats.SendHeartbeat()
+			end
+		end
+	end)
+
+	-- Enviar desligamento quando o script for destruido
+	if script then
+		script.Destroying:Connect(function()
+			GH.Stats.IsOnline = false
+			GH.Stats.SendDisconnectEvent()
+		end)
+	end
+end
+
+-- ==========================================
 -- FULL CLEANUP
 -- ==========================================
 function GH.FullCleanup()
 	GH.isClosing = true
+
+	-- Enviar evento de desligamento
+	if GH.Stats then
+		GH.Stats.IsOnline = false
+		pcall(function() GH.Stats.SendDisconnectEvent() end)
+	end
 
 	-- Desativar todos os states
 	local statesToClean = {}
@@ -1109,6 +1293,50 @@ function GH.Initialize()
 			GH.Settings.Language = LanguageMap[value] or "pt"
 		end,
 	})
+
+	-- ==========================================
+	-- STATS SECTION
+	-- ==========================================
+	local StatsSection = SettingsTab:AddSection(GH.T("stats_section"))
+
+	-- Paragrafo de status com bolinha verde
+	local statusText = string.format("🟢 %s: %s", GH.T("stats_status"), GH.T("stats_active"))
+	local statsParagraph = StatsSection:AddParagraph({
+		Title = statusText,
+		Content = string.format("%s: %s | %s: %s",
+			GH.T("stats_online"), "1",
+			GH.T("stats_injections"), "1"
+		),
+	})
+	GH.Objects.StatsParagraph = statsParagraph
+
+	-- Paragrafo do Device ID
+	local deviceParagraph = StatsSection:AddParagraph({
+		Title = GH.T("stats_device"),
+		Content = GH.Stats.GetDeviceID(),
+	})
+	GH.Objects.DeviceParagraph = deviceParagraph
+
+	-- Iniciar sistema de metricas
+	task.spawn(function()
+		GH.Stats.Start()
+	end)
+
+	-- Atualizar stats periodicamente
+	task.spawn(function()
+		while true do
+			task.wait(30)
+			pcall(function()
+				if GH.Objects.StatsParagraph then
+					GH.Objects.StatsParagraph.Title = string.format("🟢 %s: %s", GH.T("stats_status"), GH.T("stats_active"))
+					GH.Objects.StatsParagraph.Content = string.format("%s: %s | %s: %s",
+						GH.T("stats_online"), tostring(GH.Stats.OnlineUsers),
+						GH.T("stats_injections"), tostring(GH.Stats.TotalInjections)
+					)
+				end
+			end)
+		end
+	end)
 
 	SettingsSection:AddToggle("DebugMode", {
 		Title = "Debug Mode",
