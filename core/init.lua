@@ -54,11 +54,11 @@ GH.TI_Slow = TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out
 -- ==========================================
 -- UI DIMENSIONS
 -- ==========================================
-GH.PanelWidth = 720
-GH.PanelHeight = 380
-GH.TopbarHeight = 22
-GH.SidebarWidth = 160
-GH.ButtonHeight = 36
+GH.PanelWidth = 520
+GH.PanelHeight = 300
+GH.TopbarHeight = 20
+GH.SidebarWidth = 130
+GH.ButtonHeight = 30
 GH.SettingsWidth = 220
 
 -- ==========================================
@@ -665,7 +665,7 @@ function GH.Initialize()
 	for _, cat in ipairs(GH.Categories) do
 		local btn = Instance.new("TextButton")
 		btn.Name = cat.Name
-		btn.Size = UDim2.new(1, 0, 0, 28)
+		btn.Size = UDim2.new(1, 0, 0, 24)
 		btn.BackgroundColor3 = (cat.Name == GH.ActiveTab) and GH.Theme.Accent or GH.Theme.BGDark
 		btn.Text = "  " .. cat.Name
 		btn.TextColor3 = (cat.Name == GH.ActiveTab) and Color3.new(1, 1, 1) or GH.Theme.Off
@@ -694,7 +694,7 @@ function GH.Initialize()
 	-- FOOTER
 	local Footer = Instance.new("Frame")
 	Footer.Name = "Footer"
-	Footer.Size = UDim2.new(1, 0, 0, 22)
+	Footer.Size = UDim2.new(1, 0, 0, 18)
 	Footer.Position = UDim2.new(0, 0, 1, -22)
 	Footer.BackgroundColor3 = GH.Theme.BGDark
 	Footer.BackgroundTransparency = 0.2
@@ -976,7 +976,7 @@ function GH.Initialize()
 	local minimized = false
 	local NormalWidth = GH.PanelWidth
 	local NormalHeight = GH.PanelHeight
-	local MinimizedHeight = 22
+	local MinimizedHeight = 20
 
 	MinBtn.MouseButton1Click:Connect(function()
 		minimized = not minimized
@@ -987,7 +987,7 @@ function GH.Initialize()
 				container.Visible = false
 			end
 			TweenService:Create(MainFrame, GH.TI_Slow, {
-				Size = UDim2.new(0, 220, 0, MinimizedHeight)
+				Size = UDim2.new(0, 180, 0, MinimizedHeight)
 			}):Play()
 			MinBtn.Text = "+"
 		else
@@ -1013,7 +1013,7 @@ function GH.Initialize()
 
 	local function CreateSettingToggle(text, key)
 		local row = Instance.new("Frame")
-		row.Size = UDim2.new(1, 0, 0, 28)
+		row.Size = UDim2.new(1, 0, 0, 24)
 		row.BackgroundColor3 = GH.Theme.Card
 		row.BorderSizePixel = 0
 		row.ZIndex = 6
@@ -1032,7 +1032,7 @@ function GH.Initialize()
 		label.Parent = row
 
 		local toggle = Instance.new("TextButton")
-		toggle.Size = UDim2.new(0, 36, 0, 18)
+		toggle.Size = UDim2.new(0, 32, 0, 16)
 		toggle.Position = UDim2.new(1, -44, 0.5, -9)
 		toggle.BackgroundColor3 = GH.Settings[key] and GH.Theme.On or GH.Theme.OffBG
 		toggle.Text = GH.Settings[key] and "ON" or "OFF"
@@ -1059,7 +1059,7 @@ function GH.Initialize()
 
 	local function CreateSettingSlider(text, key, min, max, step)
 		local row = Instance.new("Frame")
-		row.Size = UDim2.new(1, 0, 0, 36)
+		row.Size = UDim2.new(1, 0, 0, 30)
 		row.BackgroundColor3 = GH.Theme.Card
 		row.BorderSizePixel = 0
 		row.ZIndex = 6
@@ -1090,7 +1090,7 @@ function GH.Initialize()
 		valueLabel.Parent = row
 
 		local barBG = Instance.new("Frame")
-		barBG.Size = UDim2.new(1, -16, 0, 6)
+		barBG.Size = UDim2.new(1, -16, 0, 5)
 		barBG.Position = UDim2.new(0, 8, 0, 24)
 		barBG.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 		barBG.BorderSizePixel = 0
