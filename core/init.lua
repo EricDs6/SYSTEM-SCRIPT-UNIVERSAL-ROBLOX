@@ -1008,6 +1008,17 @@ function GH.FullCleanup()
 		if GH.Cache.SpasmAnim then GH.Cache.SpasmAnim:Destroy(); GH.Cache.SpasmAnim = nil end
 	end)
 
+	-- Destruir janela Fluent
+	pcall(function()
+		if GH.Window then
+			if GH.Window.Window then GH.Window.Window:Destroy() end
+			GH.Window = nil
+		end
+		if GH.TargetGui:FindFirstChild("SystemScript") then
+			GH.TargetGui["SystemScript"]:Destroy()
+		end
+	end)
+
 	-- Limpar tabelas
 	table.clear(GH.Cache.HitboxAdornments)
 	table.clear(GH.Cache.ESPPlayers)
@@ -1309,6 +1320,15 @@ function GH.Initialize()
 			end)
 		end
 	end)
+
+	-- Cleanup quando o script e destruido pelo executor
+	if script then
+		script.Destroying:Connect(function()
+			pcall(function()
+				GH.FullCleanup()
+			end)
+		end)
+	end
 
 	-- Notificacao de carregamento
 	task.delay(0.5, function()

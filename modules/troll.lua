@@ -161,9 +161,16 @@ return function(GH)
 			end
 		end
 
+		local initialNames = {}
+		for _, player in ipairs(Players:GetPlayers()) do
+			if player ~= LocalPlayer then
+				table.insert(initialNames, player.Name)
+			end
+		end
+
 		local dropdown = GH.Tabs["Troll"]:AddDropdown("TargetFling_Select", {
 			Title = GH.T("dropdown_targetfling_title"),
-			Values = {},
+			Values = initialNames,
 			AllowNull = true,
 		})
 		GH.Objects.TargetFlingDropdown = dropdown

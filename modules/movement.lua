@@ -324,9 +324,17 @@ return function(GH)
 			end
 		end
 
+		-- Popula a lista antes de criar o dropdown
+		local initialNames = {}
+		for _, player in ipairs(Players:GetPlayers()) do
+			if player ~= LocalPlayer then
+				table.insert(initialNames, player.Name)
+			end
+		end
+
 		local dropdown = GH.Tabs["Movement"]:AddDropdown("TPPlayer_Select", {
 			Title = GH.T("dropdown_tpplayer_title"),
-			Values = {},
+			Values = initialNames,
 			AllowNull = true,
 		})
 		GH.Objects.TeleportPlayerDropdown = dropdown
@@ -343,7 +351,6 @@ return function(GH)
 			end
 		end)
 
-		refreshList()
 		GH.Connections.TeleportPlayerAdded = Players.PlayerAdded:Connect(function()
 			if GH.States.TeleportPlayer then refreshList() end
 		end)
@@ -558,9 +565,16 @@ return function(GH)
 			end
 		end
 
+		local initialNames = {}
+		for _, player in ipairs(Players:GetPlayers()) do
+			if player ~= LocalPlayer then
+				table.insert(initialNames, player.Name)
+			end
+		end
+
 		local dropdown = GH.Tabs["Movement"]:AddDropdown("VehicleGoto_Select", {
 			Title = GH.T("dropdown_vehiclegoto_title"),
-			Values = {},
+			Values = initialNames,
 			AllowNull = true,
 		})
 		GH.Objects.VehicleGotoDropdown = dropdown
@@ -616,9 +630,16 @@ return function(GH)
 			end
 		end
 
+		local initialNames = {}
+		for _, player in ipairs(Players:GetPlayers()) do
+			if player ~= LocalPlayer then
+				table.insert(initialNames, player.Name)
+			end
+		end
+
 		local dropdown = GH.Tabs["Movement"]:AddDropdown("WalkTo_Select", {
 			Title = GH.T("dropdown_walkto_title"),
-			Values = {},
+			Values = initialNames,
 			AllowNull = true,
 		})
 		GH.Objects.WalkToDropdown = dropdown
@@ -680,9 +701,16 @@ return function(GH)
 			end
 		end
 
+		local initialNames = {}
+		for _, player in ipairs(Players:GetPlayers()) do
+			if player ~= LocalPlayer then
+				table.insert(initialNames, player.Name)
+			end
+		end
+
 		local dropdown = GH.Tabs["Movement"]:AddDropdown("Orbit_Select", {
 			Title = GH.T("dropdown_orbit_title"),
-			Values = {},
+			Values = initialNames,
 			AllowNull = true,
 		})
 		GH.Objects.OrbitDropdown = dropdown
@@ -753,9 +781,16 @@ return function(GH)
 			end
 		end
 
+		local initialNames = {}
+		for _, player in ipairs(Players:GetPlayers()) do
+			if player ~= LocalPlayer then
+				table.insert(initialNames, player.Name)
+			end
+		end
+
 		local dropdown = GH.Tabs["Movement"]:AddDropdown("HeadSit_Select", {
 			Title = GH.T("dropdown_headsit_title"),
-			Values = {},
+			Values = initialNames,
 			AllowNull = true,
 		})
 		GH.Objects.HeadSitDropdown = dropdown
@@ -935,9 +970,16 @@ return function(GH)
 			end
 		end
 
+		local initialNames = {}
+		for _, player in ipairs(Players:GetPlayers()) do
+			if player ~= LocalPlayer then
+				table.insert(initialNames, player.Name)
+			end
+		end
+
 		local dropdown = GH.Tabs["Movement"]:AddDropdown("Spectate_Select", {
 			Title = GH.T("dropdown_spectate_title"),
-			Values = {},
+			Values = initialNames,
 			AllowNull = true,
 		})
 		GH.Objects.SpectateDropdown = dropdown
@@ -954,7 +996,6 @@ return function(GH)
 			end
 		end)
 
-		refreshList()
 		GH.Connections.SpectatePlayerAdded = Players.PlayerAdded:Connect(function()
 			if GH.States.Spectate then refreshList() end
 		end)

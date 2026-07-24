@@ -691,9 +691,16 @@ return function(GH)
 			end
 		end
 
+		local initialNames = {}
+		for _, player in ipairs(Players:GetPlayers()) do
+			if player ~= LocalPlayer then
+				table.insert(initialNames, player.Name)
+			end
+		end
+
 		local dropdown = GH.Tabs["Combat"]:AddDropdown("HeadSizePlayer", {
 			Title = GH.T("dropdown_headsize_title"),
-			Values = {},
+			Values = initialNames,
 			AllowNull = true,
 		})
 		GH.Objects.HeadSizeDropdown = dropdown
