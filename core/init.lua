@@ -1240,63 +1240,70 @@ function GH.Initialize()
 	-- STATS NO TOPBAR (discreto)
 	-- ==========================================
 	task.spawn(function()
-		task.wait(1) -- Esperar a janela renderizar
+		task.wait(1.5) -- Esperar a janela renderizar completamente
 
 		-- Encontrar o ScreenGui do Fluent
 		local screenGui = nil
 		for _, gui in ipairs(GH.TargetGui:GetChildren()) do
-			if gui:IsA("ScreenGui") and gui:FindFirstChild("Main", true) then
+			if gui:IsA("ScreenGui") then
 				screenGui = gui
 				break
 			end
 		end
 
-		if screenGui then
-			-- Encontrar o topbar (frame principal com titulo)
-			local mainFrame = screenGui:FindFirstChild("Main", true)
-			if mainFrame then
-				-- Criar frame discreto para stats no centro do topbar
-				local statsFrame = Instance.new("Frame")
-				statsFrame.Name = "StatsFrame"
-				statsFrame.Size = UDim2.new(0, 120, 0, 16)
-				statsFrame.Position = UDim2.new(0.5, -60, 0, 2)
-				statsFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-				statsFrame.BackgroundTransparency = 0.3
-				statsFrame.BorderSizePixel = 0
-				statsFrame.Parent = mainFrame
+		if not screenGui then return end
 
-				local corner = Instance.new("UICorner")
-				corner.CornerRadius = UDim.new(0, 4)
-				corner.Parent = statsFrame
-
-				-- Texto de stats
-				local statsLabel = Instance.new("TextLabel")
-				statsLabel.Name = "StatsLabel"
-				statsLabel.Size = UDim2.new(1, -8, 1, 0)
-				statsLabel.Position = UDim2.new(0, 4, 0, 0)
-				statsLabel.BackgroundTransparency = 1
-				statsLabel.Text = "🟢 1 | 💉 1"
-				statsLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-				statsLabel.TextSize = 10
-				statsLabel.Font = Enum.Font.Gotham
-				statsLabel.TextXAlignment = Enum.TextXAlignment.Center
-				statsLabel.Parent = statsFrame
-
-				GH.Objects.StatsLabel = statsLabel
-
-				-- Atualizar stats periodicamente
-				while true do
-					task.wait(15)
-					pcall(function()
-						if statsLabel and statsLabel.Parent then
-							statsLabel.Text = string.format("🟢 %d | 💉 %d",
-								GH.Stats.OnlineUsers,
-								GH.Stats.TotalInjections
-							)
-						end
-					end)
-				end
+		-- Encontrar o topbar procurando o frame que contem o titulo
+		local topBar = nil
+		for _, desc in ipairs(screenGui:GetDescendants()) do
+			if desc:IsA("TextLabel") and desc.Text:find("SYSTEM") then
+				topBar = desc.Parent
+				break
 			end
+		end
+
+		if not topBar then return end
+
+		-- Criar frame discreto para stats no topbar
+		local statsFrame = Instance.new("Frame")
+		statsFrame.Name = "StatsFrame"
+		statsFrame.Size = UDim2.new(0, 100, 0, 14)
+		statsFrame.Position = UDim2.new(0.5, -50, 0.5, -7)
+		statsFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+		statsFrame.BackgroundTransparency = 0.4
+		statsFrame.BorderSizePixel = 0
+		statsFrame.Parent = topBar
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 6)
+		corner.Parent = statsFrame
+
+		-- Texto de stats
+		local statsLabel = Instance.new("TextLabel")
+		statsLabel.Name = "StatsLabel"
+		statsLabel.Size = UDim2.new(1, -6, 1, 0)
+		statsLabel.Position = UDim2.new(0, 3, 0, 0)
+		statsLabel.BackgroundTransparency = 1
+		statsLabel.Text = "🟢 0 | 💉 0"
+		statsLabel.TextColor3 = Color3.fromRGB(160, 160, 160)
+		statsLabel.TextSize = 9
+		statsLabel.Font = Enum.Font.GothamMedium
+		statsLabel.TextXAlignment = Enum.TextXAlignment.Center
+		statsLabel.Parent = statsFrame
+
+		GH.Objects.StatsLabel = statsLabel
+
+		-- Atualizar stats periodicamente
+		while true do
+			task.wait(15)
+			pcall(function()
+				if statsLabel and statsLabel.Parent then
+					statsLabel.Text = string.format("🟢 %d | 💉 %d",
+						GH.Stats.OnlineUsers,
+						GH.Stats.TotalInjections
+					)
+				end
+			end)
 		end
 	end)
 
