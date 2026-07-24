@@ -333,10 +333,12 @@ return function(GH)
 	-- ==========================================
 	-- COORDS
 	-- ==========================================
-	local CacheCoords = { SavedPoints = {}, GUI = nil }
+	local CacheCoords = { SavedPoints = {}, GUI = nil, CoordsLabel = nil }
 
 	function Cheats_ToggleCoords(state, btn)
 		btn.Text = state and "Fechar Coords" or "Coordenadas"
+		GH.UnregisterMasterLoop("Coords")
+
 		if state then
 			if CacheCoords.GUI then CacheCoords.GUI:Destroy() end
 			local gui = Instance.new("ScreenGui")
@@ -347,15 +349,17 @@ return function(GH)
 			CacheCoords.GUI = gui
 
 			local frame = Instance.new("Frame")
-			frame.Size = UDim2.new(0, 180, 0, 250)
-			frame.Position = UDim2.new(0, 10, 0.5, -125)
-			frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+			frame.Size = UDim2.new(0, 180, 0, 200)
+			frame.Position = UDim2.new(0, 10, 0.5, -100)
+			frame.BackgroundColor3 = GH.Theme.BG
 			frame.BackgroundTransparency = 0.1
 			frame.BorderSizePixel = 0
 			frame.Parent = gui
+			Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+			Instance.new("UIStroke", frame).Color = GH.Theme.Border
 
 			local title = Instance.new("TextLabel")
-			title.Size = UDim2.new(1, 0, 0, 24)
+			title.Size = UDim2.new(1, 0, 0, 22)
 			title.BackgroundColor3 = GH.Theme.Topbar
 			title.Text = "COORDENADAS"
 			title.TextColor3 = GH.Theme.Accent
@@ -364,20 +368,83 @@ return function(GH)
 			title.BorderSizePixel = 0
 			title.Parent = frame
 
+			-- Coordenadas atuais
+			local coordsLabel = Instance.new("TextLabel")
+			coordsLabel.Size = UDim2.new(1, -8, 0, 28)
+			coordsLabel.Position = UDim2.new(0, 4, 0, 24)
+			coordsLabel.BackgroundColor3 = GH.Theme.Card
+			coordsLabel.Text = "X: 0  Y: 0  Z: 0"
+			coordsLabel.TextColor3 = GH.Theme.Text
+			coordsLabel.Font = Enum.Font.GothamBold
+			coordsLabel.TextSize = 10
+			coordsLabel.BorderSizePixel = 0
+			coordsLabel.Parent = frame
+			CacheCoords.CoordsLabel = coordsLabel
+
+			-- Lista de pontos salvos
 			local scroll = Instance.new("ScrollingFrame")
-			scroll.Size = UDim2.new(1, -8, 1, -60)
-			scroll.Position = UDim2.new(0, 4, 0, 28)
+			scroll.Size = UDim2.new(1, -8, 1, -80)
+			scroll.Position = UDim2.new(0, 4, 0, 56)
 			scroll.BackgroundTransparency = 1
 			scroll.ScrollBarThickness = 2
+			scroll.ScrollBarImageColor3 = GH.Theme.Accent
 			scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 			scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 			scroll.BorderSizePixel = 0
 			scroll.Parent = frame
-			Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 3)
+			Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 2)
 
+			-- Funcao pra refreshar a lista
+			local function refreshList()
+				for _, child in ipairs(scroll:GetChildren()) do
+					if child:IsA("Frame") then child:Destroy() end
+				end
+				for i, point in ipairs(CacheCoords.SavedPoints) do
+					local row = Instance.new("Frame")
+					row.Size = UDim2.new(1, 0, 0, 20)
+					row.BackgroundColor3 = GH.Theme.Card
+					row.BorderSizePixel = 0
+					row.Parent = scroll
+
+					local lbl = Instance.new("TextLabel")
+					lbl.Size = UDim2.new(1, -30, 1, 0)
+					lbl.Position = UDim2.new(0, 4, 0, 0)
+					lbl.BackgroundTransparency = 1
+					lbl.Text = point.Name .. ": " .. math.floor(point.Position.X) .. ", " .. math.floor(point.Position.Y) .. ", " .. math.floor(point.Position.Z)
+					lbl.TextColor3 = GH.Theme.Text
+					lbl.Font = Enum.Font.GothamMedium
+					lbl.TextSize = 9
+					lbl.TextXAlignment = Enum.TextXAlignment.Left
+					lbl.TextTruncate = Enum.TextTruncate.AtEnd
+					lbl.Parent = row
+
+					-- Botao TP
+					local tpBtn = Instance.new("TextButton")
+					tpBtn.Size = UDim2.new(0, 24, 0, 16)
+					tpBtn.Position = UDim2.new(1, -28, 0.5, -8)
+					tpBtn.BackgroundColor3 = GH.Theme.AccentDim
+					tpBtn.Text = "TP"
+					tpBtn.TextColor3 = Color3.new(1, 1, 1)
+					tpBtn.Font = Enum.Font.GothamBold
+					tpBtn.TextSize = 8
+					tpBtn.AutoButtonColor = false
+					tpBtn.Parent = row
+
+					tpBtn.MouseButton1Click:Connect(function()
+						local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+						if hrp then
+							hrp.CFrame = CFrame.new(point.Position + Vector3.new(0, 3, 0))
+						end
+					end)
+				end
+			end
+
+			refreshList()
+
+			-- Botao salvar
 			local saveBtn = Instance.new("TextButton")
-			saveBtn.Size = UDim2.new(1, 0, 0, 24)
-			saveBtn.Position = UDim2.new(0, 0, 1, -28)
+			saveBtn.Size = UDim2.new(1, -8, 0, 22)
+			saveBtn.Position = UDim2.new(0, 4, 1, -26)
 			saveBtn.BackgroundColor3 = GH.Theme.AccentDim
 			saveBtn.Text = "+ Salvar Posicao"
 			saveBtn.TextColor3 = Color3.new(1, 1, 1)
@@ -391,7 +458,21 @@ return function(GH)
 				if hrp then
 					local pos = hrp.Position
 					table.insert(CacheCoords.SavedPoints, { Name = "Ponto " .. (#CacheCoords.SavedPoints + 1), Position = pos })
+					refreshList()
 					GH.ShowToast("Posicao salva!", GH.Theme.On, 2)
+				end
+			end)
+
+			-- Loop para atualizar coordenadas
+			GH.RegisterMasterLoop("Coords", "Render", function()
+				if GH.isClosing or not GH.States.Coords then
+					GH.UnregisterMasterLoop("Coords")
+					return
+				end
+				local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+				if hrp and CacheCoords.CoordsLabel then
+					local p = hrp.Position
+					CacheCoords.CoordsLabel.Text = "X: " .. math.floor(p.X) .. "  Y: " .. math.floor(p.Y) .. "  Z: " .. math.floor(p.Z)
 				end
 			end)
 		else
