@@ -526,21 +526,39 @@ return function(GH)
 	end
 
 	-- ==========================================
-	-- NO KNOCKBACK (via Namecall)
+	-- NO FLING (Anti-Fling)
 	-- ==========================================
-	table.insert(GH.NamecallHandlers, function(self, method, args)
-		if not GH.States.NoKnockback then return false end
-		if not (method == "ApplyImpulse" or method == "ApplyInstantForce") then return false end
-		if self:IsA("BasePart") then
-			local char = LocalPlayer.Character
-			if char and self:IsDescendantOf(char) then return true end
-		end
-		return false
-	end)
+	function Cheats_ToggleNoFling(state, btn)
+		btn.Text = state and "Desativar NoFling" or "No Fling"
+		GH.UnregisterMasterLoop("NoFling")
 
-	function Cheats_ToggleNoKnockback(state, btn)
-		btn.Text = state and "Desativar NoKnockback" or "No Knockback"
-		GH.ShowToast(state and "No Knockback ativado" or "No Knockback desativado", state and GH.Theme.On or GH.Theme.Off, 2)
+		if state then
+			GH.RegisterMasterLoop("NoFling", "Heartbeat", function()
+				if GH.isClosing or not GH.States.NoFling then
+					GH.UnregisterMasterLoop("NoFling")
+					return
+				end
+				local char = LocalPlayer.Character
+				if not char then return end
+				local root = char:FindFirstChild("HumanoidRootPart")
+				if not root then return end
+
+				-- Remover BodyAngularVelocity
+				for _, v in ipairs(root:GetChildren()) do
+					if v:IsA("BodyAngularVelocity") then
+						v:Destroy()
+					end
+				end
+
+				-- Resetar propriedades fisicas
+				for _, part in ipairs(char:GetDescendants()) do
+					if part:IsA("BasePart") then
+						part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)
+					end
+				end
+			end)
+		end
+		GH.ShowToast(state and "No Fling ativado" or "No Fling desativado", state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
 	-- ==========================================
@@ -653,7 +671,7 @@ return function(GH)
 	GH.RegisterToggleButton("ESP", "Ativar ESP", Cheats_ToggleESP, "Combat")
 	GH.RegisterToggleButton("TriggerBot", "TriggerBot", Cheats_ToggleTriggerBot, "Combat")
 	GH.RegisterToggleButton("SilentAim", "Silent Aim", Cheats_ToggleSilentAim, "Combat")
-	GH.RegisterToggleButton("NoKnockback", "No Knockback", Cheats_ToggleNoKnockback, "Combat")
+	GH.RegisterToggleButton("NoFling", "No Fling", Cheats_ToggleNoFling, "Combat")
 	GH.RegisterToggleButton("WallBang", "Wall Bang", Cheats_ToggleWallBang, "Combat")
 	GH.RegisterToggleButton("InfiniteHealth", "Infinite Health", Cheats_ToggleInfiniteHealth, "Combat")
 	GH.RegisterToggleButton("KillAura", "Kill Aura", Cheats_ToggleKillAura, "Combat")
