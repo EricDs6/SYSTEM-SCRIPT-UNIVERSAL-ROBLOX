@@ -59,7 +59,6 @@ return function(GH)
 	end
 
 	function Cheats_ToggleFly(state, btn)
-		btn.Text = state and "Desativar Fly" or "Ativar Fly"
 		GH.Disconnect("Fly")
 		GH.Disconnect("FlyScroll")
 
@@ -154,7 +153,6 @@ return function(GH)
 	local NoClipDisabledParts = {}
 
 	function Cheats_ToggleNoClip(state, btn)
-		btn.Text = state and "Desativar NoClip" or "Ativar NoClip"
 		GH.Disconnect("NoClip")
 		GH.UnregisterMasterLoop("NoClip")
 
@@ -216,7 +214,6 @@ return function(GH)
 	-- SPRINT
 	-- ==========================================
 	function Cheats_ToggleSprint(state, btn)
-		btn.Text = state and "Desativar Sprint" or "Sprint (" .. (GH.Keybinds.Sprint or "Shift") .. ")"
 		GH.Disconnect("Sprint")
 		local sprintKey = GH.GetKeyCode("Sprint")
 		if sprintKey then GH.InputManager.Unbind(sprintKey) end
@@ -242,7 +239,6 @@ return function(GH)
 	-- SPEED HACK
 	-- ==========================================
 	function Cheats_ToggleSpeed(state, btn)
-		btn.Text = state and "Desativar Speed" or "Speed Hack"
 		local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 		if state and hum then
 			GH.Cache.OrigWalkSpeed = hum.WalkSpeed
@@ -256,7 +252,6 @@ return function(GH)
 	-- INFINITE JUMP
 	-- ==========================================
 	function Cheats_ToggleInfiniteJump(state, btn)
-		btn.Text = state and "Desativar InfJump" or "Infinite Jump"
 		GH.Disconnect("InfJump")
 		if state then
 			GH.Connections.InfJump = UserInputService.JumpRequest:Connect(function()
@@ -271,7 +266,6 @@ return function(GH)
 	-- BUNNY HOP
 	-- ==========================================
 	function Cheats_ToggleBunnyHop(state, btn)
-		btn.Text = state and "Desativar BunnyHop" or "Bunny Hop"
 		GH.UnregisterMasterLoop("BunnyHop")
 		if state then
 			GH.RegisterMasterLoop("BunnyHop", "Heartbeat", function()
@@ -290,7 +284,6 @@ return function(GH)
 	-- BLINK (Dash)
 	-- ==========================================
 	function Cheats_ToggleBlink(state, btn)
-		btn.Text = state and "Desativar Blink" or "Blink (" .. (GH.Keybinds.Blink or "Q") .. ")"
 		GH.Disconnect("Blink")
 		local blinkKey = GH.GetKeyCode("Blink")
 		if blinkKey then GH.InputManager.Unbind(blinkKey) end
@@ -310,93 +303,45 @@ return function(GH)
 	-- ==========================================
 	-- TELEPORT PLAYER
 	-- ==========================================
-	local TeleportGUI = nil
-
 	function Cheats_ToggleTeleportPlayer(state, btn)
-		btn.Text = state and "Desativar TP Player" or "TP para Player"
 		GH.Disconnect("TeleportPlayerAdded")
 		GH.Disconnect("TeleportPlayerRemoving")
-		if TeleportGUI then TeleportGUI:Destroy(); TeleportGUI = nil end
+		if GH.Objects.TeleportPlayerDropdown then
+			GH.Objects.TeleportPlayerDropdown:Destroy()
+			GH.Objects.TeleportPlayerDropdown = nil
+		end
 		if not state then return end
 
-		local gui = Instance.new("ScreenGui")
-		gui.Name = "GH_TeleportList"
-		gui.ResetOnSpawn = false
-		gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-		gui.Parent = GH.TargetGui
-		TeleportGUI = gui
-
-		local frame = Instance.new("Frame")
-		frame.Size = UDim2.new(0, 160, 0, 220)
-		frame.Position = UDim2.new(0, 10, 0.5, -110)
-		frame.BackgroundColor3 = GH.Theme.BG
-		frame.BorderSizePixel = 0
-		frame.Parent = gui
-		Instance.new("UIStroke", frame).Color = GH.Theme.Border
-		Instance.new("UIStroke", frame).Thickness = 1
-		Instance.new("UIStroke", frame).Transparency = 0.5
-
-		local title = Instance.new("TextLabel")
-		title.Size = UDim2.new(1, 0, 0, 26)
-		title.BackgroundColor3 = GH.Theme.Topbar
-		title.Text = "JOGADORES"
-		title.TextColor3 = GH.Theme.Accent
-		title.Font = Enum.Font.GothamBold
-		title.TextSize = 11
-		title.BorderSizePixel = 0
-		title.Parent = frame
-
-		local scroll = Instance.new("ScrollingFrame")
-		scroll.Size = UDim2.new(1, -8, 1, -32)
-		scroll.Position = UDim2.new(0, 4, 0, 30)
-		scroll.BackgroundTransparency = 1
-		scroll.ScrollBarThickness = 2
-		scroll.ScrollBarImageColor3 = GH.Theme.Accent
-		scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-		scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-		scroll.BorderSizePixel = 0
-		scroll.Parent = frame
-		Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 2)
-
 		local function refreshList()
-			for _, child in ipairs(scroll:GetChildren()) do
-				if child:IsA("TextButton") then child:Destroy() end
-			end
-			local order = 0
+			local names = {}
 			for _, player in ipairs(Players:GetPlayers()) do
 				if player ~= LocalPlayer then
-					order += 1
-					local plrBtn = Instance.new("TextButton")
-					plrBtn.Size = UDim2.new(1, 0, 0, 28)
-					plrBtn.BackgroundColor3 = GH.Theme.Card
-					plrBtn.Text = ""
-					plrBtn.AutoButtonColor = false
-					plrBtn.BorderSizePixel = 0
-					plrBtn.LayoutOrder = order
-					plrBtn.Parent = scroll
-
-					local nameLbl = Instance.new("TextLabel")
-					nameLbl.Size = UDim2.new(0.8, 0, 1, 0)
-					nameLbl.Position = UDim2.new(0, 8, 0, 0)
-					nameLbl.BackgroundTransparency = 1
-					nameLbl.Text = player.Name
-					nameLbl.TextColor3 = GH.Theme.Text
-					nameLbl.Font = Enum.Font.GothamMedium
-					nameLbl.TextSize = 11
-					nameLbl.TextXAlignment = Enum.TextXAlignment.Left
-					nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
-					nameLbl.Parent = plrBtn
-
-					plrBtn.MouseButton1Click:Connect(function()
-						local targetHrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-						local myHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-						if targetHrp and myHrp then
-							GH.TweenTeleport(myHrp, targetHrp.CFrame + Vector3.new(0, 3, 2))
-						end
-					end)
+					table.insert(names, player.Name)
 				end
 			end
+			if GH.Objects.TeleportPlayerDropdown then
+				GH.Objects.TeleportPlayerDropdown:SetValues(names)
+			end
 		end
+
+		local dropdown = GH.Tabs["Movement"]:AddDropdown("TPPlayer_Select", {
+			Title = "TP para Player - Selecionar",
+			Values = {},
+			AllowNull = true,
+		})
+		GH.Objects.TeleportPlayerDropdown = dropdown
+
+		dropdown:OnChanged(function(name)
+			if name then
+				local player = Players:FindFirstChild(name)
+				local targetHrp = player and player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+				local myHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+				if targetHrp and myHrp then
+					GH.TweenTeleport(myHrp, targetHrp.CFrame + Vector3.new(0, 3, 2))
+					GH.ShowToast("TP para " .. name, GH.Theme.On, 2)
+				end
+			end
+		end)
 
 		refreshList()
 		GH.Connections.TeleportPlayerAdded = Players.PlayerAdded:Connect(function()
@@ -411,7 +356,6 @@ return function(GH)
 	-- NO JUMP COOLDOWN
 	-- ==========================================
 	function Cheats_ToggleNoJumpCooldown(state, btn)
-		btn.Text = state and "Desativar NoJumpCD" or "No Jump Cooldown"
 		GH.UnregisterMasterLoop("NoJumpCooldown")
 		if state then
 			GH.RegisterMasterLoop("NoJumpCooldown", "Heartbeat", function()
@@ -440,7 +384,6 @@ return function(GH)
 	-- VEHICLE SPEED
 	-- ==========================================
 	function Cheats_ToggleVehicleSpeed(state, btn)
-		btn.Text = state and "Desativar VehicleSpeed" or "Vehicle Speed"
 		GH.Disconnect("VehicleSpeed")
 		if state then
 			GH.Connections.VehicleSpeed = RunService.Heartbeat:Connect(function()
@@ -460,7 +403,6 @@ return function(GH)
 	-- FLOAT (Plataforma voadora — igual FE Cosmic)
 	-- ==========================================
 	function Cheats_ToggleFloat(state, btn)
-		btn.Text = state and "Desativar Float" or "Float"
 		GH.UnregisterMasterLoop("Float")
 		GH.Disconnect("FloatKeyQ")
 		GH.Disconnect("FloatKeyE")
@@ -533,7 +475,6 @@ return function(GH)
 	-- SWIM (Natacao no ar)
 	-- ==========================================
 	function Cheats_ToggleSwim(state, btn)
-		btn.Text = state and "Desativar Swim" or "Swim"
 		GH.UnregisterMasterLoop("Swim")
 		GH.Disconnect("SwimDied")
 
@@ -597,415 +538,266 @@ return function(GH)
 	-- VEHICLE GOTO
 	-- ==========================================
 	function Cheats_ToggleVehicleGoto(state, btn)
-		btn.Text = state and "Desativar VehicleGoto" or "Vehicle Goto"
-		if state then
-			local gui = Instance.new("ScreenGui")
-			gui.Name = "GH_VehicleGotoList"
-			gui.ResetOnSpawn = false
-			gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-			gui.Parent = GH.TargetGui
-			GH.Objects.VehicleGotoGUI = gui
+		GH.Disconnect("VehicleGotoPlayerAdded")
+		GH.Disconnect("VehicleGotoPlayerRemoving")
+		if GH.Objects.VehicleGotoDropdown then
+			GH.Objects.VehicleGotoDropdown:Destroy()
+			GH.Objects.VehicleGotoDropdown = nil
+		end
+		if not state then return end
 
-			local frame = Instance.new("Frame")
-			frame.Size = UDim2.new(0, 160, 0, 220)
-			frame.Position = UDim2.new(1, -170, 0.5, -110)
-			frame.BackgroundColor3 = GH.Theme.BG
-			frame.BorderSizePixel = 0
-			frame.Parent = gui
-			Instance.new("UIStroke", frame).Color = GH.Theme.Border
-
-			local title = Instance.new("TextLabel")
-			title.Size = UDim2.new(1, 0, 0, 26)
-			title.BackgroundColor3 = GH.Theme.Topbar
-			title.Text = "VEHICLE GOTO"
-			title.TextColor3 = GH.Theme.Accent
-			title.Font = Enum.Font.GothamBold
-			title.TextSize = 11
-			title.BorderSizePixel = 0
-			title.Parent = frame
-
-			local scroll = Instance.new("ScrollingFrame")
-			scroll.Size = UDim2.new(1, -8, 1, -32)
-			scroll.Position = UDim2.new(0, 4, 0, 30)
-			scroll.BackgroundTransparency = 1
-			scroll.ScrollBarThickness = 2
-			scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-			scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-			scroll.BorderSizePixel = 0
-			scroll.Parent = frame
-			Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 2)
-
-			local order = 0
+		local function refreshList()
+			local names = {}
 			for _, player in ipairs(Players:GetPlayers()) do
 				if player ~= LocalPlayer then
-					order += 1
-					local plrBtn = Instance.new("TextButton")
-					plrBtn.Size = UDim2.new(1, 0, 0, 28)
-					plrBtn.BackgroundColor3 = GH.Theme.Card
-					plrBtn.Text = ""
-					plrBtn.AutoButtonColor = false
-					plrBtn.BorderSizePixel = 0
-					plrBtn.LayoutOrder = order
-					plrBtn.Parent = scroll
-					local nameLbl = Instance.new("TextLabel")
-					nameLbl.Size = UDim2.new(0.8, 0, 1, 0)
-					nameLbl.Position = UDim2.new(0, 8, 0, 0)
-					nameLbl.BackgroundTransparency = 1
-					nameLbl.Text = player.Name
-					nameLbl.TextColor3 = GH.Theme.Text
-					nameLbl.Font = Enum.Font.GothamMedium
-					nameLbl.TextSize = 11
-					nameLbl.TextXAlignment = Enum.TextXAlignment.Left
-					nameLbl.Parent = plrBtn
-					plrBtn.MouseButton1Click:Connect(function()
-						local char = LocalPlayer.Character
-						local hum = char and char:FindFirstChildOfClass("Humanoid")
-						if hum and hum.SeatPart then
-							local vehicle = hum.SeatPart:FindFirstAncestorWhichIsA("Model")
-							local target = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-							if vehicle and target then
-								vehicle:MoveTo(target.Position)
-								GH.ShowToast("Vehicle → " .. player.Name, GH.Theme.On, 2)
-							end
-						end
-					end)
+					table.insert(names, player.Name)
 				end
 			end
-		else
-			if GH.Objects.VehicleGotoGUI then
-				GH.Objects.VehicleGotoGUI:Destroy()
-				GH.Objects.VehicleGotoGUI = nil
+			if GH.Objects.VehicleGotoDropdown then
+				GH.Objects.VehicleGotoDropdown:SetValues(names)
 			end
 		end
+
+		local dropdown = GH.Tabs["Movement"]:AddDropdown("VehicleGoto_Select", {
+			Title = "Vehicle Goto - Selecionar Player",
+			Values = {},
+			AllowNull = true,
+		})
+		GH.Objects.VehicleGotoDropdown = dropdown
+
+		dropdown:OnChanged(function(name)
+			if name then
+				local player = Players:FindFirstChild(name)
+				local char = LocalPlayer.Character
+				local hum = char and char:FindFirstChildOfClass("Humanoid")
+				if hum and hum.SeatPart then
+					local vehicle = hum.SeatPart:FindFirstAncestorWhichIsA("Model")
+					local target = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+					if vehicle and target then
+						vehicle:MoveTo(target.Position)
+						GH.ShowToast("Vehicle -> " .. name, GH.Theme.On, 2)
+					end
+				end
+			end
+		end)
+
+		refreshList()
+		GH.Connections.VehicleGotoPlayerAdded = Players.PlayerAdded:Connect(function()
+			if GH.States.VehicleGoto then refreshList() end
+		end)
+		GH.Connections.VehicleGotoPlayerRemoving = Players.PlayerRemoving:Connect(function()
+			if GH.States.VehicleGoto then refreshList() end
+		end)
 	end
 
 	-- ==========================================
 	-- WALK TO (Seguir player)
 	-- ==========================================
 	function Cheats_ToggleWalkTo(state, btn)
-		btn.Text = state and "Desativar WalkTo" or "Walk To"
 		GH.UnregisterMasterLoop("WalkTo")
 		GH.Disconnect("WalkToDied")
+		GH.Disconnect("WalkToPlayerAdded")
+		GH.Disconnect("WalkToPlayerRemoving")
+		if GH.Objects.WalkToDropdown then
+			GH.Objects.WalkToDropdown:Destroy()
+			GH.Objects.WalkToDropdown = nil
+		end
+		if not state then return end
 
-		if state then
-			local gui = Instance.new("ScreenGui")
-			gui.Name = "GH_WalkToList"
-			gui.ResetOnSpawn = false
-			gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-			gui.Parent = GH.TargetGui
-			GH.Objects.WalkToGUI = gui
-
-			local frame = Instance.new("Frame")
-			frame.Size = UDim2.new(0, 160, 0, 220)
-			frame.Position = UDim2.new(1, -170, 0.5, -110)
-			frame.BackgroundColor3 = GH.Theme.BG
-			frame.BorderSizePixel = 0
-			frame.Parent = gui
-			Instance.new("UIStroke", frame).Color = GH.Theme.Border
-
-			local title = Instance.new("TextLabel")
-			title.Size = UDim2.new(1, 0, 0, 26)
-			title.BackgroundColor3 = GH.Theme.Topbar
-			title.Text = "WALK TO"
-			title.TextColor3 = GH.Theme.Accent
-			title.Font = Enum.Font.GothamBold
-			title.TextSize = 11
-			title.BorderSizePixel = 0
-			title.Parent = frame
-
-			local scroll = Instance.new("ScrollingFrame")
-			scroll.Size = UDim2.new(1, -8, 1, -32)
-			scroll.Position = UDim2.new(0, 4, 0, 30)
-			scroll.BackgroundTransparency = 1
-			scroll.ScrollBarThickness = 2
-			scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-			scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-			scroll.BorderSizePixel = 0
-			scroll.Parent = frame
-			Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 2)
-
-			local order = 0
+		local function refreshList()
+			local names = {}
 			for _, player in ipairs(Players:GetPlayers()) do
 				if player ~= LocalPlayer then
-					order += 1
-					local plrBtn = Instance.new("TextButton")
-					plrBtn.Size = UDim2.new(1, 0, 0, 28)
-					plrBtn.BackgroundColor3 = GH.Theme.Card
-					plrBtn.Text = ""
-					plrBtn.AutoButtonColor = false
-					plrBtn.BorderSizePixel = 0
-					plrBtn.LayoutOrder = order
-					plrBtn.Parent = scroll
-					local nameLbl = Instance.new("TextLabel")
-					nameLbl.Size = UDim2.new(0.8, 0, 1, 0)
-					nameLbl.Position = UDim2.new(0, 8, 0, 0)
-					nameLbl.BackgroundTransparency = 1
-					nameLbl.Text = player.Name
-					nameLbl.TextColor3 = GH.Theme.Text
-					nameLbl.Font = Enum.Font.GothamMedium
-					nameLbl.TextSize = 11
-					nameLbl.TextXAlignment = Enum.TextXAlignment.Left
-					nameLbl.Parent = plrBtn
-					plrBtn.MouseButton1Click:Connect(function()
-						if GH.Objects.WalkToGUI then
-							GH.Objects.WalkToGUI:Destroy()
-							GH.Objects.WalkToGUI = nil
-						end
-						local targetName = player.Name
-						btn.Text = "Seguindo: " .. targetName
-
-						GH.RegisterMasterLoop("WalkTo", "Heartbeat", function()
-							if GH.isClosing or not GH.States.WalkTo then
-								GH.UnregisterMasterLoop("WalkTo")
-								btn.Text = "Walk To"
-								return
-							end
-							local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-							local target = Players:FindFirstChild(targetName)
-							local targetRoot = target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")
-							if hum and targetRoot then
-								if hum.SeatPart then hum.Sit = false end
-								hum:MoveTo(targetRoot.Position)
-							else
-								GH.UnregisterMasterLoop("WalkTo")
-								btn.Text = "Walk To"
-								GH.States.WalkTo = false
-							end
-						end)
-					end)
+					table.insert(names, player.Name)
 				end
 			end
-		else
-			if GH.Objects.WalkToGUI then
-				GH.Objects.WalkToGUI:Destroy()
-				GH.Objects.WalkToGUI = nil
+			if GH.Objects.WalkToDropdown then
+				GH.Objects.WalkToDropdown:SetValues(names)
 			end
 		end
+
+		local dropdown = GH.Tabs["Movement"]:AddDropdown("WalkTo_Select", {
+			Title = "Walk To - Selecionar Player",
+			Values = {},
+			AllowNull = true,
+		})
+		GH.Objects.WalkToDropdown = dropdown
+
+		dropdown:OnChanged(function(name)
+			if name then
+				local targetName = name
+				GH.RegisterMasterLoop("WalkTo", "Heartbeat", function()
+					if GH.isClosing or not GH.States.WalkTo then
+						GH.UnregisterMasterLoop("WalkTo")
+						return
+					end
+					local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+					local target = Players:FindFirstChild(targetName)
+					local targetRoot = target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+					if hum and targetRoot then
+						if hum.SeatPart then hum.Sit = false end
+						hum:MoveTo(targetRoot.Position)
+					else
+						GH.UnregisterMasterLoop("WalkTo")
+						GH.States.WalkTo = false
+					end
+				end)
+			end
+		end)
+
+		refreshList()
+		GH.Connections.WalkToPlayerAdded = Players.PlayerAdded:Connect(function()
+			if GH.States.WalkTo then refreshList() end
+		end)
+		GH.Connections.WalkToPlayerRemoving = Players.PlayerRemoving:Connect(function()
+			if GH.States.WalkTo then refreshList() end
+		end)
 	end
 
 	-- ==========================================
 	-- ORBIT (Girar ao redor de player)
 	-- ==========================================
 	function Cheats_ToggleOrbit(state, btn)
-		btn.Text = state and "Desativar Orbit" or "Orbit"
 		GH.UnregisterMasterLoop("Orbit")
 		GH.UnregisterMasterLoop("OrbitLook")
+		GH.Disconnect("OrbitPlayerAdded")
+		GH.Disconnect("OrbitPlayerRemoving")
+		if GH.Objects.OrbitDropdown then
+			GH.Objects.OrbitDropdown:Destroy()
+			GH.Objects.OrbitDropdown = nil
+		end
+		if not state then return end
 
-		if state then
-			local gui = Instance.new("ScreenGui")
-			gui.Name = "GH_OrbitList"
-			gui.ResetOnSpawn = false
-			gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-			gui.Parent = GH.TargetGui
-			GH.Objects.OrbitGUI = gui
-
-			local frame = Instance.new("Frame")
-			frame.Size = UDim2.new(0, 160, 0, 220)
-			frame.Position = UDim2.new(1, -170, 0.5, -110)
-			frame.BackgroundColor3 = GH.Theme.BG
-			frame.BorderSizePixel = 0
-			frame.Parent = gui
-			Instance.new("UIStroke", frame).Color = GH.Theme.Border
-
-			local title = Instance.new("TextLabel")
-			title.Size = UDim2.new(1, 0, 0, 26)
-			title.BackgroundColor3 = GH.Theme.Topbar
-			title.Text = "ORBIT"
-			title.TextColor3 = GH.Theme.Accent
-			title.Font = Enum.Font.GothamBold
-			title.TextSize = 11
-			title.BorderSizePixel = 0
-			title.Parent = frame
-
-			local scroll = Instance.new("ScrollingFrame")
-			scroll.Size = UDim2.new(1, -8, 1, -32)
-			scroll.Position = UDim2.new(0, 4, 0, 30)
-			scroll.BackgroundTransparency = 1
-			scroll.ScrollBarThickness = 2
-			scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-			scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-			scroll.BorderSizePixel = 0
-			scroll.Parent = frame
-			Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 2)
-
-			local order = 0
+		local function refreshList()
+			local names = {}
 			for _, player in ipairs(Players:GetPlayers()) do
 				if player ~= LocalPlayer then
-					order += 1
-					local plrBtn = Instance.new("TextButton")
-					plrBtn.Size = UDim2.new(1, 0, 0, 28)
-					plrBtn.BackgroundColor3 = GH.Theme.Card
-					plrBtn.Text = ""
-					plrBtn.AutoButtonColor = false
-					plrBtn.BorderSizePixel = 0
-					plrBtn.LayoutOrder = order
-					plrBtn.Parent = scroll
-					local nameLbl = Instance.new("TextLabel")
-					nameLbl.Size = UDim2.new(0.8, 0, 1, 0)
-					nameLbl.Position = UDim2.new(0, 8, 0, 0)
-					nameLbl.BackgroundTransparency = 1
-					nameLbl.Text = player.Name
-					nameLbl.TextColor3 = GH.Theme.Text
-					nameLbl.Font = Enum.Font.GothamMedium
-					nameLbl.TextSize = 11
-					nameLbl.TextXAlignment = Enum.TextXAlignment.Left
-					nameLbl.Parent = plrBtn
-					plrBtn.MouseButton1Click:Connect(function()
-						if GH.Objects.OrbitGUI then
-							GH.Objects.OrbitGUI:Destroy()
-							GH.Objects.OrbitGUI = nil
-						end
-						local targetName = player.Name
-						local rotation = 0
-						btn.Text = "Orbitando: " .. targetName
-
-						GH.RegisterMasterLoop("Orbit", "Heartbeat", function()
-							if GH.isClosing or not GH.States.Orbit then
-								GH.UnregisterMasterLoop("Orbit")
-								GH.UnregisterMasterLoop("OrbitLook")
-								btn.Text = "Orbit"
-								return
-							end
-							local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-							local target = Players:FindFirstChild(targetName)
-							local targetRoot = target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")
-							if root and targetRoot then
-								rotation = rotation + 0.2
-								root.CFrame = CFrame.new(targetRoot.Position) * CFrame.Angles(0, math.rad(rotation), 0) * CFrame.new(6, 0, 0)
-							end
-						end)
-
-						GH.RegisterMasterLoop("OrbitLook", "Render", function()
-							if GH.isClosing or not GH.States.Orbit then return end
-							local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-							local target = Players:FindFirstChild(targetName)
-							local targetRoot = target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")
-							if root and targetRoot then
-								root.CFrame = CFrame.new(root.Position, targetRoot.Position)
-							end
-						end)
-					end)
+					table.insert(names, player.Name)
 				end
 			end
-		else
-			if GH.Objects.OrbitGUI then
-				GH.Objects.OrbitGUI:Destroy()
-				GH.Objects.OrbitGUI = nil
+			if GH.Objects.OrbitDropdown then
+				GH.Objects.OrbitDropdown:SetValues(names)
 			end
 		end
+
+		local dropdown = GH.Tabs["Movement"]:AddDropdown("Orbit_Select", {
+			Title = "Orbit - Selecionar Player",
+			Values = {},
+			AllowNull = true,
+		})
+		GH.Objects.OrbitDropdown = dropdown
+
+		dropdown:OnChanged(function(name)
+			if name then
+				local targetName = name
+				local rotation = 0
+
+				GH.RegisterMasterLoop("Orbit", "Heartbeat", function()
+					if GH.isClosing or not GH.States.Orbit then
+						GH.UnregisterMasterLoop("Orbit")
+						GH.UnregisterMasterLoop("OrbitLook")
+						return
+					end
+					local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+					local target = Players:FindFirstChild(targetName)
+					local targetRoot = target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+					if root and targetRoot then
+						rotation = rotation + 0.2
+						root.CFrame = CFrame.new(targetRoot.Position) * CFrame.Angles(0, math.rad(rotation), 0) * CFrame.new(6, 0, 0)
+					end
+				end)
+
+				GH.RegisterMasterLoop("OrbitLook", "Render", function()
+					if GH.isClosing or not GH.States.Orbit then return end
+					local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+					local target = Players:FindFirstChild(targetName)
+					local targetRoot = target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+					if root and targetRoot then
+						root.CFrame = CFrame.new(root.Position, targetRoot.Position)
+					end
+				end)
+			end
+		end)
+
+		refreshList()
+		GH.Connections.OrbitPlayerAdded = Players.PlayerAdded:Connect(function()
+			if GH.States.Orbit then refreshList() end
+		end)
+		GH.Connections.OrbitPlayerRemoving = Players.PlayerRemoving:Connect(function()
+			if GH.States.Orbit then refreshList() end
+		end)
 	end
 
 	-- ==========================================
 	-- HEADSIT (Sentar na cabeça de player)
 	-- ==========================================
 	function Cheats_ToggleHeadSit(state, btn)
-		btn.Text = state and "Desativar HeadSit" or "HeadSit"
 		GH.UnregisterMasterLoop("HeadSit")
+		GH.Disconnect("HeadSitPlayerAdded")
+		GH.Disconnect("HeadSitPlayerRemoving")
+		if GH.Objects.HeadSitDropdown then
+			GH.Objects.HeadSitDropdown:Destroy()
+			GH.Objects.HeadSitDropdown = nil
+		end
+		if not state then return end
 
-		if state then
-			local gui = Instance.new("ScreenGui")
-			gui.Name = "GH_HeadSitList"
-			gui.ResetOnSpawn = false
-			gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-			gui.Parent = GH.TargetGui
-			GH.Objects.HeadSitGUI = gui
-
-			local frame = Instance.new("Frame")
-			frame.Size = UDim2.new(0, 160, 0, 220)
-			frame.Position = UDim2.new(1, -170, 0.5, -110)
-			frame.BackgroundColor3 = GH.Theme.BG
-			frame.BorderSizePixel = 0
-			frame.Parent = gui
-			Instance.new("UIStroke", frame).Color = GH.Theme.Border
-
-			local title = Instance.new("TextLabel")
-			title.Size = UDim2.new(1, 0, 0, 26)
-			title.BackgroundColor3 = GH.Theme.Topbar
-			title.Text = "HEADSIT"
-			title.TextColor3 = GH.Theme.Accent
-			title.Font = Enum.Font.GothamBold
-			title.TextSize = 11
-			title.BorderSizePixel = 0
-			title.Parent = frame
-
-			local scroll = Instance.new("ScrollingFrame")
-			scroll.Size = UDim2.new(1, -8, 1, -32)
-			scroll.Position = UDim2.new(0, 4, 0, 30)
-			scroll.BackgroundTransparency = 1
-			scroll.ScrollBarThickness = 2
-			scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-			scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-			scroll.BorderSizePixel = 0
-			scroll.Parent = frame
-			Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 2)
-
-			local order = 0
+		local function refreshList()
+			local names = {}
 			for _, player in ipairs(Players:GetPlayers()) do
 				if player ~= LocalPlayer then
-					order += 1
-					local plrBtn = Instance.new("TextButton")
-					plrBtn.Size = UDim2.new(1, 0, 0, 28)
-					plrBtn.BackgroundColor3 = GH.Theme.Card
-					plrBtn.Text = ""
-					plrBtn.AutoButtonColor = false
-					plrBtn.BorderSizePixel = 0
-					plrBtn.LayoutOrder = order
-					plrBtn.Parent = scroll
-					local nameLbl = Instance.new("TextLabel")
-					nameLbl.Size = UDim2.new(0.8, 0, 1, 0)
-					nameLbl.Position = UDim2.new(0, 8, 0, 0)
-					nameLbl.BackgroundTransparency = 1
-					nameLbl.Text = player.Name
-					nameLbl.TextColor3 = GH.Theme.Text
-					nameLbl.Font = Enum.Font.GothamMedium
-					nameLbl.TextSize = 11
-					nameLbl.TextXAlignment = Enum.TextXAlignment.Left
-					nameLbl.Parent = plrBtn
-					plrBtn.MouseButton1Click:Connect(function()
-						if GH.Objects.HeadSitGUI then
-							GH.Objects.HeadSitGUI:Destroy()
-							GH.Objects.HeadSitGUI = nil
-						end
-						local targetName = player.Name
-						btn.Text = "Sentando em: " .. targetName
-
-						local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-						if hum then hum.Sit = true end
-
-						GH.RegisterMasterLoop("HeadSit", "Heartbeat", function()
-							if GH.isClosing or not GH.States.HeadSit then
-								GH.UnregisterMasterLoop("HeadSit")
-								btn.Text = "HeadSit"
-								return
-							end
-							local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-							local myHum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-							local target = Players:FindFirstChild(targetName)
-							local targetRoot = target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")
-							if root and targetRoot and myHum and myHum.Sit then
-								root.CFrame = targetRoot.CFrame * CFrame.Angles(0, math.rad(0), 0) * CFrame.new(0, 1.6, 0.4)
-							else
-								GH.UnregisterMasterLoop("HeadSit")
-								btn.Text = "HeadSit"
-								GH.States.HeadSit = false
-							end
-						end)
-					end)
+					table.insert(names, player.Name)
 				end
 			end
-		else
-			if GH.Objects.HeadSitGUI then
-				GH.Objects.HeadSitGUI:Destroy()
-				GH.Objects.HeadSitGUI = nil
+			if GH.Objects.HeadSitDropdown then
+				GH.Objects.HeadSitDropdown:SetValues(names)
 			end
 		end
+
+		local dropdown = GH.Tabs["Movement"]:AddDropdown("HeadSit_Select", {
+			Title = "HeadSit - Selecionar Player",
+			Values = {},
+			AllowNull = true,
+		})
+		GH.Objects.HeadSitDropdown = dropdown
+
+		dropdown:OnChanged(function(name)
+			if name then
+				local targetName = name
+				local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+				if hum then hum.Sit = true end
+
+				GH.RegisterMasterLoop("HeadSit", "Heartbeat", function()
+					if GH.isClosing or not GH.States.HeadSit then
+						GH.UnregisterMasterLoop("HeadSit")
+						return
+					end
+					local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+					local myHum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+					local target = Players:FindFirstChild(targetName)
+					local targetRoot = target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+					if root and targetRoot and myHum and myHum.Sit then
+						root.CFrame = targetRoot.CFrame * CFrame.Angles(0, math.rad(0), 0) * CFrame.new(0, 1.6, 0.4)
+					else
+						GH.UnregisterMasterLoop("HeadSit")
+						GH.States.HeadSit = false
+					end
+				end)
+			end
+		end)
+
+		refreshList()
+		GH.Connections.HeadSitPlayerAdded = Players.PlayerAdded:Connect(function()
+			if GH.States.HeadSit then refreshList() end
+		end)
+		GH.Connections.HeadSitPlayerRemoving = Players.PlayerRemoving:Connect(function()
+			if GH.States.HeadSit then refreshList() end
+		end)
 	end
 
 	-- ==========================================
 	-- VEHICLE FLY (Fly em veiculos — estilo FE Cosmic)
 	-- ==========================================
 	function Cheats_ToggleVehicleFly(state, btn)
-		btn.Text = state and "Desativar VehicleFly" or "Vehicle Fly"
 		GH.Disconnect("VFLKey")
 		GH.Disconnect("VFLKeyUp")
 		GH.Disconnect("VFLScroll")
@@ -1117,159 +909,94 @@ return function(GH)
 	-- SPECTATE (Camera segue jogador)
 	-- ==========================================
 	function Cheats_ToggleSpectate(state, btn)
-		btn.Text = state and "Desativar Spectate" or "Spectate"
 		GH.Disconnect("SpectateDied")
 		GH.Disconnect("SpectateChanged")
+		GH.Disconnect("SpectatePlayerAdded")
+		GH.Disconnect("SpectatePlayerRemoving")
+		if GH.Objects.SpectateDropdown then
+			GH.Objects.SpectateDropdown:Destroy()
+			GH.Objects.SpectateDropdown = nil
+		end
 
-		if state then
-			local gui = Instance.new("ScreenGui")
-			gui.Name = "GH_SpectateList"
-			gui.ResetOnSpawn = false
-			gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-			gui.Parent = GH.TargetGui
-			GH.Objects.SpectateGUI = gui
+		if not state then
+			workspace.CurrentCamera.CameraSubject = LocalPlayer.Character
+			return
+		end
 
-			local frame = Instance.new("Frame")
-			frame.Size = UDim2.new(0, 160, 0, 220)
-			frame.Position = UDim2.new(1, -170, 0.5, -110)
-			frame.BackgroundColor3 = GH.Theme.BG
-			frame.BorderSizePixel = 0
-			frame.Parent = gui
-			Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
-			Instance.new("UIStroke", frame).Color = GH.Theme.Border
-
-			local title = Instance.new("TextLabel")
-			title.Size = UDim2.new(1, 0, 0, 24)
-			title.BackgroundColor3 = GH.Theme.Topbar
-			title.Text = "SPECTATE"
-			title.TextColor3 = GH.Theme.Accent
-			title.Font = Enum.Font.GothamBold
-			title.TextSize = 10
-			title.BorderSizePixel = 0
-			title.Parent = frame
-
-			local scroll = Instance.new("ScrollingFrame")
-			scroll.Size = UDim2.new(1, -8, 1, -30)
-			scroll.Position = UDim2.new(0, 4, 0, 28)
-			scroll.BackgroundTransparency = 1
-			scroll.ScrollBarThickness = 2
-			scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-			scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-			scroll.BorderSizePixel = 0
-			scroll.Parent = frame
-			Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 2)
-
+		local function refreshList()
+			local names = {}
 			for _, player in ipairs(Players:GetPlayers()) do
 				if player ~= LocalPlayer then
-					local plrBtn = Instance.new("TextButton")
-					plrBtn.Size = UDim2.new(1, 0, 0, 24)
-					plrBtn.BackgroundColor3 = GH.Theme.Card
-					plrBtn.Text = ""
-					plrBtn.AutoButtonColor = false
-					plrBtn.BorderSizePixel = 0
-					plrBtn.Parent = scroll
-					local nameLbl = Instance.new("TextLabel")
-					nameLbl.Size = UDim2.new(0.8, 0, 1, 0)
-					nameLbl.Position = UDim2.new(0, 8, 0, 0)
-					nameLbl.BackgroundTransparency = 1
-					nameLbl.Text = player.Name
-					nameLbl.TextColor3 = GH.Theme.Text
-					nameLbl.Font = Enum.Font.GothamMedium
-					nameLbl.TextSize = 11
-					nameLbl.TextXAlignment = Enum.TextXAlignment.Left
-					nameLbl.Parent = plrBtn
-					plrBtn.MouseButton1Click:Connect(function()
-						if GH.Objects.SpectateGUI then
-							GH.Objects.SpectateGUI:Destroy()
-							GH.Objects.SpectateGUI = nil
-						end
-						btn.Text = "Vendo: " .. player.Name
-						workspace.CurrentCamera.CameraSubject = player.Character
-						GH.Connections.SpectateDied = player.CharacterAdded:Connect(function(char)
-							workspace.CurrentCamera.CameraSubject = char
-						end)
+					table.insert(names, player.Name)
+				end
+			end
+			if GH.Objects.SpectateDropdown then
+				GH.Objects.SpectateDropdown:SetValues(names)
+			end
+		end
+
+		local dropdown = GH.Tabs["Movement"]:AddDropdown("Spectate_Select", {
+			Title = "Spectate - Selecionar Player",
+			Values = {},
+			AllowNull = true,
+		})
+		GH.Objects.SpectateDropdown = dropdown
+
+		dropdown:OnChanged(function(name)
+			if name then
+				local player = Players:FindFirstChild(name)
+				if player then
+					workspace.CurrentCamera.CameraSubject = player.Character
+					GH.Connections.SpectateDied = player.CharacterAdded:Connect(function(char)
+						workspace.CurrentCamera.CameraSubject = char
 					end)
 				end
 			end
-		else
-			workspace.CurrentCamera.CameraSubject = LocalPlayer.Character
-			if GH.Objects.SpectateGUI then
-				GH.Objects.SpectateGUI:Destroy()
-				GH.Objects.SpectateGUI = nil
-			end
-		end
+		end)
+
+		refreshList()
+		GH.Connections.SpectatePlayerAdded = Players.PlayerAdded:Connect(function()
+			if GH.States.Spectate then refreshList() end
+		end)
+		GH.Connections.SpectatePlayerRemoving = Players.PlayerRemoving:Connect(function()
+			if GH.States.Spectate then refreshList() end
+		end)
 	end
 
 	-- ==========================================
 	-- GOTO PART (Teleporta para parte pelo nome)
 	-- ==========================================
 	function Cheats_ToggleGotoPart(state, btn)
-		btn.Text = state and "Desativar GotoPart" or "Goto Part"
-		if state then
-			local gui = Instance.new("ScreenGui")
-			gui.Name = "GH_GotoPartGUI"
-			gui.ResetOnSpawn = false
-			gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-			gui.Parent = GH.TargetGui
-			GH.Objects.GotoPartGUI = gui
+		if GH.Objects.GotoPartInput then
+			GH.Objects.GotoPartInput:Destroy()
+			GH.Objects.GotoPartInput = nil
+		end
+		if not state then return end
 
-			local frame = Instance.new("Frame")
-			frame.Size = UDim2.new(0, 200, 0, 60)
-			frame.Position = UDim2.new(0.5, -100, 0.5, -30)
-			frame.BackgroundColor3 = GH.Theme.BG
-			frame.BorderSizePixel = 0
-			frame.Parent = gui
-			Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
-			Instance.new("UIStroke", frame).Color = GH.Theme.Border
-
-			local title = Instance.new("TextLabel")
-			title.Size = UDim2.new(1, 0, 0, 20)
-			title.BackgroundColor3 = GH.Theme.Topbar
-			title.Text = "GOTO PART"
-			title.TextColor3 = GH.Theme.Accent
-			title.Font = Enum.Font.GothamBold
-			title.TextSize = 10
-			title.BorderSizePixel = 0
-			title.Parent = frame
-
-			local input = Instance.new("TextBox")
-			input.Size = UDim2.new(1, -16, 0, 22)
-			input.Position = UDim2.new(0, 8, 0, 26)
-			input.BackgroundColor3 = GH.Theme.Card
-			input.Text = ""
-			input.PlaceholderText = "Nome da parte..."
-			input.PlaceholderColor3 = GH.Theme.Off
-			input.TextColor3 = GH.Theme.Text
-			input.Font = Enum.Font.GothamMedium
-			input.TextSize = 11
-			input.ClearTextOnFocus = false
-			input.BorderSizePixel = 0
-			input.Parent = frame
-
-			local function teleportToPart(partName)
-				for _, v in ipairs(workspace:GetDescendants()) do
-					if v:IsA("BasePart") and v.Name:lower() == partName:lower() then
-						local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-						if hrp then
-							hrp.CFrame = v.CFrame + Vector3.new(0, 3, 0)
-							GH.ShowToast("TP para " .. v.Name, GH.Theme.On, 2)
-						end
-						break
+		local function teleportToPart(partName)
+			for _, v in ipairs(workspace:GetDescendants()) do
+				if v:IsA("BasePart") and v.Name:lower() == partName:lower() then
+					local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+					if hrp then
+						hrp.CFrame = v.CFrame + Vector3.new(0, 3, 0)
+						GH.ShowToast("TP para " .. v.Name, GH.Theme.On, 2)
 					end
+					break
 				end
-			end
-
-			input.FocusLost:Connect(function(enterPressed)
-				if enterPressed and input.Text ~= "" then
-					teleportToPart(input.Text)
-				end
-			end)
-		else
-			if GH.Objects.GotoPartGUI then
-				GH.Objects.GotoPartGUI:Destroy()
-				GH.Objects.GotoPartGUI = nil
 			end
 		end
+
+		local input = GH.Tabs["Movement"]:AddInput("GotoPartInput", {
+			Title = "Goto Part - Nome da Parte",
+			Placeholder = "Digite o nome...",
+			Finished = true,
+			Callback = function(value)
+				if value and value ~= "" then
+					teleportToPart(value)
+				end
+			end,
+		})
+		GH.Objects.GotoPartInput = input
 	end
 
 	-- ==========================================

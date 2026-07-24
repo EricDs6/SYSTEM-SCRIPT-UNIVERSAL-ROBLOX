@@ -13,7 +13,6 @@ return function(GH)
 	-- TROLL FLING
 	-- ==========================================
 	function Cheats_ToggleTrollFling(state, btn)
-		btn.Text = state and "Desativar Tornado" or "Tornado Fling"
 		GH.UnregisterMasterLoop("TrollFling")
 
 		local char = LocalPlayer.Character
@@ -78,13 +77,16 @@ return function(GH)
 	-- TARGET FLING
 	-- ==========================================
 	local TargetFlingTarget = nil
-	local TargetFlingGUI = nil
 
 	function Cheats_ToggleTargetFling(state, btn)
-		btn.Text = state and "Desativar TargetFling" or "Target Fling"
 		GH.UnregisterMasterLoop("TargetFling")
 		GH.Disconnect("TargetFlingRespawn")
-		if TargetFlingGUI then TargetFlingGUI:Destroy(); TargetFlingGUI = nil end
+		GH.Disconnect("TargetFlingPlayerAdded")
+		GH.Disconnect("TargetFlingPlayerRemoving")
+		if GH.Objects.TargetFlingDropdown then
+			GH.Objects.TargetFlingDropdown:Destroy()
+			GH.Objects.TargetFlingDropdown = nil
+		end
 		TargetFlingTarget = nil
 
 		-- Restaurar ao desativar
@@ -106,46 +108,8 @@ return function(GH)
 
 		if not state then return end
 
-		-- GUI de seleção
-		local gui = Instance.new("ScreenGui")
-		gui.Name = "GH_TargetFlingList"
-		gui.ResetOnSpawn = false
-		gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-		gui.Parent = GH.TargetGui
-		TargetFlingGUI = gui
-
-		local frame = Instance.new("Frame")
-		frame.Size = UDim2.new(0, 160, 0, 220)
-		frame.Position = UDim2.new(0, 10, 0.5, -110)
-		frame.BackgroundColor3 = GH.Theme.BG
-		frame.BorderSizePixel = 0
-		frame.Parent = gui
-		Instance.new("UIStroke", frame).Color = GH.Theme.Border
-
-		local title = Instance.new("TextLabel")
-		title.Size = UDim2.new(1, 0, 0, 26)
-		title.BackgroundColor3 = GH.Theme.Topbar
-		title.Text = "ESCOLHER ALVO"
-		title.TextColor3 = GH.Theme.Red
-		title.Font = Enum.Font.GothamBold
-		title.TextSize = 11
-		title.BorderSizePixel = 0
-		title.Parent = frame
-
-		local scroll = Instance.new("ScrollingFrame")
-		scroll.Size = UDim2.new(1, -8, 1, -32)
-		scroll.Position = UDim2.new(0, 4, 0, 30)
-		scroll.BackgroundTransparency = 1
-		scroll.ScrollBarThickness = 2
-		scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-		scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-		scroll.BorderSizePixel = 0
-		scroll.Parent = frame
-		Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 2)
-
 		local function startFlinging(targetPlayer)
 			TargetFlingTarget = targetPlayer
-			if TargetFlingGUI then TargetFlingGUI:Destroy(); TargetFlingGUI = nil end
 
 			local char = LocalPlayer.Character
 			local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -185,42 +149,47 @@ return function(GH)
 			end)
 		end
 
-		-- Refresh list
-		for _, child in ipairs(scroll:GetChildren()) do
-			if child:IsA("TextButton") then child:Destroy() end
-		end
-		local order = 0
-		for _, player in ipairs(Players:GetPlayers()) do
-			if player ~= LocalPlayer then
-				order += 1
-				local plrBtn = Instance.new("TextButton")
-				plrBtn.Size = UDim2.new(1, 0, 0, 28)
-				plrBtn.BackgroundColor3 = GH.Theme.Card
-				plrBtn.Text = ""
-				plrBtn.AutoButtonColor = false
-				plrBtn.BorderSizePixel = 0
-				plrBtn.LayoutOrder = order
-				plrBtn.Parent = scroll
-				local nameLbl = Instance.new("TextLabel")
-				nameLbl.Size = UDim2.new(0.8, 0, 1, 0)
-				nameLbl.Position = UDim2.new(0, 8, 0, 0)
-				nameLbl.BackgroundTransparency = 1
-				nameLbl.Text = player.Name
-				nameLbl.TextColor3 = GH.Theme.Text
-				nameLbl.Font = Enum.Font.GothamMedium
-				nameLbl.TextSize = 11
-				nameLbl.TextXAlignment = Enum.TextXAlignment.Left
-				nameLbl.Parent = plrBtn
-				plrBtn.MouseButton1Click:Connect(function() startFlinging(player) end)
+		local function refreshList()
+			local names = {}
+			for _, player in ipairs(Players:GetPlayers()) do
+				if player ~= LocalPlayer then
+					table.insert(names, player.Name)
+				end
+			end
+			if GH.Objects.TargetFlingDropdown then
+				GH.Objects.TargetFlingDropdown:SetValues(names)
 			end
 		end
+
+		local dropdown = GH.Tabs["Troll"]:AddDropdown("TargetFling_Select", {
+			Title = "Target Fling - Selecionar Alvo",
+			Values = {},
+			AllowNull = true,
+		})
+		GH.Objects.TargetFlingDropdown = dropdown
+
+		dropdown:OnChanged(function(name)
+			if name then
+				local player = Players:FindFirstChild(name)
+				if player then
+					startFlinging(player)
+				end
+			end
+		end)
+
+		refreshList()
+		GH.Connections.TargetFlingPlayerAdded = Players.PlayerAdded:Connect(function()
+			if GH.States.TargetFling then refreshList() end
+		end)
+		GH.Connections.TargetFlingPlayerRemoving = Players.PlayerRemoving:Connect(function()
+			if GH.States.TargetFling then refreshList() end
+		end)
 	end
 
 	-- ==========================================
 	-- SPASMOS (Animacao do FE Cosmic)
 	-- ==========================================
 	function Cheats_ToggleSpasmos(state, btn)
-		btn.Text = state and "Desativar Spasmos" or "Spasmos"
 
 		-- Limpar animacao anterior
 		pcall(function()
@@ -265,7 +234,6 @@ return function(GH)
 	-- NAKED (Remove todas as roupas)
 	-- ==========================================
 	function Cheats_ToggleNaked(state, btn)
-		btn.Text = state and "Desativar Naked" or "Naked"
 		if state then
 			local char = LocalPlayer.Character
 			if char then
@@ -283,7 +251,6 @@ return function(GH)
 	-- FREEZE (Congela todos os jogadores)
 	-- ==========================================
 	function Cheats_ToggleFreeze(state, btn)
-		btn.Text = state and "Desativar Freeze" or "Freeze All"
 		if state then
 			for _, player in ipairs(Players:GetPlayers()) do
 				if player ~= LocalPlayer and player.Character then

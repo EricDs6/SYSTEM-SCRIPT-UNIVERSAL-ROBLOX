@@ -46,7 +46,6 @@ return function(GH)
 	end
 
 	function Cheats_ToggleESP(state, btn)
-		btn.Text = state and "Desativar ESP" or "Ativar ESP"
 		GH.Disconnect("ESP_GlobalLoop")
 		GH.Disconnect("ESP_Added")
 		GH.Disconnect("ESP_Removing")
@@ -289,7 +288,6 @@ return function(GH)
 	-- HITBOX
 	-- ==========================================
 	function Cheats_ToggleHitbox(state, btn)
-		btn.Text = state and "Desativar Hitbox" or "Hitbox Gigante"
 		GH.UnregisterMasterLoop("Hitbox")
 		GH.Disconnect("Hitbox_PlayerRemoving")
 
@@ -425,7 +423,6 @@ return function(GH)
 	-- TRIGGER BOT
 	-- ==========================================
 	function Cheats_ToggleTriggerBot(state, btn)
-		btn.Text = state and "Desativar TriggerBot" or "TriggerBot"
 		GH.Disconnect("TriggerBot")
 
 		if state then
@@ -520,7 +517,6 @@ return function(GH)
 	end)
 
 	function Cheats_ToggleSilentAim(state, btn)
-		btn.Text = state and "Desativar SilentAim" or "Silent Aim"
 		GH.SilentAimConfig.Enabled = state
 		GH.ShowToast(state and "Silent Aim ativado" or "Silent Aim desativado", state and GH.Theme.On or GH.Theme.Off, 2)
 	end
@@ -529,7 +525,6 @@ return function(GH)
 	-- NO FLING (Anti-Fling — estilo FE Cosmic)
 	-- ==========================================
 	function Cheats_ToggleNoFling(state, btn)
-		btn.Text = state and "Desativar NoFling" or "No Fling"
 		GH.UnregisterMasterLoop("NoFling")
 
 		if state then
@@ -593,7 +588,6 @@ return function(GH)
 	end)
 
 	function Cheats_ToggleWallBang(state, btn)
-		btn.Text = state and "Desativar WallBang" or "Wall Bang"
 		GH.ShowToast(state and "Wall Bang ativado" or "Wall Bang desativado", state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
@@ -613,7 +607,6 @@ return function(GH)
 	end)
 
 	function Cheats_ToggleNoFallDamage(state, btn)
-		btn.Text = state and "Desativar NoFallDmg" or "No Fall Damage"
 		GH.ShowToast(state and "No Fall Damage ativado" or "No Fall Damage desativado", state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
@@ -621,7 +614,6 @@ return function(GH)
 	-- INFINITE HEALTH
 	-- ==========================================
 	function Cheats_ToggleInfiniteHealth(state, btn)
-		btn.Text = state and "Desativar InfHealth" or "Infinite Health"
 		GH.UnregisterMasterLoop("InfiniteHealth")
 		if state then
 			GH.RegisterMasterLoop("InfiniteHealth", "Heartbeat", function()
@@ -639,7 +631,6 @@ return function(GH)
 	-- KILL AURA
 	-- ==========================================
 	function Cheats_ToggleKillAura(state, btn)
-		btn.Text = state and "Desativar KillAura" or "Kill Aura"
 		GH.UnregisterMasterLoop("KillAura")
 		if state then
 			GH.RegisterMasterLoop("KillAura", "Heartbeat", function()
@@ -679,82 +670,53 @@ return function(GH)
 	-- HEAD SIZE (Aumenta cabeca de jogadores)
 	-- ==========================================
 	function Cheats_ToggleHeadSize(state, btn)
-		btn.Text = state and "Desativar HeadSize" or "Head Size"
 		GH.UnregisterMasterLoop("HeadSize")
+		GH.Disconnect("HeadSizePlayerAdded")
+		GH.Disconnect("HeadSizePlayerRemoving")
+		if GH.Objects.HeadSizeDropdown then
+			GH.Objects.HeadSizeDropdown:Destroy()
+			GH.Objects.HeadSizeDropdown = nil
+		end
+		if not state then return end
 
-		if state then
-			local gui = Instance.new("ScreenGui")
-			gui.Name = "GH_HeadSizeList"
-			gui.ResetOnSpawn = false
-			gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-			gui.Parent = GH.TargetGui
-			GH.Objects.HeadSizeGUI = gui
-
-			local frame = Instance.new("Frame")
-			frame.Size = UDim2.new(0, 160, 0, 220)
-			frame.Position = UDim2.new(1, -170, 0.5, -110)
-			frame.BackgroundColor3 = GH.Theme.BG
-			frame.BorderSizePixel = 0
-			frame.Parent = gui
-			Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
-			Instance.new("UIStroke", frame).Color = GH.Theme.Border
-
-			local title = Instance.new("TextLabel")
-			title.Size = UDim2.new(1, 0, 0, 24)
-			title.BackgroundColor3 = GH.Theme.Topbar
-			title.Text = "HEAD SIZE"
-			title.TextColor3 = GH.Theme.Red
-			title.Font = Enum.Font.GothamBold
-			title.TextSize = 10
-			title.BorderSizePixel = 0
-			title.Parent = frame
-
-			local scroll = Instance.new("ScrollingFrame")
-			scroll.Size = UDim2.new(1, -8, 1, -30)
-			scroll.Position = UDim2.new(0, 4, 0, 28)
-			scroll.BackgroundTransparency = 1
-			scroll.ScrollBarThickness = 2
-			scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-			scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-			scroll.BorderSizePixel = 0
-			scroll.Parent = frame
-			Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 2)
-
+		local function refreshList()
+			local names = {}
 			for _, player in ipairs(Players:GetPlayers()) do
 				if player ~= LocalPlayer then
-					local plrBtn = Instance.new("TextButton")
-					plrBtn.Size = UDim2.new(1, 0, 0, 24)
-					plrBtn.BackgroundColor3 = GH.Theme.Card
-					plrBtn.Text = ""
-					plrBtn.AutoButtonColor = false
-					plrBtn.BorderSizePixel = 0
-					plrBtn.Parent = scroll
-					local nameLbl = Instance.new("TextLabel")
-					nameLbl.Size = UDim2.new(0.6, 0, 1, 0)
-					nameLbl.Position = UDim2.new(0, 8, 0, 0)
-					nameLbl.BackgroundTransparency = 1
-					nameLbl.Text = player.Name
-					nameLbl.TextColor3 = GH.Theme.Text
-					nameLbl.Font = Enum.Font.GothamMedium
-					nameLbl.TextSize = 10
-					nameLbl.TextXAlignment = Enum.TextXAlignment.Left
-					nameLbl.Parent = plrBtn
-					plrBtn.MouseButton1Click:Connect(function()
-						local head = player.Character and player.Character:FindFirstChild("Head")
-						if head and head:IsA("BasePart") then
-							head.Size = Vector3.new(5, 5, 5)
-							head.CanCollide = false
-							GH.ShowToast("Head de " .. player.Name .. " ampliada!", GH.Theme.Red, 2)
-						end
-					end)
+					table.insert(names, player.Name)
 				end
 			end
-		else
-			if GH.Objects.HeadSizeGUI then
-				GH.Objects.HeadSizeGUI:Destroy()
-				GH.Objects.HeadSizeGUI = nil
+			if GH.Objects.HeadSizeDropdown then
+				GH.Objects.HeadSizeDropdown:SetValues(names)
 			end
 		end
+
+		local dropdown = GH.Tabs["Combat"]:AddDropdown("HeadSizePlayer", {
+			Title = "Head Size - Selecionar Player",
+			Values = {},
+			AllowNull = true,
+		})
+		GH.Objects.HeadSizeDropdown = dropdown
+
+		dropdown:OnChanged(function(name)
+			if name then
+				local player = Players:FindFirstChild(name)
+				local head = player and player.Character and player.Character:FindFirstChild("Head")
+				if head and head:IsA("BasePart") then
+					head.Size = Vector3.new(5, 5, 5)
+					head.CanCollide = false
+					GH.ShowToast("Head de " .. name .. " ampliada!", GH.Theme.Red, 2)
+				end
+			end
+		end)
+
+		refreshList()
+		GH.Connections.HeadSizePlayerAdded = Players.PlayerAdded:Connect(function()
+			if GH.States.HeadSize then refreshList() end
+		end)
+		GH.Connections.HeadSizePlayerRemoving = Players.PlayerRemoving:Connect(function()
+			if GH.States.HeadSize then refreshList() end
+		end)
 	end
 
 	-- ==========================================

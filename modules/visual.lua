@@ -14,7 +14,6 @@ return function(GH)
 	-- X-RAY
 	-- ==========================================
 	function Cheats_ToggleXRay(state, btn)
-		btn.Text = state and "Desativar X-Ray" or "X-Ray (Paredes)"
 		if state then
 			GH.Cache.XRayParts = {}
 			GH.Cache.XRayOriginals = GH.MakeWeakCache("k")
@@ -68,7 +67,6 @@ return function(GH)
 	-- NIGHT MODE
 	-- ==========================================
 	function Cheats_ToggleNightMode(state, btn)
-		btn.Text = state and "Desativar Night" or "Night Mode"
 		if state then
 			GH.Cache.OrigBrightness = Lighting.Brightness
 			GH.Cache.OrigClockTime = Lighting.ClockTime
@@ -100,7 +98,6 @@ return function(GH)
 	-- FULLBRIGHT
 	-- ==========================================
 	function Cheats_ToggleFullbright(state, btn)
-		btn.Text = state and "Desativar Fullbright" or "Fullbright"
 		if state then
 			GH.Cache.OrigBrightness = Lighting.Brightness
 			GH.Cache.OrigClockTime = Lighting.ClockTime
@@ -149,7 +146,6 @@ return function(GH)
 	local CacheTracers = { Lines = {} }
 
 	function Cheats_ToggleTracers(state, btn)
-		btn.Text = state and "Desativar Tracers" or "Tracers"
 		for player, line in pairs(CacheTracers.Lines) do
 			TracerPool:release(line)
 			CacheTracers.Lines[player] = nil
@@ -210,7 +206,6 @@ return function(GH)
 	local CrosshairSize = 4
 
 	function Cheats_ToggleCrosshair(state, btn)
-		btn.Text = state and "Desativar Crosshair" or "Custom Crosshair"
 		if state then
 			if CacheCrosshair.Objects.Main then return end
 			local gui = Instance.new("ScreenGui")

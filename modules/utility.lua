@@ -15,7 +15,6 @@ return function(GH)
 	local TpTool = nil
 
 	function Cheats_ToggleTPTool(state, btn)
-		btn.Text = state and "Remover Tool TP" or "Tool TP Click"
 		if state then
 			local bp = LocalPlayer:WaitForChild("Backpack", 5)
 			if bp then
@@ -40,7 +39,6 @@ return function(GH)
 	-- GRAVITY
 	-- ==========================================
 	function Cheats_ToggleGravity(state, btn)
-		btn.Text = state and "Desativar Gravity" or "Gravity Baixa"
 		if state then
 			GH.Cache.OrigGravity = workspace.Gravity
 			workspace.Gravity = 10
@@ -59,19 +57,16 @@ return function(GH)
 		GH.Cache.ShouldSpawnAtCustom = false
 
 		if not state then
-			btn.Text = "Marcar Spawn"
 			return
 		end
 
 		local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 		if not hrp then
 			GH.States.CustomSpawn = false
-			btn.Text = "Marcar Spawn"
 			return
 		end
 
 		GH.Cache.SpawnCFrame = hrp.CFrame
-		btn.Text = "Desativar Spawn"
 
 		local function connectDiedListener()
 			local c = LocalPlayer.Character
@@ -246,7 +241,6 @@ return function(GH)
 	end
 
 	function Cheats_ToggleFreecam(state, btn)
-		btn.Text = state and "Desativar Freecam" or "Freecam"
 		GH.Disconnect("Freecam")
 
 		if FCState.running then
@@ -290,7 +284,6 @@ return function(GH)
 	GH.Cache.LastDeathCFrame = nil
 
 	function Cheats_ToggleFlashback(state, btn)
-		btn.Text = state and "Desativar Flashback" or "Flashback"
 		GH.Disconnect("FlashbackDied")
 		GH.Disconnect("FlashbackRespawn")
 
@@ -333,172 +326,121 @@ return function(GH)
 	-- ==========================================
 	-- COORDS
 	-- ==========================================
-	local CacheCoords = { SavedPoints = {}, GUI = nil, CoordsLabel = nil }
+	local CacheCoords = { SavedPoints = {}, CoordsParagraph = nil, SavedDropdown = nil }
 
 	function Cheats_ToggleCoords(state, btn)
-		btn.Text = state and "Fechar Coords" or "Coordenadas"
 		GH.UnregisterMasterLoop("Coords")
+		if GH.Objects.CoordsParagraph then
+			GH.Objects.CoordsParagraph:Destroy()
+			GH.Objects.CoordsParagraph = nil
+		end
+		if GH.Objects.CoordsSaveBtn then
+			GH.Objects.CoordsSaveBtn:Destroy()
+			GH.Objects.CoordsSaveBtn = nil
+		end
+		if GH.Objects.CoordsSavedDropdown then
+			GH.Objects.CoordsSavedDropdown:Destroy()
+			GH.Objects.CoordsSavedDropdown = nil
+		end
+		if GH.Objects.CoordsTPBtn then
+			GH.Objects.CoordsTPBtn:Destroy()
+			GH.Objects.CoordsTPBtn = nil
+		end
+		if not state then return end
 
-		if state then
-			if CacheCoords.GUI then CacheCoords.GUI:Destroy() end
-			local gui = Instance.new("ScreenGui")
-			gui.Name = "GH_CoordsGUI"
-			gui.ResetOnSpawn = false
-			gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-			gui.Parent = GH.TargetGui
-			CacheCoords.GUI = gui
+		local section = GH.Tabs["Utility"]:AddSection("Coordenadas")
 
-			local frame = Instance.new("Frame")
-			frame.Size = UDim2.new(0, 180, 0, 200)
-			frame.Position = UDim2.new(0, 10, 0.5, -100)
-			frame.BackgroundColor3 = GH.Theme.BG
-			frame.BackgroundTransparency = 0.1
-			frame.BorderSizePixel = 0
-			frame.Parent = gui
-			Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
-			Instance.new("UIStroke", frame).Color = GH.Theme.Border
+		local paragraph = section:AddParagraph({
+			Title = "Posicao Atual",
+			Content = "X: 0  Y: 0  Z: 0",
+		})
+		GH.Objects.CoordsParagraph = paragraph
 
-			local title = Instance.new("TextLabel")
-			title.Size = UDim2.new(1, 0, 0, 22)
-			title.BackgroundColor3 = GH.Theme.Topbar
-			title.Text = "COORDENADAS"
-			title.TextColor3 = GH.Theme.Accent
-			title.Font = Enum.Font.GothamBold
-			title.TextSize = 10
-			title.BorderSizePixel = 0
-			title.Parent = frame
-
-			-- Coordenadas atuais
-			local coordsLabel = Instance.new("TextLabel")
-			coordsLabel.Size = UDim2.new(1, -8, 0, 28)
-			coordsLabel.Position = UDim2.new(0, 4, 0, 24)
-			coordsLabel.BackgroundColor3 = GH.Theme.Card
-			coordsLabel.Text = "X: 0  Y: 0  Z: 0"
-			coordsLabel.TextColor3 = GH.Theme.Text
-			coordsLabel.Font = Enum.Font.GothamBold
-			coordsLabel.TextSize = 10
-			coordsLabel.BorderSizePixel = 0
-			coordsLabel.Parent = frame
-			CacheCoords.CoordsLabel = coordsLabel
-
-			-- Lista de pontos salvos
-			local scroll = Instance.new("ScrollingFrame")
-			scroll.Size = UDim2.new(1, -8, 1, -80)
-			scroll.Position = UDim2.new(0, 4, 0, 56)
-			scroll.BackgroundTransparency = 1
-			scroll.ScrollBarThickness = 2
-			scroll.ScrollBarImageColor3 = GH.Theme.Accent
-			scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-			scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-			scroll.BorderSizePixel = 0
-			scroll.Parent = frame
-			Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 2)
-
-			-- Funcao pra refreshar a lista
-			local function refreshList()
-				for _, child in ipairs(scroll:GetChildren()) do
-					if child:IsA("Frame") then child:Destroy() end
-				end
-				for i, point in ipairs(CacheCoords.SavedPoints) do
-					local row = Instance.new("Frame")
-					row.Size = UDim2.new(1, 0, 0, 20)
-					row.BackgroundColor3 = GH.Theme.Card
-					row.BorderSizePixel = 0
-					row.Parent = scroll
-
-					local lbl = Instance.new("TextLabel")
-					lbl.Size = UDim2.new(1, -30, 1, 0)
-					lbl.Position = UDim2.new(0, 4, 0, 0)
-					lbl.BackgroundTransparency = 1
-					lbl.Text = point.Name .. ": " .. math.floor(point.Position.X) .. ", " .. math.floor(point.Position.Y) .. ", " .. math.floor(point.Position.Z)
-					lbl.TextColor3 = GH.Theme.Text
-					lbl.Font = Enum.Font.GothamMedium
-					lbl.TextSize = 9
-					lbl.TextXAlignment = Enum.TextXAlignment.Left
-					lbl.TextTruncate = Enum.TextTruncate.AtEnd
-					lbl.Parent = row
-
-					-- Botao TP
-					local tpBtn = Instance.new("TextButton")
-					tpBtn.Size = UDim2.new(0, 24, 0, 16)
-					tpBtn.Position = UDim2.new(1, -28, 0.5, -8)
-					tpBtn.BackgroundColor3 = GH.Theme.AccentDim
-					tpBtn.Text = "TP"
-					tpBtn.TextColor3 = Color3.new(1, 1, 1)
-					tpBtn.Font = Enum.Font.GothamBold
-					tpBtn.TextSize = 8
-					tpBtn.AutoButtonColor = false
-					tpBtn.Parent = row
-
-					tpBtn.MouseButton1Click:Connect(function()
-						local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-						if hrp then
-							hrp.CFrame = CFrame.new(point.Position + Vector3.new(0, 3, 0))
-						end
-					end)
-				end
-			end
-
-			refreshList()
-
-			-- Botao salvar
-			local saveBtn = Instance.new("TextButton")
-			saveBtn.Size = UDim2.new(1, -8, 0, 22)
-			saveBtn.Position = UDim2.new(0, 4, 1, -26)
-			saveBtn.BackgroundColor3 = GH.Theme.AccentDim
-			saveBtn.Text = "+ Salvar Posicao"
-			saveBtn.TextColor3 = Color3.new(1, 1, 1)
-			saveBtn.Font = Enum.Font.GothamBold
-			saveBtn.TextSize = 10
-			saveBtn.AutoButtonColor = false
-			saveBtn.Parent = frame
-
-			saveBtn.MouseButton1Click:Connect(function()
+		local saveBtn = section:AddButton({
+			Title = "Salvar Posicao",
+			Callback = function()
 				local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 				if hrp then
 					local pos = hrp.Position
 					table.insert(CacheCoords.SavedPoints, { Name = "Ponto " .. (#CacheCoords.SavedPoints + 1), Position = pos })
-					refreshList()
+					if GH.Objects.CoordsSavedDropdown then
+						local names = {}
+						for _, p in ipairs(CacheCoords.SavedPoints) do
+							table.insert(names, p.Name)
+						end
+						GH.Objects.CoordsSavedDropdown:SetValues(names)
+					end
 					GH.ShowToast("Posicao salva!", GH.Theme.On, 2)
 				end
-			end)
+			end,
+		})
+		GH.Objects.CoordsSaveBtn = saveBtn
 
-			-- Loop para atualizar coordenadas
-			GH.RegisterMasterLoop("Coords", "Render", function()
-				if GH.isClosing or not GH.States.Coords then
-					GH.UnregisterMasterLoop("Coords")
-					return
-				end
-				local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-				if hrp and CacheCoords.CoordsLabel then
-					local p = hrp.Position
-					CacheCoords.CoordsLabel.Text = "X: " .. math.floor(p.X) .. "  Y: " .. math.floor(p.Y) .. "  Z: " .. math.floor(p.Z)
-				end
-			end)
-		else
-			if CacheCoords.GUI then CacheCoords.GUI:Destroy(); CacheCoords.GUI = nil end
+		local savedNames = {}
+		for _, p in ipairs(CacheCoords.SavedPoints) do
+			table.insert(savedNames, p.Name)
 		end
+
+		local dropdown = section:AddDropdown("CoordsSaved_Select", {
+			Title = "Pontos Salvos",
+			Values = savedNames,
+			AllowNull = true,
+		})
+		GH.Objects.CoordsSavedDropdown = dropdown
+
+		local tpBtn = section:AddButton({
+			Title = "TP para Ponto Selecionado",
+			Callback = function()
+				local selectedName = dropdown.Value
+				if selectedName then
+					for _, p in ipairs(CacheCoords.SavedPoints) do
+						if p.Name == selectedName then
+							local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+							if hrp then
+								hrp.CFrame = CFrame.new(p.Position + Vector3.new(0, 3, 0))
+								GH.ShowToast("TP para " .. p.Name, GH.Theme.On, 2)
+							end
+							break
+						end
+					end
+				end
+			end,
+		})
+		GH.Objects.CoordsTPBtn = tpBtn
+
+		-- Loop para atualizar coordenadas
+		GH.RegisterMasterLoop("Coords", "Render", function()
+			if GH.isClosing or not GH.States.Coords then
+				GH.UnregisterMasterLoop("Coords")
+				return
+			end
+			local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+			if hrp and GH.Objects.CoordsParagraph then
+				local p = hrp.Position
+				pcall(function()
+					GH.Objects.CoordsParagraph:SetDesc("X: " .. math.floor(p.X) .. "  Y: " .. math.floor(p.Y) .. "  Z: " .. math.floor(p.Z))
+				end)
+			end
+		end)
 	end
 
 	-- ==========================================
 	-- SERVER REJOIN
 	-- ==========================================
 	function Cheats_ToggleServerRejoin(state, btn)
-		if not state then btn.Text = "Server Rejoin"; return end
-		btn.Text = "Reconectando..."
+		if not state then return end
 		task.spawn(function()
 			pcall(function()
 				game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
 			end)
 		end)
-		task.delay(2, function() btn.Text = "Server Rejoin"; GH.States.ServerRejoin = false end)
+		task.delay(2, function() GH.States.ServerRejoin = false end)
 	end
 
 	-- ==========================================
 	-- AUTO COLLECT
 	-- ==========================================
 	function Cheats_ToggleAutoCollect(state, btn)
-		btn.Text = state and "Desativar AutoCollect" or "Auto Collect"
 		GH.UnregisterMasterLoop("AutoCollect")
 		if state then
 			local tick = 0
@@ -532,7 +474,6 @@ return function(GH)
 	-- ANTI-AFK
 	-- ==========================================
 	function Cheats_ToggleAntiAFK(state, btn)
-		btn.Text = state and "Desativar AntiAFK" or "Anti-AFK"
 		GH.Disconnect("AntiAFK")
 		if state then
 			GH.Connections.AntiAFK = RunService.Heartbeat:Connect(function()
@@ -560,11 +501,10 @@ return function(GH)
 	local OldKickFunction = nil
 
 	function Cheats_ToggleAntiKick(state, btn)
-		btn.Text = state and "Desativar AntiKick" or "Anti-Kick"
 		if state then
 			if not hookfunction then
 				GH.ShowToast("Anti-Kick: hookfunction nao disponivel", GH.Theme.Red, 3)
-				btn.Text = "Anti-Kick"; GH.States.AntiKick = false; return
+				GH.States.AntiKick = false; return
 			end
 			OldKickFunction = hookfunction(LocalPlayer.Kick, function() end)
 			GH.ShowToast("Anti-Kick ativado", GH.Theme.On, 2)
@@ -580,7 +520,6 @@ return function(GH)
 	-- AUTO-CLICKER
 	-- ==========================================
 	function Cheats_ToggleAutoClicker(state, btn)
-		btn.Text = state and "Desativar AutoClicker" or "Auto-Clicker"
 		GH.Disconnect("AutoClicker")
 		local acKey = GH.GetKeyCode("AutoClicker")
 		if acKey then GH.InputManager.Unbind(acKey) end
@@ -607,7 +546,6 @@ return function(GH)
 	local ProximityCache = {}
 
 	function Cheats_ToggleProximityInstant(state, btn)
-		btn.Text = state and "Desativar ProxInstant" or "Proximity Instant"
 		GH.Disconnect("ProximityLoop")
 		if state then
 			for _, obj in ipairs(workspace:GetDescendants()) do
@@ -634,7 +572,6 @@ return function(GH)
 	-- FIRE CLICK DETECTORS
 	-- ==========================================
 	function Cheats_ToggleFireClickDetectors(state, btn)
-		btn.Text = state and "Desativar FireCD" or "Fire Click Detectors"
 		if state then
 			pcall(function()
 				for _, v in ipairs(workspace:GetDescendants()) do
@@ -651,7 +588,6 @@ return function(GH)
 	-- FIRE PROXIMITY PROMPTS
 	-- ==========================================
 	function Cheats_ToggleFireProximityPrompts(state, btn)
-		btn.Text = state and "Desativar FirePP" or "Fire Proximity Prompts"
 		if state then
 			pcall(function()
 				for _, v in ipairs(workspace:GetDescendants()) do
@@ -668,7 +604,6 @@ return function(GH)
 	-- BTOOLS (Building Tools)
 	-- ==========================================
 	function Cheats_ToggleBTools(state, btn)
-		btn.Text = state and "Desativar BTools" or "BTools"
 		if state then
 			local bp = LocalPlayer:FindFirstChild("Backpack")
 			if bp then
@@ -696,7 +631,6 @@ return function(GH)
 	-- BREAK VELOCITY
 	-- ==========================================
 	function Cheats_ToggleBreakVelocity(state, btn)
-		btn.Text = state and "Desativar BreakVel" or "Break Velocity"
 		if state then
 			local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 			if hrp then
@@ -719,7 +653,6 @@ return function(GH)
 	local ShownParts = {}
 
 	function Cheats_ToggleInvisibleParts(state, btn)
-		btn.Text = state and "Desativar InvisParts" or "Invisible Parts"
 		if state then
 			ShownParts = {}
 			for _, v in ipairs(workspace:GetDescendants()) do
