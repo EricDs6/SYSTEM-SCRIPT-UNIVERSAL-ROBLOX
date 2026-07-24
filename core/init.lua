@@ -274,10 +274,10 @@ GH.Categories = {
 }
 
 -- Botões pendentes que serão criados após a UI existir
-GH.PendingButtons = {} -- { {name, text, callback, category}, ... }
+GH.PendingButtons = {} -- { {name, text, callback, category, description}, ... }
 
-function GH.RegisterToggleButton(name, text, callback, category)
-	table.insert(GH.PendingButtons, {name = name, text = text, callback = callback, category = category})
+function GH.RegisterToggleButton(name, text, callback, category, description)
+	table.insert(GH.PendingButtons, {name = name, text = text, callback = callback, category = category, description = description})
 end
 
 -- ==========================================
@@ -353,7 +353,7 @@ end
 -- ==========================================
 -- UI CREATION: Toggle Button
 -- ==========================================
-function GH.CreateToggleButton(name, defaultText, callback, category)
+function GH.CreateToggleButton(name, defaultText, callback, category, description)
 	local targetContainer = GH.TabContainers[category or "Combat"]
 	if not targetContainer then targetContainer = GH.TabContainers["Combat"] end
 
@@ -381,16 +381,70 @@ function GH.CreateToggleButton(name, defaultText, callback, category)
 	StatusDot.ZIndex = 4
 	StatusDot.Parent = Btn
 
-	Btn.MouseEnter:Connect(function()
-		if not GH.States[name] then
-			TweenService:Create(Btn, GH.TI, {BackgroundColor3 = GH.Theme.CardHover}):Play()
-		end
-	end)
-	Btn.MouseLeave:Connect(function()
-		if not GH.States[name] then
-			TweenService:Create(Btn, GH.TI, {BackgroundColor3 = GH.Theme.OffBG}):Play()
-		end
-	end)
+	-- Tooltip
+	if description and description ~= "" then
+		local TooltipGui = nil
+		local TooltipLabel = nil
+
+		Btn.MouseEnter:Connect(function()
+			if not GH.States[name] then
+				TweenService:Create(Btn, GH.TI, {BackgroundColor3 = GH.Theme.CardHover}):Play()
+			end
+			if not TooltipGui then
+				TooltipGui = Instance.new("ScreenGui")
+				TooltipGui.Name = "GH_Tooltip"
+				TooltipGui.ResetOnSpawn = false
+				TooltipGui.DisplayOrder = 1000
+				TooltipGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+				TooltipGui.Parent = GH.TargetGui
+
+				TooltipLabel = Instance.new("TextLabel")
+				TooltipLabel.Size = UDim2.new(0, 0, 0, 0)
+				TooltipLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+				TooltipLabel.BackgroundTransparency = 0.05
+				TooltipLabel.Text = "  " .. description
+				TooltipLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+				TooltipLabel.Font = Enum.Font.GothamMedium
+				TooltipLabel.TextSize = 10
+				TooltipLabel.TextXAlignment = Enum.TextXAlignment.Left
+				TooltipLabel.AutomaticSize = Enum.AutomaticSize.XY
+				TooltipLabel.ZIndex = 1001
+				TooltipLabel.Parent = TooltipGui
+				Instance.new("UICorner", TooltipLabel).CornerRadius = UDim.new(0, 4)
+				Instance.new("UIPadding", TooltipLabel).PaddingTop = UDim.new(0, 4)
+				Instance.new("UIPadding", TooltipLabel).PaddingBottom = UDim.new(0, 4)
+				Instance.new("UIPadding", TooltipLabel).PaddingLeft = UDim.new(0, 6)
+				Instance.new("UIPadding", TooltipLabel).PaddingRight = UDim.new(0, 6)
+			end
+			local absPos = Btn.AbsolutePosition
+			local absSize = Btn.AbsoluteSize
+			TooltipLabel.Position = UDim2.new(0, absPos.X + absSize.X + 8, 0, absPos.Y + 2)
+			TooltipLabel.Size = UDim2.new(0, 0, 0, 0)
+			TooltipLabel.Visible = true
+		end)
+
+		Btn.MouseLeave:Connect(function()
+			if not GH.States[name] then
+				TweenService:Create(Btn, GH.TI, {BackgroundColor3 = GH.Theme.OffBG}):Play()
+			end
+			if TooltipGui then
+				TooltipGui:Destroy()
+				TooltipGui = nil
+				TooltipLabel = nil
+			end
+		end)
+	else
+		Btn.MouseEnter:Connect(function()
+			if not GH.States[name] then
+				TweenService:Create(Btn, GH.TI, {BackgroundColor3 = GH.Theme.CardHover}):Play()
+			end
+		end)
+		Btn.MouseLeave:Connect(function()
+			if not GH.States[name] then
+				TweenService:Create(Btn, GH.TI, {BackgroundColor3 = GH.Theme.OffBG}):Play()
+			end
+		end)
+	end
 
 	Btn.MouseButton1Click:Connect(function()
 		GH.States[name] = not GH.States[name]
@@ -773,7 +827,7 @@ function GH.Initialize()
 	-- ==========================================
 	for _, pending in ipairs(GH.PendingButtons) do
 		GH.States[pending.name] = false
-		GH.CreateToggleButton(pending.name, pending.text, pending.callback, pending.category)
+		GH.CreateToggleButton(pending.name, pending.text, pending.callback, pending.category, pending.description)
 	end
 
 	-- ==========================================

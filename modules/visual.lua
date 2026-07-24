@@ -249,10 +249,10 @@ return function(GH)
 	-- ==========================================
 	-- REGISTRAR BOTÕES
 	-- ==========================================
-	GH.RegisterToggleButton("XRay", "X-Ray (Paredes)", Cheats_ToggleXRay, "Visual")
-	GH.RegisterToggleButton("NightMode", "Night Mode", Cheats_ToggleNightMode, "Visual")
-	GH.RegisterToggleButton("Fullbright", "Fullbright", Cheats_ToggleFullbright, "Visual")
-	GH.RegisterToggleButton("Tracers", "Tracers", Cheats_ToggleTracers, "Visual")
-	GH.RegisterToggleButton("Crosshair", "Custom Crosshair", Cheats_ToggleCrosshair, "Visual")
-	GH.RegisterToggleButton("FOVChanger", "FOV Changer", Cheats_ToggleFOVChanger, "Visual")
+	GH.RegisterToggleButton("XRay", "X-Ray (Paredes)", Cheats_ToggleXRay, "Visual", "Veja atraves de paredes e objeitos")
+	GH.RegisterToggleButton("NightMode", "Night Mode", Cheats_ToggleNightMode, "Visual", "Escurece o ambiente para ver melhor")
+	GH.RegisterToggleButton("Fullbright", "Fullbright", Cheats_ToggleFullbright, "Visual", "Iluminacao maxima, nada de sombras")
+	GH.RegisterToggleButton("Tracers", "Tracers", Cheats_ToggleTracers, "Visual", "Linhas que apontam para jogadores")
+	GH.RegisterToggleButton("Crosshair", "Custom Crosshair", Cheats_ToggleCrosshair, "Visual", "Mira personalizada no centro da tela")
+	GH.RegisterToggleButton("FOVChanger", "FOV Changer", Cheats_ToggleFOVChanger, "Visual", "Aumenta ou diminui o campo de visao")
 end

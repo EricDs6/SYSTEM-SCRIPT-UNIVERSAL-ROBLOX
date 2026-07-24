@@ -264,7 +264,7 @@ return function(GH)
 	-- ==========================================
 	-- REGISTRAR BOTÕES
 	-- ==========================================
-	GH.RegisterToggleButton("TrollFling", "Tornado Fling", Cheats_ToggleTrollFling, "Troll")
-	GH.RegisterToggleButton("TargetFling", "Target Fling", Cheats_ToggleTargetFling, "Troll")
-	GH.RegisterToggleButton("Spasms", "Spasmos", Cheats_ToggleSpasmos, "Troll")
+	GH.RegisterToggleButton("TrollFling", "Tornado Fling", Cheats_ToggleTrollFling, "Troll", "Gira rapidamente para jogar outros jogadores")
+	GH.RegisterToggleButton("TargetFling", "Target Fling", Cheats_ToggleTargetFling, "Troll", "Seleciona um alvo e voa ate ele para derrubar")
+	GH.RegisterToggleButton("Spasms", "Spasmos", Cheats_ToggleSpasmos, "Troll", "Animacao de convulsao (requer R6)")
 end

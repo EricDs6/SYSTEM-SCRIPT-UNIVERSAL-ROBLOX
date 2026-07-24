@@ -678,13 +678,13 @@ return function(GH)
 	-- ==========================================
 	-- REGISTRAR BOTÕES
 	-- ==========================================
-	GH.RegisterToggleButton("Hitbox", "Hitbox Gigante", Cheats_ToggleHitbox, "Combat")
-	GH.RegisterToggleButton("ESP", "Ativar ESP", Cheats_ToggleESP, "Combat")
-	GH.RegisterToggleButton("TriggerBot", "TriggerBot", Cheats_ToggleTriggerBot, "Combat")
-	GH.RegisterToggleButton("SilentAim", "Silent Aim", Cheats_ToggleSilentAim, "Combat")
-	GH.RegisterToggleButton("NoFling", "No Fling", Cheats_ToggleNoFling, "Combat")
-	GH.RegisterToggleButton("WallBang", "Wall Bang", Cheats_ToggleWallBang, "Combat")
-	GH.RegisterToggleButton("InfiniteHealth", "Infinite Health", Cheats_ToggleInfiniteHealth, "Combat")
-	GH.RegisterToggleButton("KillAura", "Kill Aura", Cheats_ToggleKillAura, "Combat")
-	GH.RegisterToggleButton("NoFallDamage", "No Fall Damage", Cheats_ToggleNoFallDamage, "Combat")
+	GH.RegisterToggleButton("Hitbox", "Hitbox Gigante", Cheats_ToggleHitbox, "Combat", "Expande a hitbox dos inimigos para acertar mais facil")
+	GH.RegisterToggleButton("ESP", "Ativar ESP", Cheats_ToggleESP, "Combat", "Mostra nomes, vida e distancia dos jogadores atraves de paredes")
+	GH.RegisterToggleButton("TriggerBot", "TriggerBot", Cheats_ToggleTriggerBot, "Combat", "Atira automaticamente quando mira no inimigo")
+	GH.RegisterToggleButton("SilentAim", "Silent Aim", Cheats_ToggleSilentAim, "Combat", "Redireciona tiros para o jogador mais proximo do cursor")
+	GH.RegisterToggleButton("NoFling", "No Fling", Cheats_ToggleNoFling, "Combat", "Impede que voce seja jogado por exploits de fling")
+	GH.RegisterToggleButton("WallBang", "Wall Bang", Cheats_ToggleWallBang, "Combat", "Permite atirar atraves de paredes e objeitos")
+	GH.RegisterToggleButton("InfiniteHealth", "Infinite Health", Cheats_ToggleInfiniteHealth, "Combat", "Mantem sua vida sempre no maximo")
+	GH.RegisterToggleButton("KillAura", "Kill Aura", Cheats_ToggleKillAura, "Combat", "Ataca automaticamente jogadores proximos")
+	GH.RegisterToggleButton("NoFallDamage", "No Fall Damage", Cheats_ToggleNoFallDamage, "Combat", "Remove dano de queda")
 end
