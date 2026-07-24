@@ -816,6 +816,9 @@ function GH.Initialize()
 		if minimized then
 			TabBar.Visible = false
 			Footer.Visible = false
+			for _, container in pairs(GH.TabContainers) do
+				container.Visible = false
+			end
 			TweenService:Create(MainFrame, GH.TI_Slow, {
 				Size = UDim2.new(0, 220, 0, MinimizedHeight)
 			}):Play()
