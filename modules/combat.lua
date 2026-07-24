@@ -293,6 +293,7 @@ return function(GH)
 		GH.UnregisterMasterLoop("Hitbox")
 		GH.Disconnect("Hitbox_PlayerRemoving")
 
+		-- Restaurar tamanhos originais dos HRPs
 		for _, player in ipairs(Players:GetPlayers()) do
 			if player.Character then
 				local hrp = player.Character:FindFirstChild("HumanoidRootPart")
@@ -303,12 +304,29 @@ return function(GH)
 				end
 			end
 		end
-		for _, obj in ipairs(GH.TargetGui:GetChildren()) do
-			if obj:IsA("SelectionBox") and obj.Name:sub(1, 11) == "GH_Hitbox_SB" then
+
+		-- Limpar SelectionBox de todos os locais possiveis
+		local function cleanSelectionBox(obj)
+			if obj and obj.Parent and obj:IsA("SelectionBox") and obj.Name:sub(1, 12) == "GH_Hitbox_SB" then
 				obj.Adornee = nil
 				obj:Destroy()
 			end
 		end
+
+		-- Limpar do TargetGui
+		for _, obj in ipairs(GH.TargetGui:GetChildren()) do
+			cleanSelectionBox(obj)
+		end
+
+		-- Limpar dos personagens
+		for _, player in ipairs(Players:GetPlayers()) do
+			if player.Character then
+				for _, obj in ipairs(player.Character:GetChildren()) do
+					cleanSelectionBox(obj)
+				end
+			end
+		end
+
 		table.clear(GH.Cache.OrigHRPSizes)
 		table.clear(GH.Cache.HitboxAdornments)
 
@@ -322,6 +340,15 @@ return function(GH)
 					sb:Destroy()
 				end
 				GH.Cache.HitboxAdornments[player] = nil
+			end
+			-- Limpar SelectionBox do character tambem
+			if player.Character then
+				for _, obj in ipairs(player.Character:GetChildren()) do
+					if obj:IsA("SelectionBox") and obj.Name:sub(1, 12) == "GH_Hitbox_SB" then
+						obj.Adornee = nil
+						obj:Destroy()
+					end
+				end
 			end
 			GH.Cache.OrigHRPSizes[player] = nil
 		end)
