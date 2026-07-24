@@ -1038,6 +1038,7 @@ function GH.Initialize()
 	local NormalWidth = GH.PanelWidth
 	local NormalHeight = GH.PanelHeight
 	local MinimizedHeight = 20
+	local HiddenChildPanels = {}
 
 	MinBtn.MouseButton1Click:Connect(function()
 		minimized = not minimized
@@ -1047,11 +1048,26 @@ function GH.Initialize()
 			for _, container in pairs(GH.TabContainers) do
 				container.Visible = false
 			end
+			-- Esconder todos os painéis secundários abertos
+			HiddenChildPanels = {}
+			for _, child in ipairs(GH.TargetGui:GetChildren()) do
+				if child:IsA("ScreenGui") and child.Name ~= "SystemScript" and child.Enabled then
+					child.Enabled = false
+					table.insert(HiddenChildPanels, child)
+				end
+			end
 			TweenService:Create(MainFrame, GH.TI_Slow, {
 				Size = UDim2.new(0, 180, 0, MinimizedHeight)
 			}):Play()
 			MinBtn.Text = "+"
 		else
+			-- Restaurar painéis secundários que estavam abertos
+			for _, panel in ipairs(HiddenChildPanels) do
+				if panel and panel.Parent then
+					panel.Enabled = true
+				end
+			end
+			HiddenChildPanels = {}
 			TweenService:Create(MainFrame, GH.TI_Slow, {
 				Size = UDim2.new(0, NormalWidth, 0, NormalHeight)
 			}):Play()
