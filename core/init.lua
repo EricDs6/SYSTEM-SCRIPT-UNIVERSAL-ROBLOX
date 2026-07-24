@@ -1236,6 +1236,75 @@ function GH.Initialize()
 	})
 	GH.Window = Window
 
+	-- ==========================================
+	-- STATS NO TOPBAR (discreto)
+	-- ==========================================
+	task.spawn(function()
+		task.wait(1) -- Esperar a janela renderizar
+
+		-- Encontrar o ScreenGui do Fluent
+		local screenGui = nil
+		for _, gui in ipairs(GH.TargetGui:GetChildren()) do
+			if gui:IsA("ScreenGui") and gui:FindFirstChild("Main", true) then
+				screenGui = gui
+				break
+			end
+		end
+
+		if screenGui then
+			-- Encontrar o topbar (frame principal com titulo)
+			local mainFrame = screenGui:FindFirstChild("Main", true)
+			if mainFrame then
+				-- Criar frame discreto para stats no canto superior direito
+				local statsFrame = Instance.new("Frame")
+				statsFrame.Name = "StatsFrame"
+				statsFrame.Size = UDim2.new(0, 180, 0, 16)
+				statsFrame.Position = UDim2.new(1, -190, 0, 2)
+				statsFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+				statsFrame.BackgroundTransparency = 0.3
+				statsFrame.BorderSizePixel = 0
+				statsFrame.Parent = mainFrame
+
+				local corner = Instance.new("UICorner")
+				corner.CornerRadius = UDim.new(0, 4)
+				corner.Parent = statsFrame
+
+				-- Texto de stats
+				local statsLabel = Instance.new("TextLabel")
+				statsLabel.Name = "StatsLabel"
+				statsLabel.Size = UDim2.new(1, -8, 1, 0)
+				statsLabel.Position = UDim2.new(0, 4, 0, 0)
+				statsLabel.BackgroundTransparency = 1
+				statsLabel.Text = "🟢 1 | 💉 1"
+				statsLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+				statsLabel.TextSize = 10
+				statsLabel.Font = Enum.Font.Gotham
+				statsLabel.TextXAlignment = Enum.TextXAlignment.Right
+				statsLabel.Parent = statsFrame
+
+				GH.Objects.StatsLabel = statsLabel
+
+				-- Atualizar stats periodicamente
+				while true do
+					task.wait(15)
+					pcall(function()
+						if statsLabel and statsLabel.Parent then
+							statsLabel.Text = string.format("🟢 %d | 💉 %d",
+								GH.Stats.OnlineUsers,
+								GH.Stats.TotalInjections
+							)
+						end
+					end)
+				end
+			end
+		end
+	end)
+
+	-- Iniciar sistema de metricas
+	task.spawn(function()
+		GH.Stats.Start()
+	end)
+
 	-- Criar Tabs
 	local Tabs = {}
 	for _, cat in ipairs(GH.Categories) do
@@ -1293,50 +1362,6 @@ function GH.Initialize()
 			GH.Settings.Language = LanguageMap[value] or "pt"
 		end,
 	})
-
-	-- ==========================================
-	-- STATS SECTION
-	-- ==========================================
-	local StatsSection = SettingsTab:AddSection(GH.T("stats_section"))
-
-	-- Paragrafo de status com bolinha verde
-	local statusText = string.format("🟢 %s: %s", GH.T("stats_status"), GH.T("stats_active"))
-	local statsParagraph = StatsSection:AddParagraph({
-		Title = statusText,
-		Content = string.format("%s: %s | %s: %s",
-			GH.T("stats_online"), "1",
-			GH.T("stats_injections"), "1"
-		),
-	})
-	GH.Objects.StatsParagraph = statsParagraph
-
-	-- Paragrafo do Device ID
-	local deviceParagraph = StatsSection:AddParagraph({
-		Title = GH.T("stats_device"),
-		Content = GH.Stats.GetDeviceID(),
-	})
-	GH.Objects.DeviceParagraph = deviceParagraph
-
-	-- Iniciar sistema de metricas
-	task.spawn(function()
-		GH.Stats.Start()
-	end)
-
-	-- Atualizar stats periodicamente
-	task.spawn(function()
-		while true do
-			task.wait(30)
-			pcall(function()
-				if GH.Objects.StatsParagraph then
-					GH.Objects.StatsParagraph.Title = string.format("🟢 %s: %s", GH.T("stats_status"), GH.T("stats_active"))
-					GH.Objects.StatsParagraph.Content = string.format("%s: %s | %s: %s",
-						GH.T("stats_online"), tostring(GH.Stats.OnlineUsers),
-						GH.T("stats_injections"), tostring(GH.Stats.TotalInjections)
-					)
-				end
-			end)
-		end
-	end)
 
 	SettingsSection:AddToggle("DebugMode", {
 		Title = "Debug Mode",
