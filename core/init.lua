@@ -452,6 +452,7 @@ function GH.Initialize()
 	GH.ScreenGui = Instance.new("ScreenGui")
 	GH.ScreenGui.Name = "SystemScript"
 	GH.ScreenGui.ResetOnSpawn = false
+	GH.ScreenGui.DisplayOrder = 999
 	GH.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	GH.ScreenGui.Parent = GH.TargetGui
 
@@ -838,6 +839,7 @@ function GH.Initialize()
 	-- INPUT MANAGER GLOBAL CONNECTIONS
 	-- ==========================================
 	GH.TrackGlobalConnection("InputManager_Began", UserInputService.InputBegan:Connect(function(input, gpe)
+		if gpe then return end
 		if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
 		local binding = GH.InputManager._bindings[input.KeyCode]
 		if binding and binding.onDown then binding.onDown() end
