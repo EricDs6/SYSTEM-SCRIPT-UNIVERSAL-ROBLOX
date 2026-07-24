@@ -299,6 +299,10 @@ GH.Cache = {
 	HitboxRemoving = {} :: {[Player]: boolean},
 	ShouldSpawnAtCustom = false,
 	SpawnCFrame = nil :: CFrame?,
+	SpasmTrack = nil,
+	SpasmAnim = nil,
+	LastDeathCFrame = nil :: CFrame?,
+	SwimOldGravity = 196.2,
 }
 
 -- ==========================================

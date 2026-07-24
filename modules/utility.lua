@@ -110,46 +110,223 @@ return function(GH)
 	end
 
 	-- ==========================================
-	-- FREECAM
+	-- FREECAM (Estilo FE Cosmic — Spring-based)
 	-- ==========================================
-	local CacheFreecam = { Camera = nil, Speed = 2 }
+	local Spring = {}
+	Spring.__index = Spring
+
+	function Spring.new(freq, pos)
+		local self = setmetatable({}, Spring)
+		self.f = freq
+		self.p = pos
+		self.v = pos * 0
+		return self
+	end
+
+	function Spring:Update(dt, goal)
+		local f = self.f * 2 * math.pi
+		local p0 = self.p
+		local v0 = self.v
+		local offset = goal - p0
+		local decay = math.exp(-f * dt)
+		local p1 = goal + (v0 * dt - offset * (f * dt + 1)) * decay
+		local v1 = (f * dt * (offset * f - v0) + v0) * decay
+		self.p = p1
+		self.v = v1
+		return p1
+	end
+
+	function Spring:Reset(pos)
+		self.p = pos
+		self.v = pos * 0
+	end
+
+	local FCState = {
+		running = false,
+		cameraPos = Vector3.new(),
+		cameraRot = Vector2.new(),
+		cameraFov = 70,
+		origType = nil,
+		origCF = nil,
+		velSpring = Spring.new(5, Vector3.new()),
+		panSpring = Spring.new(5, Vector2.new()),
+		keys = { W = 0, A = 0, S = 0, D = 0, E = 0, Q = 0, Up = 0, Down = 0 },
+		mouse = { Delta = Vector2.new() },
+		navSpeed = 1,
+	}
+
+	local function FCKeypress(action, state, input)
+		FCState.keys[input.KeyCode.Name] = state == Enum.UserInputState.Begin and 1 or 0
+		return Enum.ContextActionResult.Sink
+	end
+
+	local function FCMousePan(action, state, input)
+		FCState.mouse.Delta = Vector2.new(-input.Delta.Y, -input.Delta.X)
+		return Enum.ContextActionResult.Sink
+	end
+
+	local function FCStartCapture()
+		pcall(function()
+			local CAS = game:GetService("ContextActionService")
+			CAS:BindActionAtPriority("GH_FCKeys", FCKeypress, false, Enum.ContextActionPriority.High.Value,
+				Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D,
+				Enum.KeyCode.E, Enum.KeyCode.Q, Enum.KeyCode.Up, Enum.KeyCode.Down)
+			CAS:BindActionAtPriority("GH_FCMouse", FCMousePan, false, Enum.ContextActionPriority.High.Value,
+				Enum.UserInputType.MouseMovement)
+		end)
+	end
+
+	local function FCStopCapture()
+		FCState.navSpeed = 1
+		for k, _ in pairs(FCState.keys) do FCState.keys[k] = 0 end
+		FCState.mouse.Delta = Vector2.new()
+		pcall(function()
+			local CAS = game:GetService("ContextActionService")
+			CAS:UnbindAction("GH_FCKeys")
+			CAS:UnbindAction("GH_FCMouse")
+		end)
+	end
+
+	local function FCGetFocusDistance(cameraFrame)
+		local znear = 0.1
+		local viewport = workspace.CurrentCamera.ViewportSize
+		local projy = 2 * math.tan(math.rad(FCState.cameraFov / 2))
+		local projx = viewport.X / viewport.Y * projy
+		local fx = cameraFrame.RightVector
+		local fy = cameraFrame.UpVector
+		local fz = cameraFrame.LookVector
+		local minVect = Vector3.new()
+		local minDist = 512
+		for x = 0, 1, 0.5 do
+			for y = 0, 1, 0.5 do
+				local cx = (x - 0.5) * projx
+				local cy = (y - 0.5) * projy
+				local offset = fx * cx - fy * cy + fz
+				local origin = cameraFrame.Position + offset * znear
+				local rayResult = workspace:Raycast(origin, offset.Unit * minDist)
+				if rayResult then
+					local dist = (rayResult.Position - origin).Magnitude
+					if minDist > dist then
+						minDist = dist
+						minVect = offset.Unit
+					end
+				end
+			end
+		end
+		return fz:Dot(minVect) * minDist
+	end
+
+	local function FCVel()
+		local shift = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
+		FCState.navSpeed = math.clamp(FCState.navSpeed + (FCState.keys.Up - FCState.keys.Down) * 0.75, 0.01, 4)
+		local k = Vector3.new(FCState.keys.D - FCState.keys.A, FCState.keys.E - FCState.keys.Q, FCState.keys.S - FCState.keys.W)
+		return k * (FCState.navSpeed * (shift and 0.25 or 1))
+	end
+
+	local function FCPan()
+		local kMouse = FCState.mouse.Delta * (math.pi / 64)
+		FCState.mouse.Delta = Vector2.new()
+		return kMouse
+	end
+
+	local function FCStep(dt)
+		if not FCState.running then return end
+		local vel = FCState.velSpring:Update(dt, FCVel())
+		local pan = FCState.panSpring:Update(dt, FCPan())
+		local zoomFactor = math.sqrt(math.tan(math.rad(70 / 2)) / math.tan(math.rad(FCState.cameraFov / 2)))
+		FCState.cameraRot = FCState.cameraRot + pan * Vector2.new(0.75, 1) * 8 * (dt / zoomFactor)
+		FCState.cameraRot = Vector2.new(
+			math.clamp(FCState.cameraRot.X, -math.rad(90), math.rad(90)),
+			FCState.cameraRot.Y % (2 * math.pi))
+		local camCFrame = CFrame.new(FCState.cameraPos) * CFrame.fromOrientation(FCState.cameraRot.X, FCState.cameraRot.Y, 0) * CFrame.new(vel * 64 * dt)
+		FCState.cameraPos = camCFrame.Position
+		workspace.CurrentCamera.CFrame = camCFrame
+		workspace.CurrentCamera.Focus = camCFrame * CFrame.new(0, 0, -FCGetFocusDistance(camCFrame))
+		workspace.CurrentCamera.FieldOfView = FCState.cameraFov
+	end
 
 	function Cheats_ToggleFreecam(state, btn)
 		btn.Text = state and "Desativar Freecam" or "Freecam"
 		GH.Disconnect("Freecam")
 
+		if FCState.running then
+			FCStopCapture()
+			RunService:UnbindFromRenderStep("GH_Freecam")
+			local cam = workspace.CurrentCamera
+			if cam then
+				cam.CameraType = FCState.origType or Enum.CameraType.Custom
+				if FCState.origCF then cam.CFrame = FCState.origCF end
+				cam.FieldOfView = 70
+			end
+			UserInputService.MouseIconEnabled = true
+			FCState.running = false
+		end
+
 		if state then
 			local cam = workspace.CurrentCamera
 			if not cam then return end
-			CacheFreecam.Camera = cam
-			CacheFreecam.OriginalCF = cam.CFrame
-			CacheFreecam.OriginalType = cam.CameraType
-			cam.CameraType = Enum.CameraType.Scriptable
+			FCState.origType = cam.CameraType
+			FCState.origCF = cam.CFrame
+			FCState.cameraPos = cam.CFrame.Position
+			FCState.cameraRot = Vector2.new()
+			FCState.cameraFov = cam.FieldOfView
 
-			GH.Connections.Freecam = RunService.RenderStepped:Connect(function(dt)
-				if GH.isClosing or not GH.States.Freecam then return end
-				local cam = workspace.CurrentCamera
-				if not cam then return end
-				local speed = CacheFreecam.Speed * dt * 60 * (UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) and 3 or 1)
-				local cf = cam.CFrame
-				if UserInputService:IsKeyDown(Enum.KeyCode.W) then cf = cf + cf.LookVector * speed end
-				if UserInputService:IsKeyDown(Enum.KeyCode.S) then cf = cf - cf.LookVector * speed end
-				if UserInputService:IsKeyDown(Enum.KeyCode.A) then cf = cf - cf.RightVector * speed end
-				if UserInputService:IsKeyDown(Enum.KeyCode.D) then cf = cf + cf.RightVector * speed end
-				if UserInputService:IsKeyDown(Enum.KeyCode.Space) then cf = cf + Vector3.new(0, speed, 0) end
-				if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then cf = cf - Vector3.new(0, speed, 0) end
-				local mouseDelta = UserInputService:GetMouseDelta()
-				if mouseDelta.Magnitude > 0 then
-					cf = cf * CFrame.Angles(-mouseDelta.Y * 0.002, -mouseDelta.X * 0.002, 0)
+			FCState.velSpring:Reset(Vector3.new())
+			FCState.panSpring:Reset(Vector2.new())
+
+			cam.CameraType = Enum.CameraType.Custom
+			UserInputService.MouseIconEnabled = true
+			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+
+			FCStartCapture()
+			FCState.running = true
+			RunService:BindToRenderStep("GH_Freecam", Enum.RenderPriority.Camera.Value, FCStep)
+		end
+	end
+
+	-- ==========================================
+	-- FLASHBACK (Voltar ao local da ultima morte)
+	-- ==========================================
+	GH.Cache.LastDeathCFrame = nil
+
+	function Cheats_ToggleFlashback(state, btn)
+		btn.Text = state and "Desativar Flashback" or "Flashback"
+		GH.Disconnect("FlashbackDied")
+		GH.Disconnect("FlashbackRespawn")
+
+		if state then
+			local function connectDied()
+				local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+				if hum then
+					GH.Disconnect("FlashbackDied")
+					GH.Connections.FlashbackDied = hum.Died:Connect(function()
+						local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+						if hrp then
+							GH.Cache.LastDeathCFrame = hrp.CFrame
+						end
+					end)
 				end
-				cam.CFrame = cf
+			end
+
+			connectDied()
+			GH.Connections.FlashbackRespawn = LocalPlayer.CharacterAdded:Connect(function()
+				if GH.States.Flashback then connectDied() end
+			end)
+
+			GH.InputManager.Bind(Enum.KeyCode.P, function()
+				if not GH.States.Flashback then return end
+				if GH.Cache.LastDeathCFrame then
+					local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+					if hrp then
+						local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+						if hum and hum.SeatPart then hum.Sit = false end
+						hrp.CFrame = GH.Cache.LastDeathCFrame
+						GH.ShowToast("Flashback!", GH.Theme.Accent, 2)
+					end
+				end
 			end)
 		else
-			local cam = workspace.CurrentCamera
-			if cam then
-				cam.CameraType = CacheFreecam.OriginalType or Enum.CameraType.Custom
-				if CacheFreecam.OriginalCF then cam.CFrame = CacheFreecam.OriginalCF end
-			end
+			GH.InputManager.Unbind(Enum.KeyCode.P)
 		end
 	end
 
@@ -202,7 +379,7 @@ return function(GH)
 			saveBtn.Size = UDim2.new(1, 0, 0, 24)
 			saveBtn.Position = UDim2.new(0, 0, 1, -28)
 			saveBtn.BackgroundColor3 = GH.Theme.AccentDim
-			saveBtn.Text = "+ Salvar Posição"
+			saveBtn.Text = "+ Salvar Posicao"
 			saveBtn.TextColor3 = Color3.new(1, 1, 1)
 			saveBtn.Font = Enum.Font.GothamBold
 			saveBtn.TextSize = 10
@@ -214,7 +391,7 @@ return function(GH)
 				if hrp then
 					local pos = hrp.Position
 					table.insert(CacheCoords.SavedPoints, { Name = "Ponto " .. (#CacheCoords.SavedPoints + 1), Position = pos })
-					GH.ShowToast("Posição salva!", GH.Theme.On, 2)
+					GH.ShowToast("Posicao salva!", GH.Theme.On, 2)
 				end
 			end)
 		else
@@ -305,7 +482,7 @@ return function(GH)
 		btn.Text = state and "Desativar AntiKick" or "Anti-Kick"
 		if state then
 			if not hookfunction then
-				GH.ShowToast("Anti-Kick: hookfunction não disponível", GH.Theme.Red, 3)
+				GH.ShowToast("Anti-Kick: hookfunction nao disponivel", GH.Theme.Red, 3)
 				btn.Text = "Anti-Kick"; GH.States.AntiKick = false; return
 			end
 			OldKickFunction = hookfunction(LocalPlayer.Kick, function() end)
@@ -373,12 +550,13 @@ return function(GH)
 	end
 
 	-- ==========================================
-	-- REGISTRAR BOTÕES
+	-- REGISTRAR BOTOES
 	-- ==========================================
 	GH.RegisterToggleButton("ClickTP", "Tool TP Click", Cheats_ToggleTPTool, "Utility")
 	GH.RegisterToggleButton("Gravity", "Gravity Baixa", Cheats_ToggleGravity, "Utility")
 	GH.RegisterToggleButton("CustomSpawn", "Marcar Spawn", Cheats_ToggleCustomSpawn, "Utility")
 	GH.RegisterToggleButton("Freecam", "Freecam", Cheats_ToggleFreecam, "Utility")
+	GH.RegisterToggleButton("Flashback", "Flashback", Cheats_ToggleFlashback, "Utility")
 	GH.RegisterToggleButton("Coords", "Coordenadas", Cheats_ToggleCoords, "Utility")
 	GH.RegisterToggleButton("ServerRejoin", "Server Rejoin", Cheats_ToggleServerRejoin, "Utility")
 	GH.RegisterToggleButton("AutoClicker", "Auto-Clicker", Cheats_ToggleAutoClicker, "Utility")

@@ -217,32 +217,42 @@ return function(GH)
 	end
 
 	-- ==========================================
-	-- SPASMOS
+	-- SPASMOS (Animacao do FE Cosmic)
 	-- ==========================================
 	function Cheats_ToggleSpasmos(state, btn)
 		btn.Text = state and "Desativar Spasmos" or "Spasmos"
 		GH.UnregisterMasterLoop("Spasms")
+
+		-- Limpar animacao anterior
+		pcall(function()
+			if GH.Cache.SpasmTrack then GH.Cache.SpasmTrack:Stop(); GH.Cache.SpasmTrack = nil end
+			if GH.Cache.SpasmAnim then GH.Cache.SpasmAnim:Destroy(); GH.Cache.SpasmAnim = nil end
+		end)
+
 		if state then
-			GH.RegisterMasterLoop("Spasms", "Heartbeat", function()
-				if GH.isClosing or not GH.States.Spasms then
-					GH.UnregisterMasterLoop("Spasms"); return
-				end
-				local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-				local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-				if not hrp or not hum or hum.Health <= 0 then return end
-				hrp.AssemblyAngularVelocity = Vector3.new(
-					math.random(-8, 8), math.random(-3, 3), math.random(-8, 8)
-				)
-				local vel = hrp.AssemblyLinearVelocity
-				hrp.AssemblyLinearVelocity = Vector3.new(vel.X * 0.5, -2, vel.Z * 0.5)
-				hum.PlatformStand = false
-				hum.AutoRotate = false
-			end)
+			local char = LocalPlayer.Character
+			local hum = char and char:FindFirstChildOfClass("Humanoid")
+			if not hum then return end
+
+			-- Verificar R6 (FE Cosmic so funciona em R6)
+			local isR6 = hum.RigType == Enum.HumanoidRigType.R6
+			if not isR6 then
+				GH.ShowToast("Spasmos: Requer R6", GH.Theme.Red, 3)
+				GH.States.Spasms = false
+				btn.Text = "Spasmos"
+				return
+			end
+
+			GH.Cache.SpasmAnim = Instance.new("Animation")
+			GH.Cache.SpasmAnim.AnimationId = "rbxassetid://33796059"
+			GH.Cache.SpasmTrack = hum:LoadAnimation(GH.Cache.SpasmAnim)
+			GH.Cache.SpasmTrack:Play()
+			GH.Cache.SpasmTrack:AdjustSpeed(99)
 		else
-			local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-			local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-			if hrp then hrp.AssemblyAngularVelocity = Vector3.zero; hrp.AssemblyLinearVelocity = Vector3.zero end
-			if hum then hum.AutoRotate = true; hum.PlatformStand = false end
+			pcall(function()
+				if GH.Cache.SpasmTrack then GH.Cache.SpasmTrack:Stop(); GH.Cache.SpasmTrack = nil end
+				if GH.Cache.SpasmAnim then GH.Cache.SpasmAnim:Destroy(); GH.Cache.SpasmAnim = nil end
+			end)
 		end
 	end
 
