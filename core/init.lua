@@ -844,6 +844,10 @@ function GH.Initialize()
 		pcall(function()
 			local pad = workspace:FindFirstChild("GH_FloatPad")
 			if pad then pad:Destroy() end
+			if LocalPlayer.Character then
+				local pad2 = LocalPlayer.Character:FindFirstChild("GH_FloatPad")
+				if pad2 then pad2:Destroy() end
+			end
 		end)
 
 		-- Restaurar workspace

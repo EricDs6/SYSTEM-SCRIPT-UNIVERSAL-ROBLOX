@@ -457,54 +457,74 @@ return function(GH)
 	end
 
 	-- ==========================================
-	-- FLOAT (Plataforma voadora)
+	-- FLOAT (Plataforma voadora — igual FE Cosmic)
 	-- ==========================================
-	local FloatValue = -3.1
-
 	function Cheats_ToggleFloat(state, btn)
 		btn.Text = state and "Desativar Float" or "Float"
 		GH.UnregisterMasterLoop("Float")
-		GH.Disconnect("FloatKey")
+		GH.Disconnect("FloatKeyQ")
+		GH.Disconnect("FloatKeyE")
 		GH.Disconnect("FloatLoop")
 
-		-- Limpar pad antigo
-		local oldPad = workspace:FindFirstChild("GH_FloatPad")
-		if oldPad then oldPad:Destroy() end
+		local char = LocalPlayer.Character
+		if char then
+			local old = char:FindFirstChild("GH_FloatPad")
+			if old then old:Destroy() end
+		end
 
 		if state then
 			local char = LocalPlayer.Character
 			local hrp = char and char:FindFirstChild("HumanoidRootPart")
 			if not char or not hrp then return end
 
-			FloatValue = -3.1
+			local FloatValue = -3.1
+
 			local pad = Instance.new("Part")
 			pad.Name = "GH_FloatPad"
 			pad.Size = Vector3.new(2, 0.2, 1.5)
 			pad.Transparency = 1
 			pad.Anchored = true
-			pad.CanCollide = true
-			pad.Parent = workspace
+			pad.CFrame = hrp.CFrame * CFrame.new(0, FloatValue, 0)
+			pad.Parent = char
 
-			GH.Connections.FloatKey = UserInputService.InputBegan:Connect(function(input, gpe)
+			-- Q = descer segurando, E = subir segurando
+			GH.Connections.FloatKeyQ = UserInputService.InputBegan:Connect(function(input, gpe)
 				if gpe or not GH.States.Float then return end
-				if input.KeyCode == Enum.KeyCode.Q then FloatValue = FloatValue + 0.5
-				elseif input.KeyCode == Enum.KeyCode.E then FloatValue = FloatValue - 0.5 end
+				if input.KeyCode == Enum.KeyCode.Q then
+					FloatValue = FloatValue - 0.5
+				end
+			end)
+			GH.Connections.FloatKeyE = UserInputService.InputBegan:Connect(function(input, gpe)
+				if gpe or not GH.States.Float then return end
+				if input.KeyCode == Enum.KeyCode.E then
+					FloatValue = FloatValue + 1.5
+				end
 			end)
 
+			-- Resetar posicao ao soltar
+			UserInputService.InputEnded:Connect(function(input)
+				if not GH.States.Float then return end
+				if input.KeyCode == Enum.KeyCode.Q then
+					FloatValue = FloatValue + 0.5
+				elseif input.KeyCode == Enum.KeyCode.E then
+					FloatValue = FloatValue - 1.5
+				end
+			end)
+
+			-- Loop de posicao
 			GH.Connections.FloatLoop = RunService.Heartbeat:Connect(function()
-				if not GH.States.Float then
+				if not GH.States.Float or not char or not char.Parent then
 					GH.Disconnect("FloatLoop")
 					return
 				end
-				local c = LocalPlayer.Character
-				local r = c and c:FindFirstChild("HumanoidRootPart")
-				local p = workspace:FindFirstChild("GH_FloatPad")
+				local r = char:FindFirstChild("HumanoidRootPart")
+				local p = char:FindFirstChild("GH_FloatPad")
 				if r and p then
 					p.CFrame = r.CFrame * CFrame.new(0, FloatValue, 0)
 				end
 			end)
 		else
-			local p = workspace:FindFirstChild("GH_FloatPad")
+			local p = char and char:FindFirstChild("GH_FloatPad")
 			if p then p:Destroy() end
 		end
 	end
