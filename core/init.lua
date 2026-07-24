@@ -575,6 +575,38 @@ function GH.Initialize()
 	TabBarLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	TabBarLayout.Padding = UDim.new(0, 0)
 
+	-- ==========================================
+	-- SETTINGS PANEL (criado antes dos tabs)
+	-- ==========================================
+	local settingsOpen = false
+	local SettingsFrame = Instance.new("Frame")
+	SettingsFrame.Name = "SettingsPanel"
+	SettingsFrame.Size = UDim2.new(1, 0, 1, -GH.TopbarHeight)
+	SettingsFrame.Position = UDim2.new(0, 0, 0, GH.TopbarHeight)
+	SettingsFrame.BackgroundColor3 = GH.Theme.BGDark
+	SettingsFrame.BackgroundTransparency = 0.15
+	SettingsFrame.BorderSizePixel = 0
+	SettingsFrame.Visible = false
+	SettingsFrame.ZIndex = 10
+	SettingsFrame.ClipsDescendants = true
+	SettingsFrame.Parent = MainFrame
+
+	local SettingsScroll = Instance.new("ScrollingFrame")
+	SettingsScroll.Name = "SettingsScroll"
+	SettingsScroll.Size = UDim2.new(1, -12, 1, -8)
+	SettingsScroll.Position = UDim2.new(0, 6, 0, 4)
+	SettingsScroll.BackgroundTransparency = 1
+	SettingsScroll.ScrollBarThickness = 3
+	SettingsScroll.ScrollBarImageColor3 = GH.Theme.Accent
+	SettingsScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	SettingsScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+	SettingsScroll.BorderSizePixel = 0
+	SettingsScroll.ZIndex = 10
+	SettingsScroll.Parent = SettingsFrame
+	Instance.new("UIListLayout", SettingsScroll).Padding = UDim.new(0, 4)
+	Instance.new("UIPadding", SettingsScroll).PaddingTop = UDim.new(0, 2)
+	Instance.new("UIPadding", SettingsScroll).PaddingLeft = UDim.new(0, 4)
+
 	GH.TabContainers = {}
 	GH.TabButtons = {}
 	GH.ActiveTab = "Combat"
@@ -974,35 +1006,9 @@ function GH.Initialize()
 	end)
 
 	-- ==========================================
-	-- SETTINGS TOGGLE
+	-- SETTINGS CONTENT (usando SettingsScroll ja criado)
 	-- ==========================================
-	local settingsOpen = false
-	local SettingsFrame = Instance.new("Frame")
-	SettingsFrame.Name = "SettingsPanel"
-	SettingsFrame.Size = UDim2.new(1, 0, 1, -GH.TopbarHeight)
-	SettingsFrame.Position = UDim2.new(0, 0, 0, GH.TopbarHeight)
-	SettingsFrame.BackgroundColor3 = GH.Theme.BG
-	SettingsFrame.BackgroundTransparency = 0.15
-	SettingsFrame.BorderSizePixel = 0
-	SettingsFrame.Visible = false
-	SettingsFrame.ZIndex = 5
-	SettingsFrame.Parent = MainFrame
-
-	local SettingsScroll = Instance.new("ScrollingFrame")
-	SettingsScroll.Size = UDim2.new(1, -12, 1, -8)
-	SettingsScroll.Position = UDim2.new(0, 6, 0, 4)
-	SettingsScroll.BackgroundTransparency = 1
-	SettingsScroll.ScrollBarThickness = 3
-	SettingsScroll.ScrollBarImageColor3 = GH.Theme.Accent
-	SettingsScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	SettingsScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-	SettingsScroll.BorderSizePixel = 0
-	SettingsScroll.ZIndex = 5
-	SettingsScroll.Parent = SettingsFrame
-	Instance.new("UIListLayout", SettingsScroll).Padding = UDim.new(0, 4)
-	Instance.new("UIPadding", SettingsScroll).PaddingTop = UDim.new(0, 2)
-
-	local function CreateSettingToggle(text, key, default)
+	local function CreateSettingToggle(text, key)
 		local row = Instance.new("Frame")
 		row.Size = UDim2.new(1, 0, 0, 28)
 		row.BackgroundColor3 = GH.Theme.Card
