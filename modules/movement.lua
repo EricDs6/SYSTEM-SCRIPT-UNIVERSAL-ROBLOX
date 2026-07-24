@@ -1002,6 +1002,133 @@ return function(GH)
 	end
 
 	-- ==========================================
+	-- VEHICLE FLY (Fly em veiculos — estilo FE Cosmic)
+	-- ==========================================
+	local VFConnections = {}
+
+	local function VFCleanup(char, hum)
+		for _, conn in pairs(VFConnections) do
+			if conn and typeof(conn) == "RBXScriptConnection" then
+				pcall(function() conn:Disconnect() end)
+			end
+		end
+		table.clear(VFConnections)
+		if char then
+			local r = char:FindFirstChild("HumanoidRootPart")
+			if r then
+				local bv = r:FindFirstChild("GH_VFlyBV")
+				if bv then bv:Destroy() end
+				local bg = r:FindFirstChild("GH_VFlyBG")
+				if bg then bg:Destroy() end
+			end
+		end
+		if hum then
+			hum.PlatformStand = false
+			hum.AutoRotate = true
+		end
+	end
+
+	function Cheats_ToggleVehicleFly(state, btn)
+		btn.Text = state and "Desativar VehicleFly" or "Vehicle Fly"
+		GH.Disconnect("VFLKey")
+		GH.Disconnect("VFLScroll")
+
+		local oldChar = LocalPlayer.Character
+		local oldHum = oldChar and oldChar:FindFirstChildOfClass("Humanoid")
+		VFCleanup(oldChar, oldHum)
+
+		if not state then return end
+
+		local char = LocalPlayer.Character
+		local hum = char and char:FindFirstChildOfClass("Humanoid")
+		local hrp = char and char:FindFirstChild("HumanoidRootPart")
+		if not hum or not hrp or hum.Health <= 0 then return end
+
+		-- NAO seta PlatformStand = true (permita dirigir veiculos)
+
+		local CONTROL = { F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0 }
+		local SPEED = 0
+
+		local bv = Instance.new("BodyVelocity")
+		bv.Name = "GH_VFlyBV"
+		bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+		bv.Velocity = Vector3.new(0, 0, 0)
+		bv.Parent = hrp
+
+		local bg = Instance.new("BodyGyro")
+		bg.Name = "GH_VFlyBG"
+		bg.P = 9e4
+		bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+		bg.CFrame = hrp.CFrame
+		bg.Parent = hrp
+
+		-- Scroll para velocidade
+		GH.Connections.VFLScroll = UserInputService.InputChanged:Connect(function(input)
+			if not GH.States.VehicleFly then return end
+			if input.UserInputType == Enum.UserInputType.MouseWheel then
+				GH.FlySpeed = math.clamp(GH.FlySpeed + (input.Position.Z > 0 and 1 or -1), 1, 100)
+			end
+		end)
+
+		-- Teclas W/A/S/D/Q/E
+		VFConnections.KeyDown = UserInputService.InputBegan:Connect(function(input, gpe)
+			if gpe or not GH.States.VehicleFly then return end
+			local k = GH.FlySpeed
+			if input.KeyCode == Enum.KeyCode.W then CONTROL.F = k
+			elseif input.KeyCode == Enum.KeyCode.S then CONTROL.B = -k
+			elseif input.KeyCode == Enum.KeyCode.A then CONTROL.L = -k
+			elseif input.KeyCode == Enum.KeyCode.D then CONTROL.R = k
+			elseif input.KeyCode == Enum.KeyCode.E then CONTROL.Q = k * 2
+			elseif input.KeyCode == Enum.KeyCode.Q then CONTROL.E = -k * 2
+			end
+		end)
+
+		VFConnections.KeyUp = UserInputService.InputEnded:Connect(function(input)
+			if not GH.States.VehicleFly then return end
+			if input.KeyCode == Enum.KeyCode.W then CONTROL.F = 0
+			elseif input.KeyCode == Enum.KeyCode.S then CONTROL.B = 0
+			elseif input.KeyCode == Enum.KeyCode.A then CONTROL.L = 0
+			elseif input.KeyCode == Enum.KeyCode.D then CONTROL.R = 0
+			elseif input.KeyCode == Enum.KeyCode.E then CONTROL.Q = 0
+			elseif input.KeyCode == Enum.KeyCode.Q then CONTROL.E = 0
+			end
+		end)
+
+		-- Loop de voo
+		VFConnections.Loop = RunService.RenderStepped:Connect(function()
+			if GH.isClosing or not GH.States.VehicleFly then
+				VFCleanup(LocalPlayer.Character, LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid"))
+				return
+			end
+			local c = LocalPlayer.Character
+			local h = c and c:FindFirstChildOfClass("Humanoid")
+			local r = c and c:FindFirstChild("HumanoidRootPart")
+			if not c or not r or not h or h.Health <= 0 then
+				VFCleanup(c, h)
+				return
+			end
+
+			local cam = workspace.CurrentCamera
+			if not cam then return end
+
+			if CONTROL.F + CONTROL.B ~= 0 or CONTROL.L + CONTROL.R ~= 0 or CONTROL.Q + CONTROL.E ~= 0 then
+				SPEED = 50
+			else
+				SPEED = 0
+			end
+
+			if SPEED ~= 0 then
+				bv.Velocity = ((cam.CFrame.LookVector * (CONTROL.F + CONTROL.B))
+					+ ((cam.CFrame * CFrame.new(CONTROL.L + CONTROL.R, (CONTROL.F + CONTROL.B + CONTROL.Q + CONTROL.E) * 0.2, 0).Position) - cam.CFrame.Position))
+					* SPEED
+			else
+				bv.Velocity = Vector3.new(0, 0, 0)
+			end
+			bg.CFrame = cam.CFrame
+		end)
+	end
+
+	-- ==========================================
 	-- REGISTRAR BOTÕES
 	-- ==========================================
 	GH.RegisterToggleButton("Fly", "Ativar Fly", Cheats_ToggleFly, "Movement")
@@ -1020,4 +1147,5 @@ return function(GH)
 	GH.RegisterToggleButton("WalkTo", "Walk To", Cheats_ToggleWalkTo, "Movement")
 	GH.RegisterToggleButton("Orbit", "Orbit", Cheats_ToggleOrbit, "Movement")
 	GH.RegisterToggleButton("HeadSit", "HeadSit", Cheats_ToggleHeadSit, "Movement")
+	GH.RegisterToggleButton("VehicleFly", "Vehicle Fly", Cheats_ToggleVehicleFly, "Movement")
 end

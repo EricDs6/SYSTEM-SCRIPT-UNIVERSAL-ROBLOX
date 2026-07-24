@@ -526,7 +526,7 @@ return function(GH)
 	end
 
 	-- ==========================================
-	-- NO FLING (Anti-Fling)
+	-- NO FLING (Anti-Fling — estilo FE Cosmic)
 	-- ==========================================
 	function Cheats_ToggleNoFling(state, btn)
 		btn.Text = state and "Desativar NoFling" or "No Fling"
@@ -543,14 +543,25 @@ return function(GH)
 				local root = char:FindFirstChild("HumanoidRootPart")
 				if not root then return end
 
-				-- Remover BodyAngularVelocity
+				-- Remover BodyAngularVelocity (API antiga)
 				for _, v in ipairs(root:GetChildren()) do
-					if v:IsA("BodyAngularVelocity") then
+					if v:IsA("BodyAngularVelocity") or v:IsA("BodyAngularForce") then
 						v:Destroy()
 					end
 				end
 
-				-- Resetar propriedades fisicas
+				-- Remover AngularVelocity (API nova)
+				for _, att in ipairs(root:GetDescendants()) do
+					if att:IsA("Attachment") then
+						for _, v in ipairs(att:GetChildren()) do
+							if v:IsA("AngularVelocity") or v:IsA("VectorForce") then
+								v:Destroy()
+							end
+						end
+					end
+				end
+
+				-- Resetar propriedades fisicas (FE Cosmic: 0.7, 0.3, 0.5)
 				for _, part in ipairs(char:GetDescendants()) do
 					if part:IsA("BasePart") then
 						part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)

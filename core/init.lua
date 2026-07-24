@@ -850,6 +850,19 @@ function GH.Initialize()
 			end
 		end)
 
+		-- Limpar VehicleFly body movers
+		pcall(function()
+			if LocalPlayer.Character then
+				local r = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+				if r then
+					local bv = r:FindFirstChild("GH_VFlyBV")
+					if bv then bv:Destroy() end
+					local bg = r:FindFirstChild("GH_VFlyBG")
+					if bg then bg:Destroy() end
+				end
+			end
+		end)
+
 		-- Restaurar workspace
 		pcall(function()
 			workspace.Gravity = GH.Cache.OrigGravity or 196.2
