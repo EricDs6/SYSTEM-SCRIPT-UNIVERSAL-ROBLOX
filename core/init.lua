@@ -1008,6 +1008,9 @@ function GH.Initialize()
 	-- ==========================================
 	-- SETTINGS CONTENT (usando SettingsScroll ja criado)
 	-- ==========================================
+	local SaveFile = "system_script_config.json"
+	local SaveConfig = nil -- forward declaration
+
 	local function CreateSettingToggle(text, key)
 		local row = Instance.new("Frame")
 		row.Size = UDim2.new(1, 0, 0, 28)
@@ -1050,6 +1053,7 @@ function GH.Initialize()
 				BackgroundColor3 = GH.Settings[key] and GH.Theme.On or GH.Theme.OffBG,
 				TextColor3 = GH.Settings[key] and Color3.new(1, 1, 1) or GH.Theme.Off,
 			}):Play()
+			if SaveConfig then pcall(SaveConfig) end
 		end)
 	end
 
@@ -1117,7 +1121,10 @@ function GH.Initialize()
 		end)
 		UserInputService.InputEnded:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-				dragging = false
+				if dragging then
+					dragging = false
+					if SaveConfig then pcall(SaveConfig) end
+				end
 			end
 		end)
 		RunService.RenderStepped:Connect(function()
@@ -1241,7 +1248,7 @@ function GH.Initialize()
 		}
 	end
 
-	local function SaveConfig()
+	SaveConfig = function()
 		local ok, err = pcall(function()
 			local data = GetSaveData()
 			local json = HttpService:JSONEncode(data)
