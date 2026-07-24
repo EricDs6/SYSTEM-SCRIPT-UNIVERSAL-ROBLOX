@@ -165,7 +165,7 @@ local function UpdateLoading(step)
 		currentStep = step
 		local data = loadSteps[step]
 		if data then
-			TweenService:Create(StatusText, TweenInfo.new(0.3), {Text = data.text}):Play()
+			StatusText.Text = data.text
 			TweenService:Create(ProgressBar, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 				Size = UDim2.new(data.progress, 0, 1, 0)
 			}):Play()
