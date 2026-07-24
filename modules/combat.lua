@@ -676,6 +676,88 @@ return function(GH)
 	end
 
 	-- ==========================================
+	-- HEAD SIZE (Aumenta cabeca de jogadores)
+	-- ==========================================
+	function Cheats_ToggleHeadSize(state, btn)
+		btn.Text = state and "Desativar HeadSize" or "Head Size"
+		GH.UnregisterMasterLoop("HeadSize")
+
+		if state then
+			local gui = Instance.new("ScreenGui")
+			gui.Name = "GH_HeadSizeList"
+			gui.ResetOnSpawn = false
+			gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+			gui.Parent = GH.TargetGui
+			GH.Objects.HeadSizeGUI = gui
+
+			local frame = Instance.new("Frame")
+			frame.Size = UDim2.new(0, 160, 0, 220)
+			frame.Position = UDim2.new(1, -170, 0.5, -110)
+			frame.BackgroundColor3 = GH.Theme.BG
+			frame.BorderSizePixel = 0
+			frame.Parent = gui
+			Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+			Instance.new("UIStroke", frame).Color = GH.Theme.Border
+
+			local title = Instance.new("TextLabel")
+			title.Size = UDim2.new(1, 0, 0, 24)
+			title.BackgroundColor3 = GH.Theme.Topbar
+			title.Text = "HEAD SIZE"
+			title.TextColor3 = GH.Theme.Red
+			title.Font = Enum.Font.GothamBold
+			title.TextSize = 10
+			title.BorderSizePixel = 0
+			title.Parent = frame
+
+			local scroll = Instance.new("ScrollingFrame")
+			scroll.Size = UDim2.new(1, -8, 1, -30)
+			scroll.Position = UDim2.new(0, 4, 0, 28)
+			scroll.BackgroundTransparency = 1
+			scroll.ScrollBarThickness = 2
+			scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+			scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+			scroll.BorderSizePixel = 0
+			scroll.Parent = frame
+			Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 2)
+
+			for _, player in ipairs(Players:GetPlayers()) do
+				if player ~= LocalPlayer then
+					local plrBtn = Instance.new("TextButton")
+					plrBtn.Size = UDim2.new(1, 0, 0, 24)
+					plrBtn.BackgroundColor3 = GH.Theme.Card
+					plrBtn.Text = ""
+					plrBtn.AutoButtonColor = false
+					plrBtn.BorderSizePixel = 0
+					plrBtn.Parent = scroll
+					local nameLbl = Instance.new("TextLabel")
+					nameLbl.Size = UDim2.new(0.6, 0, 1, 0)
+					nameLbl.Position = UDim2.new(0, 8, 0, 0)
+					nameLbl.BackgroundTransparency = 1
+					nameLbl.Text = player.Name
+					nameLbl.TextColor3 = GH.Theme.Text
+					nameLbl.Font = Enum.Font.GothamMedium
+					nameLbl.TextSize = 10
+					nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+					nameLbl.Parent = plrBtn
+					plrBtn.MouseButton1Click:Connect(function()
+						local head = player.Character and player.Character:FindFirstChild("Head")
+						if head and head:IsA("BasePart") then
+							head.Size = Vector3.new(5, 5, 5)
+							head.CanCollide = false
+							GH.ShowToast("Head de " .. player.Name .. " ampliada!", GH.Theme.Red, 2)
+						end
+					end)
+				end
+			end
+		else
+			if GH.Objects.HeadSizeGUI then
+				GH.Objects.HeadSizeGUI:Destroy()
+				GH.Objects.HeadSizeGUI = nil
+			end
+		end
+	end
+
+	-- ==========================================
 	-- REGISTRAR BOTÕES
 	-- ==========================================
 	GH.RegisterToggleButton("Hitbox", "Hitbox Gigante", Cheats_ToggleHitbox, "Combat", "Expande a hitbox dos inimigos para acertar mais facil")
@@ -687,4 +769,5 @@ return function(GH)
 	GH.RegisterToggleButton("InfiniteHealth", "Infinite Health", Cheats_ToggleInfiniteHealth, "Combat", "Mantem sua vida sempre no maximo")
 	GH.RegisterToggleButton("KillAura", "Kill Aura", Cheats_ToggleKillAura, "Combat", "Ataca automaticamente jogadores proximos")
 	GH.RegisterToggleButton("NoFallDamage", "No Fall Damage", Cheats_ToggleNoFallDamage, "Combat", "Remove dano de queda")
+	GH.RegisterToggleButton("HeadSize", "Head Size", Cheats_ToggleHeadSize, "Combat", "Amplia cabeca de jogadores para acertar mais facil")
 end

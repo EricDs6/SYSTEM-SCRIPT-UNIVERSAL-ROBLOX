@@ -1114,6 +1114,165 @@ return function(GH)
 	end
 
 	-- ==========================================
+	-- SPECTATE (Camera segue jogador)
+	-- ==========================================
+	function Cheats_ToggleSpectate(state, btn)
+		btn.Text = state and "Desativar Spectate" or "Spectate"
+		GH.Disconnect("SpectateDied")
+		GH.Disconnect("SpectateChanged")
+
+		if state then
+			local gui = Instance.new("ScreenGui")
+			gui.Name = "GH_SpectateList"
+			gui.ResetOnSpawn = false
+			gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+			gui.Parent = GH.TargetGui
+			GH.Objects.SpectateGUI = gui
+
+			local frame = Instance.new("Frame")
+			frame.Size = UDim2.new(0, 160, 0, 220)
+			frame.Position = UDim2.new(1, -170, 0.5, -110)
+			frame.BackgroundColor3 = GH.Theme.BG
+			frame.BorderSizePixel = 0
+			frame.Parent = gui
+			Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+			Instance.new("UIStroke", frame).Color = GH.Theme.Border
+
+			local title = Instance.new("TextLabel")
+			title.Size = UDim2.new(1, 0, 0, 24)
+			title.BackgroundColor3 = GH.Theme.Topbar
+			title.Text = "SPECTATE"
+			title.TextColor3 = GH.Theme.Accent
+			title.Font = Enum.Font.GothamBold
+			title.TextSize = 10
+			title.BorderSizePixel = 0
+			title.Parent = frame
+
+			local scroll = Instance.new("ScrollingFrame")
+			scroll.Size = UDim2.new(1, -8, 1, -30)
+			scroll.Position = UDim2.new(0, 4, 0, 28)
+			scroll.BackgroundTransparency = 1
+			scroll.ScrollBarThickness = 2
+			scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+			scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+			scroll.BorderSizePixel = 0
+			scroll.Parent = frame
+			Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 2)
+
+			for _, player in ipairs(Players:GetPlayers()) do
+				if player ~= LocalPlayer then
+					local plrBtn = Instance.new("TextButton")
+					plrBtn.Size = UDim2.new(1, 0, 0, 24)
+					plrBtn.BackgroundColor3 = GH.Theme.Card
+					plrBtn.Text = ""
+					plrBtn.AutoButtonColor = false
+					plrBtn.BorderSizePixel = 0
+					plrBtn.Parent = scroll
+					local nameLbl = Instance.new("TextLabel")
+					nameLbl.Size = UDim2.new(0.8, 0, 1, 0)
+					nameLbl.Position = UDim2.new(0, 8, 0, 0)
+					nameLbl.BackgroundTransparency = 1
+					nameLbl.Text = player.Name
+					nameLbl.TextColor3 = GH.Theme.Text
+					nameLbl.Font = Enum.Font.GothamMedium
+					nameLbl.TextSize = 11
+					nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+					nameLbl.Parent = plrBtn
+					plrBtn.MouseButton1Click:Connect(function()
+						if GH.Objects.SpectateGUI then
+							GH.Objects.SpectateGUI:Destroy()
+							GH.Objects.SpectateGUI = nil
+						end
+						btn.Text = "Vendo: " .. player.Name
+						workspace.CurrentCamera.CameraSubject = player.Character
+						GH.Connections.SpectateDied = player.CharacterAdded:Connect(function(char)
+							workspace.CurrentCamera.CameraSubject = char
+						end)
+					end)
+				end
+			end
+		else
+			workspace.CurrentCamera.CameraSubject = LocalPlayer.Character
+			if GH.Objects.SpectateGUI then
+				GH.Objects.SpectateGUI:Destroy()
+				GH.Objects.SpectateGUI = nil
+			end
+		end
+	end
+
+	-- ==========================================
+	-- GOTO PART (Teleporta para parte pelo nome)
+	-- ==========================================
+	function Cheats_ToggleGotoPart(state, btn)
+		btn.Text = state and "Desativar GotoPart" or "Goto Part"
+		if state then
+			local gui = Instance.new("ScreenGui")
+			gui.Name = "GH_GotoPartGUI"
+			gui.ResetOnSpawn = false
+			gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+			gui.Parent = GH.TargetGui
+			GH.Objects.GotoPartGUI = gui
+
+			local frame = Instance.new("Frame")
+			frame.Size = UDim2.new(0, 200, 0, 60)
+			frame.Position = UDim2.new(0.5, -100, 0.5, -30)
+			frame.BackgroundColor3 = GH.Theme.BG
+			frame.BorderSizePixel = 0
+			frame.Parent = gui
+			Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+			Instance.new("UIStroke", frame).Color = GH.Theme.Border
+
+			local title = Instance.new("TextLabel")
+			title.Size = UDim2.new(1, 0, 0, 20)
+			title.BackgroundColor3 = GH.Theme.Topbar
+			title.Text = "GOTO PART"
+			title.TextColor3 = GH.Theme.Accent
+			title.Font = Enum.Font.GothamBold
+			title.TextSize = 10
+			title.BorderSizePixel = 0
+			title.Parent = frame
+
+			local input = Instance.new("TextBox")
+			input.Size = UDim2.new(1, -16, 0, 22)
+			input.Position = UDim2.new(0, 8, 0, 26)
+			input.BackgroundColor3 = GH.Theme.Card
+			input.Text = ""
+			input.PlaceholderText = "Nome da parte..."
+			input.PlaceholderColor3 = GH.Theme.Off
+			input.TextColor3 = GH.Theme.Text
+			input.Font = Enum.Font.GothamMedium
+			input.TextSize = 11
+			input.ClearTextOnFocus = false
+			input.BorderSizePixel = 0
+			input.Parent = frame
+
+			local function teleportToPart(partName)
+				for _, v in ipairs(workspace:GetDescendants()) do
+					if v:IsA("BasePart") and v.Name:lower() == partName:lower() then
+						local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+						if hrp then
+							hrp.CFrame = v.CFrame + Vector3.new(0, 3, 0)
+							GH.ShowToast("TP para " .. v.Name, GH.Theme.On, 2)
+						end
+						break
+					end
+				end
+			end
+
+			input.FocusLost:Connect(function(enterPressed)
+				if enterPressed and input.Text ~= "" then
+					teleportToPart(input.Text)
+				end
+			end)
+		else
+			if GH.Objects.GotoPartGUI then
+				GH.Objects.GotoPartGUI:Destroy()
+				GH.Objects.GotoPartGUI = nil
+			end
+		end
+	end
+
+	-- ==========================================
 	-- REGISTRAR BOTÕES
 	-- ==========================================
 	GH.RegisterToggleButton("Fly", "Ativar Fly", Cheats_ToggleFly, "Movement", "Voar pelo mapa com WASD. Scroll ajusta velocidade")
@@ -1133,4 +1292,6 @@ return function(GH)
 	GH.RegisterToggleButton("Orbit", "Orbit", Cheats_ToggleOrbit, "Movement", "Gira ao redor de um jogador")
 	GH.RegisterToggleButton("HeadSit", "HeadSit", Cheats_ToggleHeadSit, "Movement", "Senta na cabeca de um jogador")
 	GH.RegisterToggleButton("VehicleFly", "Vehicle Fly", Cheats_ToggleVehicleFly, "Movement", "Voar dirigindo veiculos. WASD+QE")
+	GH.RegisterToggleButton("Spectate", "Spectate", Cheats_ToggleSpectate, "Movement", "Camera segue um jogador selecionado")
+	GH.RegisterToggleButton("GotoPart", "Goto Part", Cheats_ToggleGotoPart, "Movement", "Teleporta para uma parte pelo nome")
 end

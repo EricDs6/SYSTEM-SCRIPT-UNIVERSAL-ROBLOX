@@ -262,9 +262,59 @@ return function(GH)
 	end
 
 	-- ==========================================
+	-- NAKED (Remove todas as roupas)
+	-- ==========================================
+	function Cheats_ToggleNaked(state, btn)
+		btn.Text = state and "Desativar Naked" or "Naked"
+		if state then
+			local char = LocalPlayer.Character
+			if char then
+				for _, v in ipairs(char:GetDescendants()) do
+					if v:IsA("Clothing") or v:IsA("ShirtGraphic") then
+						v:Destroy()
+					end
+				end
+			end
+			GH.ShowToast("Roupas removidas!", GH.Theme.On, 2)
+		end
+	end
+
+	-- ==========================================
+	-- FREEZE (Congela todos os jogadores)
+	-- ==========================================
+	function Cheats_ToggleFreeze(state, btn)
+		btn.Text = state and "Desativar Freeze" or "Freeze All"
+		if state then
+			for _, player in ipairs(Players:GetPlayers()) do
+				if player ~= LocalPlayer and player.Character then
+					for _, part in ipairs(player.Character:GetDescendants()) do
+						if part:IsA("BasePart") and not part.Anchored then
+							part.Anchored = true
+						end
+					end
+				end
+			end
+			GH.ShowToast("Jogadores congelados!", GH.Theme.On, 2)
+		else
+			for _, player in ipairs(Players:GetPlayers()) do
+				if player ~= LocalPlayer and player.Character then
+					for _, part in ipairs(player.Character:GetDescendants()) do
+						if part:IsA("BasePart") and part.Anchored then
+							part.Anchored = false
+						end
+					end
+				end
+			end
+			GH.ShowToast("Jogadores descongelados!", GH.Theme.Off, 2)
+		end
+	end
+
+	-- ==========================================
 	-- REGISTRAR BOTÕES
 	-- ==========================================
 	GH.RegisterToggleButton("TrollFling", "Tornado Fling", Cheats_ToggleTrollFling, "Troll", "Gira rapidamente para jogar outros jogadores")
 	GH.RegisterToggleButton("TargetFling", "Target Fling", Cheats_ToggleTargetFling, "Troll", "Seleciona um alvo e voa ate ele para derrubar")
 	GH.RegisterToggleButton("Spasms", "Spasmos", Cheats_ToggleSpasmos, "Troll", "Animacao de convulsao (requer R6)")
+	GH.RegisterToggleButton("Naked", "Naked", Cheats_ToggleNaked, "Troll", "Remove todas as roupas do seu personagem")
+	GH.RegisterToggleButton("Freeze", "Freeze All", Cheats_ToggleFreeze, "Troll", "Congela todos os jogadores no servidor")
 end

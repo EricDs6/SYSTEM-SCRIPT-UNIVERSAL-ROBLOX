@@ -631,6 +631,115 @@ return function(GH)
 	end
 
 	-- ==========================================
+	-- FIRE CLICK DETECTORS
+	-- ==========================================
+	function Cheats_ToggleFireClickDetectors(state, btn)
+		btn.Text = state and "Desativar FireCD" or "Fire Click Detectors"
+		if state then
+			pcall(function()
+				for _, v in ipairs(workspace:GetDescendants()) do
+					if v:IsA("ClickDetector") then
+						pcall(function() fireclickdetector(v) end)
+					end
+				end
+			end)
+			GH.ShowToast("Click Detectors ativados!", GH.Theme.On, 2)
+		end
+	end
+
+	-- ==========================================
+	-- FIRE PROXIMITY PROMPTS
+	-- ==========================================
+	function Cheats_ToggleFireProximityPrompts(state, btn)
+		btn.Text = state and "Desativar FirePP" or "Fire Proximity Prompts"
+		if state then
+			pcall(function()
+				for _, v in ipairs(workspace:GetDescendants()) do
+					if v:IsA("ProximityPrompt") then
+						pcall(function() fireproximityprompt(v) end)
+					end
+				end
+			end)
+			GH.ShowToast("Proximity Prompts ativados!", GH.Theme.On, 2)
+		end
+	end
+
+	-- ==========================================
+	-- BTOOLS (Building Tools)
+	-- ==========================================
+	function Cheats_ToggleBTools(state, btn)
+		btn.Text = state and "Desativar BTools" or "BTools"
+		if state then
+			local bp = LocalPlayer:FindFirstChild("Backpack")
+			if bp then
+				for i = 1, 4 do
+					local tool = Instance.new("HopperBin")
+					tool.BinType = i
+					tool.Name = "BTool_" .. i
+					tool.Parent = bp
+				end
+			end
+			GH.ShowToast("BTools ativados!", GH.Theme.On, 2)
+		else
+			local bp = LocalPlayer:FindFirstChild("Backpack")
+			if bp then
+				for _, v in ipairs(bp:GetChildren()) do
+					if v:IsA("HopperBin") and v.Name:sub(1, 6) == "BTool_" then
+						v:Destroy()
+					end
+				end
+			end
+		end
+	end
+
+	-- ==========================================
+	-- BREAK VELOCITY
+	-- ==========================================
+	function Cheats_ToggleBreakVelocity(state, btn)
+		btn.Text = state and "Desativar BreakVel" or "Break Velocity"
+		if state then
+			local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+			if hrp then
+				hrp.AssemblyLinearVelocity = Vector3.zero
+				hrp.AssemblyAngularVelocity = Vector3.zero
+			end
+			for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.AssemblyLinearVelocity = Vector3.zero
+					part.AssemblyAngularVelocity = Vector3.zero
+				end
+			end
+			GH.ShowToast("Velocity resetado!", GH.Theme.On, 2)
+		end
+	end
+
+	-- ==========================================
+	-- INVISIBLE PARTS (Mostrar partes invisiveis)
+	-- ==========================================
+	local ShownParts = {}
+
+	function Cheats_ToggleInvisibleParts(state, btn)
+		btn.Text = state and "Desativar InvisParts" or "Invisible Parts"
+		if state then
+			ShownParts = {}
+			for _, v in ipairs(workspace:GetDescendants()) do
+				if v:IsA("BasePart") and v.Transparency == 1 then
+					table.insert(ShownParts, v)
+					v.Transparency = 0
+				end
+			end
+			GH.ShowToast(#ShownParts .. " partes invisiveis mostradas", GH.Theme.On, 2)
+		else
+			for _, v in ipairs(ShownParts) do
+				if v and v.Parent then
+					v.Transparency = 1
+				end
+			end
+			ShownParts = {}
+		end
+	end
+
+	-- ==========================================
 	-- REGISTRAR BOTOES
 	-- ==========================================
 	GH.RegisterToggleButton("ClickTP", "Tool TP Click", Cheats_ToggleTPTool, "Utility", "Ferramenta para teleportar clicando no chao")
@@ -645,4 +754,9 @@ return function(GH)
 	GH.RegisterToggleButton("AntiAFK", "Anti-AFK", Cheats_ToggleAntiAFK, "Utility", "Impede ser desconectado por inatividade")
 	GH.RegisterToggleButton("AntiKick", "Anti-Kick", Cheats_ToggleAntiKick, "Utility", "Impede ser expulso do servidor")
 	GH.RegisterToggleButton("AutoCollect", "Auto Collect", Cheats_ToggleAutoCollect, "Utility", "Coleta automaticamente tools e itens proximos")
+	GH.RegisterToggleButton("FireClickDetectors", "Fire Click Detectors", Cheats_ToggleFireClickDetectors, "Utility", "Ativa todos os ClickDetectors do mapa")
+	GH.RegisterToggleButton("FireProximityPrompts", "Fire Proximity Prompts", Cheats_ToggleFireProximityPrompts, "Utility", "Ativa todos os ProximityPrompts do mapa")
+	GH.RegisterToggleButton("BTools", "BTools", Cheats_ToggleBTools, "Utility", "Ferramentas de construcao (HopperBins)")
+	GH.RegisterToggleButton("BreakVelocity", "Break Velocity", Cheats_ToggleBreakVelocity, "Utility", "Reseta toda velocidade do personagem")
+	GH.RegisterToggleButton("InvisibleParts", "Invisible Parts", Cheats_ToggleInvisibleParts, "Utility", "Mostra partes que estao invisiveis no mapa")
 end
