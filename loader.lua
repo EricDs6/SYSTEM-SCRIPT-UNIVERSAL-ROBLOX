@@ -166,11 +166,9 @@ end
 -- ==========================================
 -- 3. INICIALIZAR: Montar UI + restaurar config
 -- ==========================================
-UpdateStatus("Construindo Interface...")
+UpdateStatus("Tudo pronto! Iniciando...")
 
-Core.Initialize()
-
--- Delay de 5 segundos antes de fechar o loading
+-- Delay de 5 segundos ANTES de abrir o painel principal
 task.wait(5)
 
 -- Transição suave para desaparecer (Fade Out)
@@ -182,3 +180,6 @@ LoadFrame.UIStroke.Transparency = 1
 
 task.wait(0.3)
 LoadGui:Destroy()
+
+-- Chama o painel principal APÓS a tela de load sumir completamente
+Core.Initialize()
