@@ -1255,11 +1255,11 @@ function GH.Initialize()
 			-- Encontrar o topbar (frame principal com titulo)
 			local mainFrame = screenGui:FindFirstChild("Main", true)
 			if mainFrame then
-				-- Criar frame discreto para stats no canto superior direito
+				-- Criar frame discreto para stats no centro do topbar
 				local statsFrame = Instance.new("Frame")
 				statsFrame.Name = "StatsFrame"
-				statsFrame.Size = UDim2.new(0, 180, 0, 16)
-				statsFrame.Position = UDim2.new(1, -190, 0, 2)
+				statsFrame.Size = UDim2.new(0, 120, 0, 16)
+				statsFrame.Position = UDim2.new(0.5, -60, 0, 2)
 				statsFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 				statsFrame.BackgroundTransparency = 0.3
 				statsFrame.BorderSizePixel = 0
@@ -1279,7 +1279,7 @@ function GH.Initialize()
 				statsLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
 				statsLabel.TextSize = 10
 				statsLabel.Font = Enum.Font.Gotham
-				statsLabel.TextXAlignment = Enum.TextXAlignment.Right
+				statsLabel.TextXAlignment = Enum.TextXAlignment.Center
 				statsLabel.Parent = statsFrame
 
 				GH.Objects.StatsLabel = statsLabel
