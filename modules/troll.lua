@@ -221,12 +221,18 @@ return function(GH)
 	-- ==========================================
 	function Cheats_ToggleSpasmos(state, btn)
 		btn.Text = state and "Desativar Spasmos" or "Spasmos"
-		GH.UnregisterMasterLoop("Spasms")
 
 		-- Limpar animacao anterior
 		pcall(function()
-			if GH.Cache.SpasmTrack then GH.Cache.SpasmTrack:Stop(); GH.Cache.SpasmTrack = nil end
-			if GH.Cache.SpasmAnim then GH.Cache.SpasmAnim:Destroy(); GH.Cache.SpasmAnim = nil end
+			if GH.Cache.SpasmTrack then
+				GH.Cache.SpasmTrack:Stop()
+				GH.Cache.SpasmTrack:Destroy()
+				GH.Cache.SpasmTrack = nil
+			end
+			if GH.Cache.SpasmAnim then
+				GH.Cache.SpasmAnim:Destroy()
+				GH.Cache.SpasmAnim = nil
+			end
 		end)
 
 		if state then
@@ -234,17 +240,14 @@ return function(GH)
 			local hum = char and char:FindFirstChildOfClass("Humanoid")
 			if not hum then return end
 
-			-- Verificar R6 (FE Cosmic so funciona em R6)
-			local isR6 = hum.RigType == Enum.HumanoidRigType.R6
-			if not isR6 then
-				GH.ShowToast("Spasmos: Requer R6", GH.Theme.Red, 3)
-				GH.States.Spasms = false
-				btn.Text = "Spasmos"
-				return
-			end
-
+			-- Limpar tracks antigas do animator
 			local animator = hum:FindFirstChildOfClass("Animator")
-			if not animator then
+			if animator then
+				for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+					track:Stop(0)
+					track:Destroy()
+				end
+			else
 				animator = Instance.new("Animator")
 				animator.Parent = hum
 			end
@@ -252,13 +255,9 @@ return function(GH)
 			GH.Cache.SpasmAnim = Instance.new("Animation")
 			GH.Cache.SpasmAnim.AnimationId = "rbxassetid://33796059"
 			GH.Cache.SpasmTrack = animator:LoadAnimation(GH.Cache.SpasmAnim)
+			GH.Cache.SpasmTrack.Looped = true
 			GH.Cache.SpasmTrack:Play()
 			GH.Cache.SpasmTrack:AdjustSpeed(99)
-		else
-			pcall(function()
-				if GH.Cache.SpasmTrack then GH.Cache.SpasmTrack:Stop(); GH.Cache.SpasmTrack = nil end
-				if GH.Cache.SpasmAnim then GH.Cache.SpasmAnim:Destroy(); GH.Cache.SpasmAnim = nil end
-			end)
 		end
 	end
 
