@@ -24,31 +24,33 @@ end
 local LoadingGui = Instance.new("ScreenGui")
 LoadingGui.Name = "SystemScript_Loading"
 LoadingGui.ResetOnSpawn = false
-LoadingGui.IgnoreGuiInset = true
 LoadingGui.DisplayOrder = 999
 LoadingGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 LoadingGui.Parent = TargetGui
 
--- Fundo escuro
-local BG = Instance.new("Frame")
-BG.Name = "BG"
-BG.Size = UDim2.new(1, 0, 1, 0)
-BG.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-BG.BackgroundTransparency = 0
-BG.BorderSizePixel = 0
-BG.Parent = LoadingGui
-
--- Container centralizado
+-- Container centralizado (sem fundo fullscreen)
 local Center = Instance.new("Frame")
-Center.Size = UDim2.new(0, 260, 0, 120)
-Center.Position = UDim2.new(0.5, -130, 0.5, -60)
-Center.BackgroundTransparency = 1
-Center.Parent = BG
+Center.Size = UDim2.new(0, 260, 0, 140)
+Center.Position = UDim2.new(0.5, -130, 0.5, -70)
+Center.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+Center.BackgroundTransparency = 0.15
+Center.BorderSizePixel = 0
+Center.Parent = LoadingGui
+
+local CenterCorner = Instance.new("UICorner")
+CenterCorner.CornerRadius = UDim.new(0, 10)
+CenterCorner.Parent = Center
+
+local CenterBorder = Instance.new("UIStroke")
+CenterBorder.Color = Color3.fromRGB(60, 60, 60)
+CenterBorder.Thickness = 1
+CenterBorder.Transparency = 0.4
+CenterBorder.Parent = Center
 
 -- Titulo "SYSTEM"
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 32)
-Title.Position = UDim2.new(0, 0, 0, 0)
+Title.Position = UDim2.new(0, 0, 0, 10)
 Title.BackgroundTransparency = 1
 Title.Text = "SYSTEM"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
@@ -57,20 +59,13 @@ Title.TextSize = 24
 Title.TextTransparency = 1
 Title.Parent = Center
 
--- Spinner (4 pontes rolando)
+-- Spinner
 local SpinnerFrame = Instance.new("Frame")
-SpinnerFrame.Size = UDim2.new(0, 40, 0, 40)
-SpinnerFrame.Position = UDim2.new(0.5, -20, 0, 48)
+SpinnerFrame.Size = UDim2.new(0, 36, 0, 36)
+SpinnerFrame.Position = UDim2.new(0.5, -18, 0, 48)
 SpinnerFrame.BackgroundTransparency = 1
 SpinnerFrame.Parent = Center
 
-local SpinnerCircle = Instance.new("UIStroke")
-SpinnerCircle.Thickness = 2
-SpinnerCircle.Color = Color3.fromRGB(0, 120, 210)
-SpinnerCircle.Transparency = 0.5
-SpinnerCircle.Parent = SpinnerFrame
-
--- Arco visivel (Frame transparente com borda visivel em um quadrante)
 local Arc = Instance.new("Frame")
 Arc.Size = UDim2.new(1, 0, 1, 0)
 Arc.BackgroundTransparency = 1
@@ -89,7 +84,7 @@ ArcCorner.Parent = Arc
 -- Linha de progresso
 local ProgressBG = Instance.new("Frame")
 ProgressBG.Size = UDim2.new(0, 180, 0, 3)
-ProgressBG.Position = UDim2.new(0.5, -90, 0, 100)
+ProgressBG.Position = UDim2.new(0.5, -90, 0, 96)
 ProgressBG.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 ProgressBG.BorderSizePixel = 0
 ProgressBG.Parent = Center
@@ -111,7 +106,7 @@ ProgressFill.Parent = ProgressBar
 -- Texto de status
 local StatusText = Instance.new("TextLabel")
 StatusText.Size = UDim2.new(1, 0, 0, 16)
-StatusText.Position = UDim2.new(0, 0, 0, 110)
+StatusText.Position = UDim2.new(0, 0, 0, 112)
 StatusText.BackgroundTransparency = 1
 StatusText.Text = "Carregando..."
 StatusText.TextColor3 = Color3.fromRGB(140, 140, 140)
@@ -148,7 +143,6 @@ task.spawn(function()
 	while spinning do
 		angle = angle + 4
 		Arc.Rotation = angle
-		SpinnerCircle.Transparency = 0.5 + math.sin(tick() * 3) * 0.3
 		RunService.RenderStepped:Wait()
 	end
 end)
@@ -276,7 +270,7 @@ pcall(function()
 	TweenService:Create(StatusText, fadeOutInfo, {TextTransparency = 1}):Play()
 	TweenService:Create(ProgressBG, fadeOutInfo, {BackgroundTransparency = 1}):Play()
 	TweenService:Create(ProgressBar, fadeOutInfo, {BackgroundTransparency = 1}):Play()
-	TweenService:Create(BG, fadeOutInfo, {BackgroundTransparency = 1}):Play()
+	TweenService:Create(Center, fadeOutInfo, {BackgroundTransparency = 1}):Play()
 end)
 
 task.delay(0.6, function()
