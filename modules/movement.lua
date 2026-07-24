@@ -459,13 +459,13 @@ return function(GH)
 	-- ==========================================
 	-- FLOAT (Plataforma voadora)
 	-- ==========================================
-	local FloatConn = nil
 	local FloatValue = -3.1
 
 	function Cheats_ToggleFloat(state, btn)
 		btn.Text = state and "Desativar Float" or "Float"
 		GH.UnregisterMasterLoop("Float")
 		GH.Disconnect("FloatKey")
+		GH.Disconnect("FloatLoop")
 
 		local char = LocalPlayer.Character
 		if char then
@@ -473,7 +473,6 @@ return function(GH)
 			if old then old:Destroy() end
 		end
 
-		if FloatConn then FloatConn:Disconnect(); FloatConn = nil end
 		if state then
 			local char = LocalPlayer.Character
 			local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -494,9 +493,9 @@ return function(GH)
 				elseif input.KeyCode == Enum.KeyCode.E then FloatValue = FloatValue + 0.5 end
 			end)
 
-			FloatConn = RunService.Heartbeat:Connect(function()
+			GH.Connections.FloatLoop = RunService.Heartbeat:Connect(function()
 				if not GH.States.Float then
-					if FloatConn then FloatConn:Disconnect(); FloatConn = nil end
+					GH.Disconnect("FloatLoop")
 					return
 				end
 				local c = LocalPlayer.Character
@@ -552,12 +551,6 @@ return function(GH)
 					end
 					return
 				end
-				pcall(function()
-					local r = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-					if r and r:FindFirstChild("Humanoid") then
-						r.Humanoid.RootPart.Velocity = Vector3.new(0, 0, 0)
-					end
-				end)
 			end)
 		else
 			workspace.Gravity = GH.Cache.SwimOldGravity or 196.2
