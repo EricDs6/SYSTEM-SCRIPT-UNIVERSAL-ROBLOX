@@ -17,21 +17,21 @@ return function(GH)
 			HighlightFill = Color3.fromRGB(255, 30, 30),
 			HighlightOutline = Color3.fromRGB(255, 80, 80),
 			Text = Color3.fromRGB(255, 60, 60),
-			Tag = "[INIMIGO]",
+			Tag = GH.T("esp_enemy"),
 			TextColor = Color3.fromRGB(255, 255, 255),
 		},
 		Ally = {
 			HighlightFill = Color3.fromRGB(30, 200, 30),
 			HighlightOutline = Color3.fromRGB(80, 255, 80),
 			Text = Color3.fromRGB(60, 255, 60),
-			Tag = "[ALIADO]",
+			Tag = GH.T("esp_ally"),
 			TextColor = Color3.fromRGB(255, 255, 255),
 		},
 		Neutral = {
 			HighlightFill = Color3.fromRGB(255, 200, 30),
 			HighlightOutline = Color3.fromRGB(255, 230, 100),
 			Text = Color3.fromRGB(255, 220, 50),
-			Tag = "[JOGADOR]",
+			Tag = GH.T("esp_neutral"),
 			TextColor = Color3.fromRGB(255, 255, 255),
 		},
 	}
@@ -518,7 +518,7 @@ return function(GH)
 
 	function Cheats_ToggleSilentAim(state, btn)
 		GH.SilentAimConfig.Enabled = state
-		GH.ShowToast(state and "Silent Aim ativado" or "Silent Aim desativado", state and GH.Theme.On or GH.Theme.Off, 2)
+		GH.ShowToast(state and ("Silent Aim " .. GH.T("toast_activated")) or ("Silent Aim " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
 	-- ==========================================
@@ -564,7 +564,7 @@ return function(GH)
 				end
 			end)
 		end
-		GH.ShowToast(state and "No Fling ativado" or "No Fling desativado", state and GH.Theme.On or GH.Theme.Off, 2)
+		GH.ShowToast(state and ("No Fling " .. GH.T("toast_activated")) or ("No Fling " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
 	-- ==========================================
@@ -588,7 +588,7 @@ return function(GH)
 	end)
 
 	function Cheats_ToggleWallBang(state, btn)
-		GH.ShowToast(state and "Wall Bang ativado" or "Wall Bang desativado", state and GH.Theme.On or GH.Theme.Off, 2)
+		GH.ShowToast(state and ("Wall Bang " .. GH.T("toast_activated")) or ("Wall Bang " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
 	-- ==========================================
@@ -607,7 +607,7 @@ return function(GH)
 	end)
 
 	function Cheats_ToggleNoFallDamage(state, btn)
-		GH.ShowToast(state and "No Fall Damage ativado" or "No Fall Damage desativado", state and GH.Theme.On or GH.Theme.Off, 2)
+		GH.ShowToast(state and ("No Fall Damage " .. GH.T("toast_activated")) or ("No Fall Damage " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
 	-- ==========================================
@@ -624,7 +624,7 @@ return function(GH)
 				if hum then hum.Health = hum.MaxHealth end
 			end)
 		end
-		GH.ShowToast(state and "Infinite Health ativado" or "Infinite Health desativado", state and GH.Theme.On or GH.Theme.Off, 2)
+		GH.ShowToast(state and ("Infinite Health " .. GH.T("toast_activated")) or ("Infinite Health " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
 	-- ==========================================
@@ -663,7 +663,7 @@ return function(GH)
 				end
 			end)
 		end
-		GH.ShowToast(state and "Kill Aura ativado" or "Kill Aura desativado", state and GH.Theme.On or GH.Theme.Off, 2)
+		GH.ShowToast(state and ("Kill Aura " .. GH.T("toast_activated")) or ("Kill Aura " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
 	-- ==========================================
@@ -692,7 +692,7 @@ return function(GH)
 		end
 
 		local dropdown = GH.Tabs["Combat"]:AddDropdown("HeadSizePlayer", {
-			Title = "Head Size - Selecionar Player",
+			Title = GH.T("dropdown_headsize_title"),
 			Values = {},
 			AllowNull = true,
 		})
@@ -705,7 +705,7 @@ return function(GH)
 				if head and head:IsA("BasePart") then
 					head.Size = Vector3.new(5, 5, 5)
 					head.CanCollide = false
-					GH.ShowToast("Head de " .. name .. " ampliada!", GH.Theme.Red, 2)
+					GH.ShowToast(string.format(GH.T("toast_head_amplified"), name), GH.Theme.Red, 2)
 				end
 			end
 		end)
@@ -722,14 +722,14 @@ return function(GH)
 	-- ==========================================
 	-- REGISTRAR BOTÕES
 	-- ==========================================
-	GH.RegisterToggleButton("Hitbox", "Hitbox Gigante", Cheats_ToggleHitbox, "Combat", "Expande a hitbox dos inimigos para acertar mais facil")
-	GH.RegisterToggleButton("ESP", "Ativar ESP", Cheats_ToggleESP, "Combat", "Mostra nomes, vida e distancia dos jogadores atraves de paredes")
-	GH.RegisterToggleButton("TriggerBot", "TriggerBot", Cheats_ToggleTriggerBot, "Combat", "Atira automaticamente quando mira no inimigo")
-	GH.RegisterToggleButton("SilentAim", "Silent Aim", Cheats_ToggleSilentAim, "Combat", "Redireciona tiros para o jogador mais proximo do cursor")
-	GH.RegisterToggleButton("NoFling", "No Fling", Cheats_ToggleNoFling, "Combat", "Impede que voce seja jogado por exploits de fling")
-	GH.RegisterToggleButton("WallBang", "Wall Bang", Cheats_ToggleWallBang, "Combat", "Permite atirar atraves de paredes e objeitos")
-	GH.RegisterToggleButton("InfiniteHealth", "Infinite Health", Cheats_ToggleInfiniteHealth, "Combat", "Mantem sua vida sempre no maximo")
-	GH.RegisterToggleButton("KillAura", "Kill Aura", Cheats_ToggleKillAura, "Combat", "Ataca automaticamente jogadores proximos")
-	GH.RegisterToggleButton("NoFallDamage", "No Fall Damage", Cheats_ToggleNoFallDamage, "Combat", "Remove dano de queda")
-	GH.RegisterToggleButton("HeadSize", "Head Size", Cheats_ToggleHeadSize, "Combat", "Amplia cabeca de jogadores para acertar mais facil")
+	GH.RegisterToggleButton("Hitbox", GH.T("toggle_hitbox"), Cheats_ToggleHitbox, "Combat", GH.T("desc_hitbox"))
+	GH.RegisterToggleButton("ESP", GH.T("toggle_esp"), Cheats_ToggleESP, "Combat", GH.T("desc_esp"))
+	GH.RegisterToggleButton("TriggerBot", GH.T("toggle_triggerbot"), Cheats_ToggleTriggerBot, "Combat", GH.T("desc_triggerbot"))
+	GH.RegisterToggleButton("SilentAim", GH.T("toggle_silentaim"), Cheats_ToggleSilentAim, "Combat", GH.T("desc_silentaim"))
+	GH.RegisterToggleButton("NoFling", GH.T("toggle_nofling"), Cheats_ToggleNoFling, "Combat", GH.T("desc_nofling"))
+	GH.RegisterToggleButton("WallBang", GH.T("toggle_wallbang"), Cheats_ToggleWallBang, "Combat", GH.T("desc_wallbang"))
+	GH.RegisterToggleButton("InfiniteHealth", GH.T("toggle_infinitehealth"), Cheats_ToggleInfiniteHealth, "Combat", GH.T("desc_infinitehealth"))
+	GH.RegisterToggleButton("KillAura", GH.T("toggle_killaura"), Cheats_ToggleKillAura, "Combat", GH.T("desc_killaura"))
+	GH.RegisterToggleButton("NoFallDamage", GH.T("toggle_nofalldamage"), Cheats_ToggleNoFallDamage, "Combat", GH.T("desc_nofalldamage"))
+	GH.RegisterToggleButton("HeadSize", GH.T("toggle_headsize"), Cheats_ToggleHeadSize, "Combat", GH.T("desc_headsize"))
 end

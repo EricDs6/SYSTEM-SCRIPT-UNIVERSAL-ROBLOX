@@ -314,7 +314,7 @@ return function(GH)
 						local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 						if hum and hum.SeatPart then hum.Sit = false end
 						hrp.CFrame = GH.Cache.LastDeathCFrame
-						GH.ShowToast("Flashback!", GH.Theme.Accent, 2)
+						GH.ShowToast(GH.T("toast_flashback"), GH.Theme.Accent, 2)
 					end
 				end
 			end)
@@ -348,21 +348,21 @@ return function(GH)
 		end
 		if not state then return end
 
-		local section = GH.Tabs["Utility"]:AddSection("Coordenadas")
+		local section = GH.Tabs["Utility"]:AddSection(GH.T("section_coords"))
 
 		local paragraph = section:AddParagraph({
-			Title = "Posicao Atual",
+			Title = GH.T("coords_current"),
 			Content = "X: 0  Y: 0  Z: 0",
 		})
 		GH.Objects.CoordsParagraph = paragraph
 
 		local saveBtn = section:AddButton({
-			Title = "Salvar Posicao",
+			Title = GH.T("coords_save"),
 			Callback = function()
 				local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 				if hrp then
 					local pos = hrp.Position
-					table.insert(CacheCoords.SavedPoints, { Name = "Ponto " .. (#CacheCoords.SavedPoints + 1), Position = pos })
+					table.insert(CacheCoords.SavedPoints, { Name = GH.T("coords_point_prefix") .. (#CacheCoords.SavedPoints + 1), Position = pos })
 					if GH.Objects.CoordsSavedDropdown then
 						local names = {}
 						for _, p in ipairs(CacheCoords.SavedPoints) do
@@ -370,7 +370,7 @@ return function(GH)
 						end
 						GH.Objects.CoordsSavedDropdown:SetValues(names)
 					end
-					GH.ShowToast("Posicao salva!", GH.Theme.On, 2)
+					GH.ShowToast(GH.T("toast_position_saved"), GH.Theme.On, 2)
 				end
 			end,
 		})
@@ -382,14 +382,14 @@ return function(GH)
 		end
 
 		local dropdown = section:AddDropdown("CoordsSaved_Select", {
-			Title = "Pontos Salvos",
+			Title = GH.T("coords_saved"),
 			Values = savedNames,
 			AllowNull = true,
 		})
 		GH.Objects.CoordsSavedDropdown = dropdown
 
 		local tpBtn = section:AddButton({
-			Title = "TP para Ponto Selecionado",
+			Title = GH.T("coords_tp"),
 			Callback = function()
 				local selectedName = dropdown.Value
 				if selectedName then
@@ -398,7 +398,7 @@ return function(GH)
 							local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 							if hrp then
 								hrp.CFrame = CFrame.new(p.Position + Vector3.new(0, 3, 0))
-								GH.ShowToast("TP para " .. p.Name, GH.Theme.On, 2)
+								GH.ShowToast(string.format(GH.T("toast_tp_to"), p.Name), GH.Theme.On, 2)
 							end
 							break
 						end
@@ -503,11 +503,11 @@ return function(GH)
 	function Cheats_ToggleAntiKick(state, btn)
 		if state then
 			if not hookfunction then
-				GH.ShowToast("Anti-Kick: hookfunction nao disponivel", GH.Theme.Red, 3)
+				GH.ShowToast(GH.T("toast_anti_kick_no_hook"), GH.Theme.Red, 3)
 				GH.States.AntiKick = false; return
 			end
 			OldKickFunction = hookfunction(LocalPlayer.Kick, function() end)
-			GH.ShowToast("Anti-Kick ativado", GH.Theme.On, 2)
+			GH.ShowToast(GH.T("toast_anti_kick"), GH.Theme.On, 2)
 		else
 			if OldKickFunction then
 				pcall(function() hookfunction(LocalPlayer.Kick, OldKickFunction) end)
@@ -580,7 +580,7 @@ return function(GH)
 					end
 				end
 			end)
-			GH.ShowToast("Click Detectors ativados!", GH.Theme.On, 2)
+			GH.ShowToast(GH.T("toast_click_detectors"), GH.Theme.On, 2)
 		end
 	end
 
@@ -596,7 +596,7 @@ return function(GH)
 					end
 				end
 			end)
-			GH.ShowToast("Proximity Prompts ativados!", GH.Theme.On, 2)
+			GH.ShowToast(GH.T("toast_proximity_prompts"), GH.Theme.On, 2)
 		end
 	end
 
@@ -614,7 +614,7 @@ return function(GH)
 					tool.Parent = bp
 				end
 			end
-			GH.ShowToast("BTools ativados!", GH.Theme.On, 2)
+			GH.ShowToast(GH.T("toast_btools"), GH.Theme.On, 2)
 		else
 			local bp = LocalPlayer:FindFirstChild("Backpack")
 			if bp then
@@ -643,7 +643,7 @@ return function(GH)
 					part.AssemblyAngularVelocity = Vector3.zero
 				end
 			end
-			GH.ShowToast("Velocity resetado!", GH.Theme.On, 2)
+			GH.ShowToast(GH.T("toast_velocity_reset"), GH.Theme.On, 2)
 		end
 	end
 
@@ -661,7 +661,7 @@ return function(GH)
 					v.Transparency = 0
 				end
 			end
-			GH.ShowToast(#ShownParts .. " partes invisiveis mostradas", GH.Theme.On, 2)
+			GH.ShowToast(string.format(GH.T("toast_invisible_shown"), #ShownParts), GH.Theme.On, 2)
 		else
 			for _, v in ipairs(ShownParts) do
 				if v and v.Parent then
@@ -675,21 +675,21 @@ return function(GH)
 	-- ==========================================
 	-- REGISTRAR BOTOES
 	-- ==========================================
-	GH.RegisterToggleButton("ClickTP", "Tool TP Click", Cheats_ToggleTPTool, "Utility", "Ferramenta para teleportar clicando no chao")
-	GH.RegisterToggleButton("Gravity", "Gravity Baixa", Cheats_ToggleGravity, "Utility", "Gravidade reduzida para pular alto")
-	GH.RegisterToggleButton("CustomSpawn", "Marcar Spawn", Cheats_ToggleCustomSpawn, "Utility", "Marca posicao para renascer automaticamente")
-	GH.RegisterToggleButton("Freecam", "Freecam", Cheats_ToggleFreecam, "Utility", "Camera livre para explorar o mapa. WASD+QE+Mouse")
-	GH.RegisterToggleButton("Flashback", "Flashback", Cheats_ToggleFlashback, "Utility", "Pressione P para voltar ao local da ultima morte")
-	GH.RegisterToggleButton("Coords", "Coordenadas", Cheats_ToggleCoords, "Utility", "Mostra coordenadas atuais e salva posicoes")
-	GH.RegisterToggleButton("ServerRejoin", "Server Rejoin", Cheats_ToggleServerRejoin, "Utility", "Reconecta ao mesmo servidor")
-	GH.RegisterToggleButton("AutoClicker", "Auto-Clicker", Cheats_ToggleAutoClicker, "Utility", "Clique automatico segurando a tecla X")
-	GH.RegisterToggleButton("ProximityInstant", "Proximity Instant", Cheats_ToggleProximityInstant, "Utility", "Interacao instantanea com prompts sem segurar")
-	GH.RegisterToggleButton("AntiAFK", "Anti-AFK", Cheats_ToggleAntiAFK, "Utility", "Impede ser desconectado por inatividade")
-	GH.RegisterToggleButton("AntiKick", "Anti-Kick", Cheats_ToggleAntiKick, "Utility", "Impede ser expulso do servidor")
-	GH.RegisterToggleButton("AutoCollect", "Auto Collect", Cheats_ToggleAutoCollect, "Utility", "Coleta automaticamente tools e itens proximos")
-	GH.RegisterToggleButton("FireClickDetectors", "Fire Click Detectors", Cheats_ToggleFireClickDetectors, "Utility", "Ativa todos os ClickDetectors do mapa")
-	GH.RegisterToggleButton("FireProximityPrompts", "Fire Proximity Prompts", Cheats_ToggleFireProximityPrompts, "Utility", "Ativa todos os ProximityPrompts do mapa")
-	GH.RegisterToggleButton("BTools", "BTools", Cheats_ToggleBTools, "Utility", "Ferramentas de construcao (HopperBins)")
-	GH.RegisterToggleButton("BreakVelocity", "Break Velocity", Cheats_ToggleBreakVelocity, "Utility", "Reseta toda velocidade do personagem")
-	GH.RegisterToggleButton("InvisibleParts", "Invisible Parts", Cheats_ToggleInvisibleParts, "Utility", "Mostra partes que estao invisiveis no mapa")
+	GH.RegisterToggleButton("ClickTP", GH.T("toggle_clicktp"), Cheats_ToggleTPTool, "Utility", GH.T("desc_clicktp"))
+	GH.RegisterToggleButton("Gravity", GH.T("toggle_gravity"), Cheats_ToggleGravity, "Utility", GH.T("desc_gravity"))
+	GH.RegisterToggleButton("CustomSpawn", GH.T("toggle_customspawn"), Cheats_ToggleCustomSpawn, "Utility", GH.T("desc_customspawn"))
+	GH.RegisterToggleButton("Freecam", GH.T("toggle_freecam"), Cheats_ToggleFreecam, "Utility", GH.T("desc_freecam"))
+	GH.RegisterToggleButton("Flashback", GH.T("toggle_flashback"), Cheats_ToggleFlashback, "Utility", GH.T("desc_flashback"))
+	GH.RegisterToggleButton("Coords", GH.T("toggle_coords"), Cheats_ToggleCoords, "Utility", GH.T("desc_coords"))
+	GH.RegisterToggleButton("ServerRejoin", GH.T("toggle_serverrejoin"), Cheats_ToggleServerRejoin, "Utility", GH.T("desc_serverrejoin"))
+	GH.RegisterToggleButton("AutoClicker", GH.T("toggle_autoclicker"), Cheats_ToggleAutoClicker, "Utility", GH.T("desc_autoclicker"))
+	GH.RegisterToggleButton("ProximityInstant", GH.T("toggle_proximityinstant"), Cheats_ToggleProximityInstant, "Utility", GH.T("desc_proximityinstant"))
+	GH.RegisterToggleButton("AntiAFK", GH.T("toggle_antiafk"), Cheats_ToggleAntiAFK, "Utility", GH.T("desc_antiafk"))
+	GH.RegisterToggleButton("AntiKick", GH.T("toggle_antikick"), Cheats_ToggleAntiKick, "Utility", GH.T("desc_antikick"))
+	GH.RegisterToggleButton("AutoCollect", GH.T("toggle_autocollect"), Cheats_ToggleAutoCollect, "Utility", GH.T("desc_autocollect"))
+	GH.RegisterToggleButton("FireClickDetectors", GH.T("toggle_fireclickdetectors"), Cheats_ToggleFireClickDetectors, "Utility", GH.T("desc_fireclickdetectors"))
+	GH.RegisterToggleButton("FireProximityPrompts", GH.T("toggle_fireproximityprompts"), Cheats_ToggleFireProximityPrompts, "Utility", GH.T("desc_fireproximityprompts"))
+	GH.RegisterToggleButton("BTools", GH.T("toggle_btools"), Cheats_ToggleBTools, "Utility", GH.T("desc_btools"))
+	GH.RegisterToggleButton("BreakVelocity", GH.T("toggle_breakvelocity"), Cheats_ToggleBreakVelocity, "Utility", GH.T("desc_breakvelocity"))
+	GH.RegisterToggleButton("InvisibleParts", GH.T("toggle_invisibleparts"), Cheats_ToggleInvisibleParts, "Utility", GH.T("desc_invisible_parts"))
 end

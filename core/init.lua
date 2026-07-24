@@ -17,6 +17,574 @@ local LocalPlayer = Players.LocalPlayer
 -- ==========================================
 local GH = {}
 
+-- ==========================================
+-- LOCALES (PT/EN/ES)
+-- ==========================================
+GH.Locales = {
+	pt = {
+		-- Settings
+		settings_config = "Configuracoes",
+		settings_language = "Idioma",
+		settings_debug_mode = "Debug Mode",
+		settings_show_distance = "Mostrar Distancia",
+		settings_show_health = "Mostrar Vida",
+		settings_show_tag = "Mostrar Tag",
+		settings_show_name = "Mostrar Nome",
+		settings_hitbox_size = "Tamanho Hitbox",
+		settings_esp_max_distance = "Distancia Max ESP",
+		settings_noclip_radius = "Raio NoClip",
+		settings_fly_speed = "Velocidade Fly",
+		-- Toasts
+		toast_activated = "Ativado!",
+		toast_deactivated = "Desativado!",
+		toast_script_loaded = "Script carregado com sucesso!",
+		toast_debug_failed = "DEBUG: %s falhou",
+		-- ESP
+		esp_enemy = "[INIMIGO]",
+		esp_ally = "[ALIADO]",
+		esp_neutral = "[JOGADOR]",
+		-- Toggle titles
+		toggle_hitbox = "Hitbox Gigante",
+		toggle_esp = "Ativar ESP",
+		toggle_triggerbot = "TriggerBot",
+		toggle_silentaim = "Silent Aim",
+		toggle_nofling = "No Fling",
+		toggle_wallbang = "Wall Bang",
+		toggle_infinitehealth = "Infinite Health",
+		toggle_killaura = "Kill Aura",
+		toggle_nofalldamage = "No Fall Damage",
+		toggle_headsize = "Head Size",
+		toggle_fly = "Ativar Fly",
+		toggle_noclip = "Ativar NoClip",
+		toggle_sprint = "Sprint (Shift)",
+		toggle_speed = "Speed Hack",
+		toggle_infinitejump = "Infinite Jump",
+		toggle_bunnyhop = "Bunny Hop",
+		toggle_teleportplayer = "TP para Player",
+		toggle_blink = "Blink (Q)",
+		toggle_vehiclespeed = "Vehicle Speed",
+		toggle_nojumpcooldown = "No Jump Cooldown",
+		toggle_float = "Float",
+		toggle_swim = "Swim",
+		toggle_vehiclegoto = "Vehicle Goto",
+		toggle_walkto = "Walk To",
+		toggle_orbit = "Orbit",
+		toggle_headsit = "HeadSit",
+		toggle_vehiclefly = "Vehicle Fly",
+		toggle_spectate = "Spectate",
+		toggle_gotopart = "Goto Part",
+		toggle_xray = "X-Ray (Paredes)",
+		toggle_nightmode = "Night Mode",
+		toggle_fullbright = "Fullbright",
+		toggle_tracers = "Tracers",
+		toggle_crosshair = "Custom Crosshair",
+		toggle_fovchanger = "FOV Changer",
+		toggle_clicktp = "Tool TP Click",
+		toggle_gravity = "Gravity Baixa",
+		toggle_customspawn = "Marcar Spawn",
+		toggle_freecam = "Freecam",
+		toggle_flashback = "Flashback",
+		toggle_coords = "Coordenadas",
+		toggle_serverrejoin = "Server Rejoin",
+		toggle_autoclicker = "Auto-Clicker",
+		toggle_proximityinstant = "Proximity Instant",
+		toggle_antiafk = "Anti-AFK",
+		toggle_antikick = "Anti-Kick",
+		toggle_autocollect = "Auto Collect",
+		toggle_fireclickdetectors = "Fire Click Detectors",
+		toggle_fireproximityprompts = "Fire Proximity Prompts",
+		toggle_btools = "BTools",
+		toggle_breakvelocity = "Break Velocity",
+		toggle_invisibleparts = "Invisible Parts",
+		toggle_trollfling = "Tornado Fling",
+		toggle_targetfling = "Target Fling",
+		toggle_spasms = "Spasmos",
+		toggle_naked = "Naked",
+		toggle_freeze = "Freeze All",
+		-- Toggle descriptions
+		desc_hitbox = "Expande a hitbox dos inimigos para acertar mais facil",
+		desc_esp = "Mostra nomes, vida e distancia dos jogadores atraves de paredes",
+		desc_triggerbot = "Atira automaticamente quando mira no inimigo",
+		desc_silentaim = "Redireciona tiros para o jogador mais proximo do cursor",
+		desc_nofling = "Impede que voce seja jogado por exploits de fling",
+		desc_wallbang = "Permite atirar atraves de paredes e objeitos",
+		desc_infinitehealth = "Mantem sua vida sempre no maximo",
+		desc_killaura = "Ataca automaticamente jogadores proximos",
+		desc_nofalldamage = "Remove dano de queda",
+		desc_headsize = "Amplia cabeca de jogadores para acertar mais facil",
+		desc_fly = "Voar pelo mapa com WASD. Scroll ajusta velocidade",
+		desc_noclip = "Atravessar paredes e objeitos solidos",
+		desc_sprint = "Correr mais segurando a tecla Shift",
+		desc_speed = "Aumenta a velocidade de caminhada",
+		desc_infinitejump = "Pular infinitas vezes no ar",
+		desc_bunnyhop = "Pular continuamente ao correr",
+		desc_teleportplayer = "Seleciona um player para teleportar ate ele",
+		desc_blink = "Dash rapido na direcao que olha. Tecla Q",
+		desc_vehiclespeed = "Aumenta velocidade e torqu de veiculos",
+		desc_nojumpcooldown = "Remove cooldown de pulo, pula sem parar",
+		desc_float = "Plataforma voadora. Q desce, E sobe",
+		desc_swim = "Natacao no ar, gravedade zero",
+		desc_vehiclegoto = "Teleporta seu veiculo para um jogador",
+		desc_walkto = "Segue um jogador automaticamente",
+		desc_orbit = "Gira ao redor de um jogador",
+		desc_headsit = "Senta na cabeca de um jogador",
+		desc_vehiclefly = "Voar dirigindo veiculos. WASD+QE",
+		desc_spectate = "Camera segue um jogador selecionado",
+		desc_gotopart = "Teleporta para uma parte pelo nome",
+		desc_xray = "Veja atraves de paredes e objeitos",
+		desc_nightmode = "Escurece o ambiente para ver melhor",
+		desc_fullbright = "Iluminacao maxima, nada de sombras",
+		desc_tracers = "Linhas que apontam para jogadores",
+		desc_crosshair = "Mira personalizada no centro da tela",
+		desc_fovchanger = "Aumenta ou diminui o campo de visao",
+		desc_clicktp = "Ferramenta para teleportar clicando no chao",
+		desc_gravity = "Gravidade reduzida para pular alto",
+		desc_customspawn = "Marca posicao para renascer automaticamente",
+		desc_freecam = "Camera livre para explorar o mapa. WASD+QE+Mouse",
+		desc_flashback = "Pressione P para voltar ao local da ultima morte",
+		desc_coords = "Mostra coordenadas atuais e salva posicoes",
+		desc_serverrejoin = "Reconecta ao mesmo servidor",
+		desc_autoclicker = "Clique automatico segurando a tecla X",
+		desc_proximityinstant = "Interacao instantanea com prompts sem segurar",
+		desc_antiafk = "Impede ser desconectado por inatividade",
+		desc_antikick = "Impede ser expulso do servidor",
+		desc_autocollect = "Coleta automaticamente tools e itens proximos",
+		desc_fireclickdetectors = "Ativa todos os ClickDetectors do mapa",
+		desc_fireproximityprompts = "Ativa todos os ProximityPrompts do mapa",
+		desc_btools = "Ferramentas de construcao (HopperBins)",
+		desc_breakvelocity = "Reseta toda velocidade do personagem",
+		desc_invisibleparts = "Mostra partes que estao invisiveis no mapa",
+		desc_trollfling = "Gira rapidamente para jogar outros jogadores",
+		desc_targetfling = "Seleciona um alvo e voa ate ele para derrubar",
+		desc_spasms = "Animacao de convulsao (requer R6)",
+		desc_naked = "Remove todas as roupas do seu personagem",
+		desc_freeze = "Congela todos os jogadores no servidor",
+		-- Dropdown titles
+		dropdown_select_player = "Selecionar Player",
+		dropdown_select_target = "Selecionar Alvo",
+		dropdown_headsize_title = "Head Size - Selecionar Player",
+		dropdown_tpplayer_title = "TP para Player - Selecionar",
+		dropdown_vehiclegoto_title = "Vehicle Goto - Selecionar Player",
+		dropdown_walkto_title = "Walk To - Selecionar Player",
+		dropdown_orbit_title = "Orbit - Selecionar Player",
+		dropdown_headsit_title = "HeadSit - Selecionar Player",
+		dropdown_spectate_title = "Spectate - Selecionar Player",
+		dropdown_targetfling_title = "Target Fling - Selecionar Alvo",
+		input_gotopart_title = "Goto Part - Nome da Parte",
+		input_gotopart_placeholder = "Digite o nome...",
+		-- Coords section
+		section_coords = "Coordenadas",
+		coords_current = "Posicao Atual",
+		coords_save = "Salvar Posicao",
+		coords_saved = "Pontos Salvos",
+		coords_tp = "TP para Ponto Selecionado",
+		coords_point_prefix = "Ponto ",
+		-- Toasts (dynamic)
+		toast_head_amplified = "Head de %s ampliada!",
+		toast_tp_to = "TP para %s",
+		toast_vehicle_to = "Vehicle -> %s",
+		toast_target_fling = "Target Fling: %s",
+		toast_position_saved = "Posicao salva!",
+		toast_flashback = "Flashback!",
+		toast_fov = "FOV: 90",
+		toast_anti_kick_no_hook = "Anti-Kick: hookfunction nao disponivel",
+		toast_anti_kick = "Anti-Kick ativado",
+		toast_click_detectors = "Click Detectors ativados!",
+		toast_proximity_prompts = "Proximity Prompts ativados!",
+		toast_btools = "BTools ativados!",
+		toast_velocity_reset = "Velocity resetado!",
+		toast_invisible_shown = "%s partes invisiveis mostradas",
+		toast_clothes_removed = "Roupas removidas!",
+		toast_players_frozen = "Jogadores congelados!",
+		toast_players_unfrozen = "Jogadores descongelados!",
+		-- Loader
+		load_system_init = "SYSTEM INITIALIZING",
+		load_connecting = "Connecting to GitHub...",
+		load_downloading = "Baixando: %s",
+		load_loading_core = "Carregando Core...",
+		load_error_core = "Erro Critico no Core!",
+		load_ready = "Tudo pronto! Iniciando...",
+	},
+	en = {
+		-- Settings
+		settings_config = "Settings",
+		settings_language = "Language",
+		settings_debug_mode = "Debug Mode",
+		settings_show_distance = "Show Distance",
+		settings_show_health = "Show Health",
+		settings_show_tag = "Show Tag",
+		settings_show_name = "Show Name",
+		settings_hitbox_size = "Hitbox Size",
+		settings_esp_max_distance = "Max ESP Distance",
+		settings_noclip_radius = "NoClip Radius",
+		settings_fly_speed = "Fly Speed",
+		-- Toasts
+		toast_activated = "Enabled!",
+		toast_deactivated = "Disabled!",
+		toast_script_loaded = "Script loaded successfully!",
+		toast_debug_failed = "DEBUG: %s failed",
+		-- ESP
+		esp_enemy = "[ENEMY]",
+		esp_ally = "[ALLY]",
+		esp_neutral = "[PLAYER]",
+		-- Toggle titles
+		toggle_hitbox = "Giant Hitbox",
+		toggle_esp = "Enable ESP",
+		toggle_triggerbot = "TriggerBot",
+		toggle_silentaim = "Silent Aim",
+		toggle_nofling = "No Fling",
+		toggle_wallbang = "Wall Bang",
+		toggle_infinitehealth = "Infinite Health",
+		toggle_killaura = "Kill Aura",
+		toggle_nofalldamage = "No Fall Damage",
+		toggle_headsize = "Head Size",
+		toggle_fly = "Enable Fly",
+		toggle_noclip = "Enable NoClip",
+		toggle_sprint = "Sprint (Shift)",
+		toggle_speed = "Speed Hack",
+		toggle_infinitejump = "Infinite Jump",
+		toggle_bunnyhop = "Bunny Hop",
+		toggle_teleportplayer = "TP to Player",
+		toggle_blink = "Blink (Q)",
+		toggle_vehiclespeed = "Vehicle Speed",
+		toggle_nojumpcooldown = "No Jump Cooldown",
+		toggle_float = "Float",
+		toggle_swim = "Swim",
+		toggle_vehiclegoto = "Vehicle Goto",
+		toggle_walkto = "Walk To",
+		toggle_orbit = "Orbit",
+		toggle_headsit = "HeadSit",
+		toggle_vehiclefly = "Vehicle Fly",
+		toggle_spectate = "Spectate",
+		toggle_gotopart = "Goto Part",
+		toggle_xray = "X-Ray (Walls)",
+		toggle_nightmode = "Night Mode",
+		toggle_fullbright = "Fullbright",
+		toggle_tracers = "Tracers",
+		toggle_crosshair = "Custom Crosshair",
+		toggle_fovchanger = "FOV Changer",
+		toggle_clicktp = "Tool TP Click",
+		toggle_gravity = "Low Gravity",
+		toggle_customspawn = "Set Spawn",
+		toggle_freecam = "Freecam",
+		toggle_flashback = "Flashback",
+		toggle_coords = "Coordinates",
+		toggle_serverrejoin = "Server Rejoin",
+		toggle_autoclicker = "Auto-Clicker",
+		toggle_proximityinstant = "Proximity Instant",
+		toggle_antiafk = "Anti-AFK",
+		toggle_antikick = "Anti-Kick",
+		toggle_autocollect = "Auto Collect",
+		toggle_fireclickdetectors = "Fire Click Detectors",
+		toggle_fireproximityprompts = "Fire Proximity Prompts",
+		toggle_btools = "BTools",
+		toggle_breakvelocity = "Break Velocity",
+		toggle_invisibleparts = "Invisible Parts",
+		toggle_trollfling = "Tornado Fling",
+		toggle_targetfling = "Target Fling",
+		toggle_spasms = "Spasms",
+		toggle_naked = "Naked",
+		toggle_freeze = "Freeze All",
+		-- Toggle descriptions
+		desc_hitbox = "Expands enemy hitbox for easier hits",
+		desc_esp = "Shows names, health and distance through walls",
+		desc_triggerbot = "Shoots automatically when aiming at enemy",
+		desc_silentaim = "Redirects shots to nearest player to cursor",
+		desc_nofling = "Prevents being flung by exploits",
+		desc_wallbang = "Allows shooting through walls and objects",
+		desc_infinitehealth = "Keeps your health at maximum",
+		desc_killaura = "Automatically attacks nearby players",
+		desc_nofalldamage = "Removes fall damage",
+		desc_headsize = "Enlarges player heads for easier hits",
+		desc_fly = "Fly around the map with WASD. Scroll adjusts speed",
+		desc_noclip = "Walk through walls and solid objects",
+		desc_sprint = "Run faster holding Shift key",
+		desc_speed = "Increases walk speed",
+		desc_infinitejump = "Jump infinitely in the air",
+		desc_bunnyhop = "Jump continuously while running",
+		desc_teleportplayer = "Select a player to teleport to them",
+		desc_blink = "Quick dash in look direction. Key Q",
+		desc_vehiclespeed = "Increases vehicle speed and torque",
+		desc_nojumpcooldown = "Removes jump cooldown, jump non-stop",
+		desc_float = "Flying platform. Q descends, E ascends",
+		desc_swim = "Air swimming, zero gravity",
+		desc_vehiclegoto = "Teleport your vehicle to a player",
+		desc_walkto = "Follow a player automatically",
+		desc_orbit = "Orbit around a player",
+		desc_headsit = "Sit on a player's head",
+		desc_vehiclefly = "Fly while driving vehicles. WASD+QE",
+		desc_spectate = "Camera follows a selected player",
+		desc_gotopart = "Teleport to a part by name",
+		desc_xray = "See through walls and objects",
+		desc_nightmode = "Darkens environment for better visibility",
+		desc_fullbright = "Maximum brightness, no shadows",
+		desc_tracers = "Lines pointing to players",
+		desc_crosshair = "Custom crosshair in screen center",
+		desc_fovchanger = "Increases or decreases field of view",
+		desc_clicktp = "Tool to teleport by clicking the ground",
+		desc_gravity = "Reduced gravity for higher jumps",
+		desc_customspawn = "Set position to respawn automatically",
+		desc_freecam = "Free camera to explore the map. WASD+QE+Mouse",
+		desc_flashback = "Press P to return to last death location",
+		desc_coords = "Shows current coordinates and saves positions",
+		desc_serverrejoin = "Reconnect to the same server",
+		desc_autoclicker = "Auto click holding key X",
+		desc_proximityinstant = "Instant interaction with prompts without holding",
+		desc_antiafk = "Prevents disconnection for inactivity",
+		desc_antikick = "Prevents being kicked from server",
+		desc_autocollect = "Automatically collects nearby tools and items",
+		desc_fireclickdetectors = "Activates all ClickDetectors on map",
+		desc_fireproximityprompts = "Activates all ProximityPrompts on map",
+		desc_btools = "Building tools (HopperBins)",
+		desc_breakvelocity = "Resets all character velocity",
+		desc_invisible_parts = "Shows invisible parts on map",
+		desc_trollfling = "Spins rapidly to fling other players",
+		desc_targetfling = "Select a target and fly to them to knock down",
+		desc_spasms = "Convulsion animation (requires R6)",
+		desc_naked = "Removes all clothes from your character",
+		desc_freeze = "Freezes all players in the server",
+		-- Dropdown titles
+		dropdown_select_player = "Select Player",
+		dropdown_select_target = "Select Target",
+		dropdown_headsize_title = "Head Size - Select Player",
+		dropdown_tpplayer_title = "TP to Player - Select",
+		dropdown_vehiclegoto_title = "Vehicle Goto - Select Player",
+		dropdown_walkto_title = "Walk To - Select Player",
+		dropdown_orbit_title = "Orbit - Select Player",
+		dropdown_headsit_title = "HeadSit - Select Player",
+		dropdown_spectate_title = "Spectate - Select Player",
+		dropdown_targetfling_title = "Target Fling - Select Target",
+		input_gotopart_title = "Goto Part - Part Name",
+		input_gotopart_placeholder = "Type the name...",
+		-- Coords section
+		section_coords = "Coordinates",
+		coords_current = "Current Position",
+		coords_save = "Save Position",
+		coords_saved = "Saved Points",
+		coords_tp = "TP to Selected Point",
+		coords_point_prefix = "Point ",
+		-- Toasts (dynamic)
+		toast_head_amplified = "%s's head enlarged!",
+		toast_tp_to = "TP to %s",
+		toast_vehicle_to = "Vehicle -> %s",
+		toast_target_fling = "Target Fling: %s",
+		toast_position_saved = "Position saved!",
+		toast_flashback = "Flashback!",
+		toast_fov = "FOV: 90",
+		toast_anti_kick_no_hook = "Anti-Kick: hookfunction not available",
+		toast_anti_kick = "Anti-Kick enabled",
+		toast_click_detectors = "Click Detectors enabled!",
+		toast_proximity_prompts = "Proximity Prompts enabled!",
+		toast_btools = "BTools enabled!",
+		toast_velocity_reset = "Velocity reset!",
+		toast_invisible_shown = "%s invisible parts shown",
+		toast_clothes_removed = "Clothes removed!",
+		toast_players_frozen = "Players frozen!",
+		toast_players_unfrozen = "Players unfrozen!",
+		-- Loader
+		load_system_init = "SYSTEM INITIALIZING",
+		load_connecting = "Connecting to GitHub...",
+		load_downloading = "Downloading: %s",
+		load_loading_core = "Loading Core...",
+		load_error_core = "Critical Core Error!",
+		load_ready = "All ready! Starting...",
+	},
+	es = {
+		-- Settings
+		settings_config = "Configuracion",
+		settings_language = "Idioma",
+		settings_debug_mode = "Debug Mode",
+		settings_show_distance = "Mostrar Distancia",
+		settings_show_health = "Mostrar Vida",
+		settings_show_tag = "Mostrar Etiqueta",
+		settings_show_name = "Mostrar Nombre",
+		settings_hitbox_size = "Tamano Hitbox",
+		settings_esp_max_distance = "Distancia Max ESP",
+		settings_noclip_radius = "Radio NoClip",
+		settings_fly_speed = "Velocidad Fly",
+		-- Toasts
+		toast_activated = "Activado!",
+		toast_deactivated = "Desactivado!",
+		toast_script_loaded = "Script cargado con exito!",
+		toast_debug_failed = "DEBUG: %s fallo",
+		-- ESP
+		esp_enemy = "[ENEMIGO]",
+		esp_ally = "[ALIADO]",
+		esp_neutral = "[JUGADOR]",
+		-- Toggle titles
+		toggle_hitbox = "Hitbox Gigante",
+		toggle_esp = "Activar ESP",
+		toggle_triggerbot = "TriggerBot",
+		toggle_silentaim = "Silent Aim",
+		toggle_nofling = "No Fling",
+		toggle_wallbang = "Wall Bang",
+		toggle_infinitehealth = "Infinite Health",
+		toggle_killaura = "Kill Aura",
+		toggle_nofalldamage = "No Fall Damage",
+		toggle_headsize = "Head Size",
+		toggle_fly = "Activar Fly",
+		toggle_noclip = "Activar NoClip",
+		toggle_sprint = "Sprint (Shift)",
+		toggle_speed = "Speed Hack",
+		toggle_infinitejump = "Infinite Jump",
+		toggle_bunnyhop = "Bunny Hop",
+		toggle_teleportplayer = "TP a Jugador",
+		toggle_blink = "Blink (Q)",
+		toggle_vehiclespeed = "Vehicle Speed",
+		toggle_nojumpcooldown = "No Jump Cooldown",
+		toggle_float = "Float",
+		toggle_swim = "Swim",
+		toggle_vehiclegoto = "Vehicle Goto",
+		toggle_walkto = "Walk To",
+		toggle_orbit = "Orbit",
+		toggle_headsit = "HeadSit",
+		toggle_vehiclefly = "Vehicle Fly",
+		toggle_spectate = "Spectate",
+		toggle_gotopart = "Goto Part",
+		toggle_xray = "X-Ray (Paredes)",
+		toggle_nightmode = "Night Mode",
+		toggle_fullbright = "Fullbright",
+		toggle_tracers = "Tracers",
+		toggle_crosshair = "Custom Crosshair",
+		toggle_fovchanger = "FOV Changer",
+		toggle_clicktp = "Tool TP Click",
+		toggle_gravity = "Gravedad Baja",
+		toggle_customspawn = "Marcar Spawn",
+		toggle_freecam = "Freecam",
+		toggle_flashback = "Flashback",
+		toggle_coords = "Coordenadas",
+		toggle_serverrejoin = "Server Rejoin",
+		toggle_autoclicker = "Auto-Clicker",
+		toggle_proximityinstant = "Proximity Instant",
+		toggle_antiafk = "Anti-AFK",
+		toggle_antikick = "Anti-Kick",
+		toggle_autocollect = "Auto Collect",
+		toggle_fireclickdetectors = "Fire Click Detectors",
+		toggle_fireproximityprompts = "Fire Proximity Prompts",
+		toggle_btools = "BTools",
+		toggle_breakvelocity = "Break Velocity",
+		toggle_invisibleparts = "Invisible Parts",
+		toggle_trollfling = "Tornado Fling",
+		toggle_targetfling = "Target Fling",
+		toggle_spasms = "Espasmos",
+		toggle_naked = "Naked",
+		toggle_freeze = "Freeze All",
+		-- Toggle descriptions
+		desc_hitbox = "Expande la hitbox de los enemigos para acertar mas facil",
+		desc_esp = "Muestra nombres, vida y distancia de los jugadores a traves de paredes",
+		desc_triggerbot = "Dispara automaticamente cuando apuntas al enemigo",
+		desc_silentaim = "Redirige los disparos al jugador mas cercano al cursor",
+		desc_nofling = "Impide que seas lanzado por exploits de fling",
+		desc_wallbang = "Permite disparar a traves de paredes y objetos",
+		desc_infinitehealth = "Mantiene tu vida siempre al maximo",
+		desc_killaura = "Ataca automaticamente a jugadores cercanos",
+		desc_nofalldamage = "Elimina el dano de caida",
+		desc_headsize = "Amplia cabeza de jugadores para acertar mas facil",
+		desc_fly = "Volar por el mapa con WASD. Scroll ajusta velocidad",
+		desc_noclip = "Atravesar paredes y objetos solidos",
+		desc_sprint = "Correr mas rapido sosteniendo Shift",
+		desc_speed = "Aumenta la velocidad de caminata",
+		desc_infinitejump = "Saltar infinitas veces en el aire",
+		desc_bunnyhop = "Saltar continuamente al correr",
+		desc_teleportplayer = "Selecciona un jugador para teletransportarte",
+		desc_blink = "Dash rapido en la direccion que miras. Tecla Q",
+		desc_vehiclespeed = "Aumenta velocidad y torque de vehiculos",
+		desc_nojumpcooldown = "Elimina cooldown de salto, salta sin parar",
+		desc_float = "Plataforma voladora. Q baja, E sube",
+		desc_swim = "Natacion en el aire, gravedad cero",
+		desc_vehiclegoto = "Teletransporta tu vehiculo a un jugador",
+		desc_walkto = "Sigue a un jugador automaticamente",
+		desc_orbit = "Gira alrededor de un jugador",
+		desc_headsit = "Se sienta en la cabeza de un jugador",
+		desc_vehiclefly = "Volando manejando vehiculos. WASD+QE",
+		desc_spectate = "Camara sigue a un jugador seleccionado",
+		desc_gotopart = "Teletransporta a una parte por nombre",
+		desc_xray = "Ver a traves de paredes y objetos",
+		desc_nightmode = "Oscurece el ambiente para ver mejor",
+		desc_fullbright = "Iluminacion maxima, sin sombras",
+		desc_tracers = "Lineas que apuntan a jugadores",
+		desc_crosshair = "Mira personalizada en el centro de la pantalla",
+		desc_fovchanger = "Aumenta o disminuye el campo de vision",
+		desc_clicktp = "Herramienta para teletransportar haciendo clic en el suelo",
+		desc_gravity = "Gravedad reducida para saltar alto",
+		desc_customspawn = "Marca posicion para renacer automaticamente",
+		desc_freecam = "Camara libre para explorar el mapa. WASD+QE+Mouse",
+		desc_flashback = "Presiona P para volver al lugar de la ultima muerte",
+		desc_coords = "Muestra coordenadas actuales y guarda posiciones",
+		desc_serverrejoin = "Reconecta al mismo servidor",
+		desc_autoclicker = "Cliqueo automatico sosteniendo la tecla X",
+		desc_proximityinstant = "Interaccion instantanea con prompts sin sostener",
+		desc_antiafk = "Impide ser desconectado por inactividad",
+		desc_antikick = "Impide ser expulsado del servidor",
+		desc_autocollect = "Recoge automaticamente tools e itens cercanos",
+		desc_fireclickdetectors = "Activa todos los ClickDetectors del mapa",
+		desc_fireproximityprompts = "Activa todos los ProximityPrompts del mapa",
+		desc_btools = "Herramientas de construccion (HopperBins)",
+		desc_breakvelocity = "Resetea toda velocidad del personaje",
+		desc_invisible_parts = "Muestra partes que estan invisibles en el mapa",
+		desc_trollfling = "Gira rapidamente para lanzar a otros jugadores",
+		desc_targetfling = "Selecciona un objetivo y vuela hasta el para derribar",
+		desc_spasms = "Animacion de convulsion (requiere R6)",
+		desc_naked = "Elimina todas las ropas de tu personaje",
+		desc_freeze = "Congela a todos los jugadores en el servidor",
+		-- Dropdown titles
+		dropdown_select_player = "Seleccionar Jugador",
+		dropdown_select_target = "Seleccionar Objetivo",
+		dropdown_headsize_title = "Head Size - Seleccionar Jugador",
+		dropdown_tpplayer_title = "TP a Jugador - Seleccionar",
+		dropdown_vehiclegoto_title = "Vehicle Goto - Seleccionar Jugador",
+		dropdown_walkto_title = "Walk To - Seleccionar Jugador",
+		dropdown_orbit_title = "Orbit - Seleccionar Jugador",
+		dropdown_headsit_title = "HeadSit - Seleccionar Jugador",
+		dropdown_spectate_title = "Spectate - Seleccionar Jugador",
+		dropdown_targetfling_title = "Target Fling - Seleccionar Objetivo",
+		input_gotopart_title = "Goto Part - Nombre de Parte",
+		input_gotopart_placeholder = "Escribe el nombre...",
+		-- Coords section
+		section_coords = "Coordenadas",
+		coords_current = "Posicion Actual",
+		coords_save = "Guardar Posicion",
+		coords_saved = "Puntos Guardados",
+		coords_tp = "TP a Punto Seleccionado",
+		coords_point_prefix = "Punto ",
+		-- Toasts (dynamic)
+		toast_head_amplified = "Cabeza de %s ampliada!",
+		toast_tp_to = "TP a %s",
+		toast_vehicle_to = "Vehicle -> %s",
+		toast_target_fling = "Target Fling: %s",
+		toast_position_saved = "Posicion guardada!",
+		toast_flashback = "Flashback!",
+		toast_fov = "FOV: 90",
+		toast_anti_kick_no_hook = "Anti-Kick: hookfunction no disponible",
+		toast_anti_kick = "Anti-Kick activado",
+		toast_click_detectors = "Click Detectors activados!",
+		toast_proximity_prompts = "Proximity Prompts activados!",
+		toast_btools = "BTools activados!",
+		toast_velocity_reset = "Velocity reseteado!",
+		toast_invisible_shown = "%s partes invisibles mostradas",
+		toast_clothes_removed = "Ropa eliminada!",
+		toast_players_frozen = "Jugadores congelados!",
+		toast_players_unfrozen = "Jugadores descongelados!",
+		-- Loader
+		load_system_init = "SYSTEM INITIALIZING",
+		load_connecting = "Connecting to GitHub...",
+		load_downloading = "Descargando: %s",
+		load_loading_core = "Cargando Core...",
+		load_error_core = "Error Critico en Core!",
+		load_ready = "Todo listo! Iniciando...",
+	},
+}
+
+-- Translation helper: GH.T("key") or GH.T("key", "arg1", "arg2")
+function GH.T(key, ...)
+	local lang = (GH.Settings and GH.Settings.Language) or "pt"
+	local str = GH.Locales[lang] and GH.Locales[lang][key] or GH.Locales["pt"][key] or key
+	if select("#", ...) > 0 then
+		return string.format(str, ...)
+	end
+	return str
+end
+
 -- Services
 GH.Services = {
 	Players = Players,
@@ -157,7 +725,7 @@ function GH.SafeCall(context, fn)
 	local ok, err = pcall(fn)
 	if not ok and GH.Settings and GH.Settings.DebugMode then
 		warn("[GH DEBUG] " .. context .. ": " .. tostring(err))
-		GH.ShowToast("DEBUG: " .. context .. " falhou", GH.Theme.Red, 4)
+		GH.ShowToast(string.format(GH.T("toast_debug_failed"), context), GH.Theme.Red, 4)
 	end
 end
 
@@ -165,6 +733,7 @@ end
 -- SETTINGS DEFAULTS
 -- ==========================================
 GH.Settings = {
+	Language = "pt",
 	DebugMode = false,
 	HitboxSize = 15,
 	ESPShowDistance = true,
@@ -502,9 +1071,9 @@ function GH.Initialize()
 			local state = toggle.Value
 			GH.States[pending.name] = state
 			if state then
-				GH.ShowToast(pending.name .. " Ativado!", GH.Theme.On, 2)
+				GH.ShowToast(pending.name .. " " .. GH.T("toast_activated"), GH.Theme.On, 2)
 			else
-				GH.ShowToast(pending.name .. " Desativado!", GH.Theme.Off, 2)
+				GH.ShowToast(pending.name .. " " .. GH.T("toast_deactivated"), GH.Theme.Off, 2)
 			end
 			pcall(pending.callback, state, toggle)
 		end)
@@ -516,7 +1085,19 @@ function GH.Initialize()
 	-- ==========================================
 	-- SETTINGS TAB
 	-- ==========================================
-	local SettingsSection = SettingsTab:AddSection("Configuracoes")
+	local SettingsSection = SettingsTab:AddSection(GH.T("settings_config"))
+
+	local LanguageMap = { ["Portugues"] = "pt", ["English"] = "en", ["Espanol"] = "es" }
+	local LanguageReverse = { pt = "Portugues", en = "English", es = "Espanol" }
+
+	SettingsSection:AddDropdown("Language", {
+		Title = GH.T("settings_language"),
+		Values = {"Portugues", "English", "Espanol"},
+		Default = LanguageReverse[GH.Settings.Language] or "Portugues",
+		Callback = function(value)
+			GH.Settings.Language = LanguageMap[value] or "pt"
+		end,
+	})
 
 	SettingsSection:AddToggle("DebugMode", {
 		Title = "Debug Mode",
@@ -527,7 +1108,7 @@ function GH.Initialize()
 	})
 
 	SettingsSection:AddToggle("ESPShowDistance", {
-		Title = "Mostrar Distancia",
+		Title = GH.T("settings_show_distance"),
 		Default = GH.Settings.ESPShowDistance,
 		Callback = function(value)
 			GH.Settings.ESPShowDistance = value
@@ -535,7 +1116,7 @@ function GH.Initialize()
 	})
 
 	SettingsSection:AddToggle("ESPShowHealth", {
-		Title = "Mostrar Vida",
+		Title = GH.T("settings_show_health"),
 		Default = GH.Settings.ESPShowHealth,
 		Callback = function(value)
 			GH.Settings.ESPShowHealth = value
@@ -543,7 +1124,7 @@ function GH.Initialize()
 	})
 
 	SettingsSection:AddToggle("ESPShowTag", {
-		Title = "Mostrar Tag",
+		Title = GH.T("settings_show_tag"),
 		Default = GH.Settings.ESPShowTag,
 		Callback = function(value)
 			GH.Settings.ESPShowTag = value
@@ -551,7 +1132,7 @@ function GH.Initialize()
 	})
 
 	SettingsSection:AddToggle("ESPShowName", {
-		Title = "Mostrar Nome",
+		Title = GH.T("settings_show_name"),
 		Default = GH.Settings.ESPShowName,
 		Callback = function(value)
 			GH.Settings.ESPShowName = value
@@ -559,7 +1140,7 @@ function GH.Initialize()
 	})
 
 	SettingsSection:AddSlider("HitboxSize", {
-		Title = "Tamanho Hitbox",
+		Title = GH.T("settings_hitbox_size"),
 		Default = GH.Settings.HitboxSize,
 		Min = 5,
 		Max = 50,
@@ -570,7 +1151,7 @@ function GH.Initialize()
 	})
 
 	SettingsSection:AddSlider("ESPMaxDistance", {
-		Title = "Distancia Max ESP",
+		Title = GH.T("settings_esp_max_distance"),
 		Default = GH.Settings.ESPMaxDistance,
 		Min = 50,
 		Max = 2000,
@@ -581,7 +1162,7 @@ function GH.Initialize()
 	})
 
 	SettingsSection:AddSlider("NoClipRadius", {
-		Title = "Raio NoClip",
+		Title = GH.T("settings_noclip_radius"),
 		Default = GH.Settings.NoClipRadius,
 		Min = 1,
 		Max = 20,
@@ -592,7 +1173,7 @@ function GH.Initialize()
 	})
 
 	SettingsSection:AddSlider("FlySpeed", {
-		Title = "Velocidade Fly",
+		Title = GH.T("settings_fly_speed"),
 		Default = GH.FlySpeed,
 		Min = 5,
 		Max = 100,
@@ -731,7 +1312,7 @@ function GH.Initialize()
 
 	-- Notificacao de carregamento
 	task.delay(0.5, function()
-		GH.ShowToast("Script carregado com sucesso!", GH.Theme.On, 5)
+		GH.ShowToast(GH.T("toast_script_loaded"), GH.Theme.On, 5)
 	end)
 
 	-- Selecionar primeira aba

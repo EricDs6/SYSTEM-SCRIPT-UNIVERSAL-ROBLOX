@@ -121,7 +121,7 @@ return function(GH)
 	function Cheats_ToggleFOVChanger(state, btn)
 		if state then
 			workspace.CurrentCamera.FieldOfView = 90
-			GH.ShowToast("FOV: 90", GH.Theme.Accent, 2)
+			GH.ShowToast(GH.T("toast_fov"), GH.Theme.Accent, 2)
 		else
 			workspace.CurrentCamera.FieldOfView = 70
 		end
@@ -244,10 +244,10 @@ return function(GH)
 	-- ==========================================
 	-- REGISTRAR BOTÕES
 	-- ==========================================
-	GH.RegisterToggleButton("XRay", "X-Ray (Paredes)", Cheats_ToggleXRay, "Visual", "Veja atraves de paredes e objeitos")
-	GH.RegisterToggleButton("NightMode", "Night Mode", Cheats_ToggleNightMode, "Visual", "Escurece o ambiente para ver melhor")
-	GH.RegisterToggleButton("Fullbright", "Fullbright", Cheats_ToggleFullbright, "Visual", "Iluminacao maxima, nada de sombras")
-	GH.RegisterToggleButton("Tracers", "Tracers", Cheats_ToggleTracers, "Visual", "Linhas que apontam para jogadores")
-	GH.RegisterToggleButton("Crosshair", "Custom Crosshair", Cheats_ToggleCrosshair, "Visual", "Mira personalizada no centro da tela")
-	GH.RegisterToggleButton("FOVChanger", "FOV Changer", Cheats_ToggleFOVChanger, "Visual", "Aumenta ou diminui o campo de visao")
+	GH.RegisterToggleButton("XRay", GH.T("toggle_xray"), Cheats_ToggleXRay, "Visual", GH.T("desc_xray"))
+	GH.RegisterToggleButton("NightMode", GH.T("toggle_nightmode"), Cheats_ToggleNightMode, "Visual", GH.T("desc_nightmode"))
+	GH.RegisterToggleButton("Fullbright", GH.T("toggle_fullbright"), Cheats_ToggleFullbright, "Visual", GH.T("desc_fullbright"))
+	GH.RegisterToggleButton("Tracers", GH.T("toggle_tracers"), Cheats_ToggleTracers, "Visual", GH.T("desc_tracers"))
+	GH.RegisterToggleButton("Crosshair", GH.T("toggle_crosshair"), Cheats_ToggleCrosshair, "Visual", GH.T("desc_crosshair"))
+	GH.RegisterToggleButton("FOVChanger", GH.T("toggle_fovchanger"), Cheats_ToggleFOVChanger, "Visual", GH.T("desc_fovchanger"))
 end

@@ -325,7 +325,7 @@ return function(GH)
 		end
 
 		local dropdown = GH.Tabs["Movement"]:AddDropdown("TPPlayer_Select", {
-			Title = "TP para Player - Selecionar",
+			Title = GH.T("dropdown_tpplayer_title"),
 			Values = {},
 			AllowNull = true,
 		})
@@ -338,7 +338,7 @@ return function(GH)
 				local myHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 				if targetHrp and myHrp then
 					GH.TweenTeleport(myHrp, targetHrp.CFrame + Vector3.new(0, 3, 2))
-					GH.ShowToast("TP para " .. name, GH.Theme.On, 2)
+					GH.ShowToast(string.format(GH.T("toast_tp_to"), name), GH.Theme.On, 2)
 				end
 			end
 		end)
@@ -559,7 +559,7 @@ return function(GH)
 		end
 
 		local dropdown = GH.Tabs["Movement"]:AddDropdown("VehicleGoto_Select", {
-			Title = "Vehicle Goto - Selecionar Player",
+			Title = GH.T("dropdown_vehiclegoto_title"),
 			Values = {},
 			AllowNull = true,
 		})
@@ -575,7 +575,7 @@ return function(GH)
 					local target = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 					if vehicle and target then
 						vehicle:MoveTo(target.Position)
-						GH.ShowToast("Vehicle -> " .. name, GH.Theme.On, 2)
+						GH.ShowToast(string.format(GH.T("toast_vehicle_to"), name), GH.Theme.On, 2)
 					end
 				end
 			end
@@ -617,7 +617,7 @@ return function(GH)
 		end
 
 		local dropdown = GH.Tabs["Movement"]:AddDropdown("WalkTo_Select", {
-			Title = "Walk To - Selecionar Player",
+			Title = GH.T("dropdown_walkto_title"),
 			Values = {},
 			AllowNull = true,
 		})
@@ -681,7 +681,7 @@ return function(GH)
 		end
 
 		local dropdown = GH.Tabs["Movement"]:AddDropdown("Orbit_Select", {
-			Title = "Orbit - Selecionar Player",
+			Title = GH.T("dropdown_orbit_title"),
 			Values = {},
 			AllowNull = true,
 		})
@@ -754,7 +754,7 @@ return function(GH)
 		end
 
 		local dropdown = GH.Tabs["Movement"]:AddDropdown("HeadSit_Select", {
-			Title = "HeadSit - Selecionar Player",
+			Title = GH.T("dropdown_headsit_title"),
 			Values = {},
 			AllowNull = true,
 		})
@@ -936,7 +936,7 @@ return function(GH)
 		end
 
 		local dropdown = GH.Tabs["Movement"]:AddDropdown("Spectate_Select", {
-			Title = "Spectate - Selecionar Player",
+			Title = GH.T("dropdown_spectate_title"),
 			Values = {},
 			AllowNull = true,
 		})
@@ -979,7 +979,7 @@ return function(GH)
 					local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 					if hrp then
 						hrp.CFrame = v.CFrame + Vector3.new(0, 3, 0)
-						GH.ShowToast("TP para " .. v.Name, GH.Theme.On, 2)
+						GH.ShowToast(string.format(GH.T("toast_tp_to"), v.Name), GH.Theme.On, 2)
 					end
 					break
 				end
@@ -987,8 +987,8 @@ return function(GH)
 		end
 
 		local input = GH.Tabs["Movement"]:AddInput("GotoPartInput", {
-			Title = "Goto Part - Nome da Parte",
-			Placeholder = "Digite o nome...",
+			Title = GH.T("input_gotopart_title"),
+			Placeholder = GH.T("input_gotopart_placeholder"),
 			Finished = true,
 			Callback = function(value)
 				if value and value ~= "" then
@@ -1002,23 +1002,23 @@ return function(GH)
 	-- ==========================================
 	-- REGISTRAR BOTÕES
 	-- ==========================================
-	GH.RegisterToggleButton("Fly", "Ativar Fly", Cheats_ToggleFly, "Movement", "Voar pelo mapa com WASD. Scroll ajusta velocidade")
-	GH.RegisterToggleButton("NoClip", "Ativar NoClip", Cheats_ToggleNoClip, "Movement", "Atravessar paredes e objeitos solidos")
-	GH.RegisterToggleButton("Sprint", "Sprint (Shift)", Cheats_ToggleSprint, "Movement", "Correr mais segurando a tecla Shift")
-	GH.RegisterToggleButton("Speed", "Speed Hack", Cheats_ToggleSpeed, "Movement", "Aumenta a velocidade de caminhada")
-	GH.RegisterToggleButton("InfiniteJump", "Infinite Jump", Cheats_ToggleInfiniteJump, "Movement", "Pular infinitas vezes no ar")
-	GH.RegisterToggleButton("BunnyHop", "Bunny Hop", Cheats_ToggleBunnyHop, "Movement", "Pular continuamente ao correr")
-	GH.RegisterToggleButton("TeleportPlayer", "TP para Player", Cheats_ToggleTeleportPlayer, "Movement", "Seleciona um player para teleportar ate ele")
-	GH.RegisterToggleButton("Blink", "Blink (Q)", Cheats_ToggleBlink, "Movement", "Dash rapido na direcao que olha. Tecla Q")
-	GH.RegisterToggleButton("VehicleSpeed", "Vehicle Speed", Cheats_ToggleVehicleSpeed, "Movement", "Aumenta velocidade e torqu de veiculos")
-	GH.RegisterToggleButton("NoJumpCooldown", "No Jump Cooldown", Cheats_ToggleNoJumpCooldown, "Movement", "Remove cooldown de pulo, pula sem parar")
-	GH.RegisterToggleButton("Float", "Float", Cheats_ToggleFloat, "Movement", "Plataforma voadora. Q desce, E sobe")
-	GH.RegisterToggleButton("Swim", "Swim", Cheats_ToggleSwim, "Movement", "Natacao no ar, gravedade zero")
-	GH.RegisterToggleButton("VehicleGoto", "Vehicle Goto", Cheats_ToggleVehicleGoto, "Movement", "Teleporta seu veiculo para um jogador")
-	GH.RegisterToggleButton("WalkTo", "Walk To", Cheats_ToggleWalkTo, "Movement", "Segue um jogador automaticamente")
-	GH.RegisterToggleButton("Orbit", "Orbit", Cheats_ToggleOrbit, "Movement", "Gira ao redor de um jogador")
-	GH.RegisterToggleButton("HeadSit", "HeadSit", Cheats_ToggleHeadSit, "Movement", "Senta na cabeca de um jogador")
-	GH.RegisterToggleButton("VehicleFly", "Vehicle Fly", Cheats_ToggleVehicleFly, "Movement", "Voar dirigindo veiculos. WASD+QE")
-	GH.RegisterToggleButton("Spectate", "Spectate", Cheats_ToggleSpectate, "Movement", "Camera segue um jogador selecionado")
-	GH.RegisterToggleButton("GotoPart", "Goto Part", Cheats_ToggleGotoPart, "Movement", "Teleporta para uma parte pelo nome")
+	GH.RegisterToggleButton("Fly", GH.T("toggle_fly"), Cheats_ToggleFly, "Movement", GH.T("desc_fly"))
+	GH.RegisterToggleButton("NoClip", GH.T("toggle_noclip"), Cheats_ToggleNoClip, "Movement", GH.T("desc_noclip"))
+	GH.RegisterToggleButton("Sprint", GH.T("toggle_sprint"), Cheats_ToggleSprint, "Movement", GH.T("desc_sprint"))
+	GH.RegisterToggleButton("Speed", GH.T("toggle_speed"), Cheats_ToggleSpeed, "Movement", GH.T("desc_speed"))
+	GH.RegisterToggleButton("InfiniteJump", GH.T("toggle_infinitejump"), Cheats_ToggleInfiniteJump, "Movement", GH.T("desc_infinitejump"))
+	GH.RegisterToggleButton("BunnyHop", GH.T("toggle_bunnyhop"), Cheats_ToggleBunnyHop, "Movement", GH.T("desc_bunnyhop"))
+	GH.RegisterToggleButton("TeleportPlayer", GH.T("toggle_teleportplayer"), Cheats_ToggleTeleportPlayer, "Movement", GH.T("desc_teleportplayer"))
+	GH.RegisterToggleButton("Blink", GH.T("toggle_blink"), Cheats_ToggleBlink, "Movement", GH.T("desc_blink"))
+	GH.RegisterToggleButton("VehicleSpeed", GH.T("toggle_vehiclespeed"), Cheats_ToggleVehicleSpeed, "Movement", GH.T("desc_vehiclespeed"))
+	GH.RegisterToggleButton("NoJumpCooldown", GH.T("toggle_nojumpcooldown"), Cheats_ToggleNoJumpCooldown, "Movement", GH.T("desc_nojumpcooldown"))
+	GH.RegisterToggleButton("Float", GH.T("toggle_float"), Cheats_ToggleFloat, "Movement", GH.T("desc_float"))
+	GH.RegisterToggleButton("Swim", GH.T("toggle_swim"), Cheats_ToggleSwim, "Movement", GH.T("desc_swim"))
+	GH.RegisterToggleButton("VehicleGoto", GH.T("toggle_vehiclegoto"), Cheats_ToggleVehicleGoto, "Movement", GH.T("desc_vehiclegoto"))
+	GH.RegisterToggleButton("WalkTo", GH.T("toggle_walkto"), Cheats_ToggleWalkTo, "Movement", GH.T("desc_walkto"))
+	GH.RegisterToggleButton("Orbit", GH.T("toggle_orbit"), Cheats_ToggleOrbit, "Movement", GH.T("desc_orbit"))
+	GH.RegisterToggleButton("HeadSit", GH.T("toggle_headsit"), Cheats_ToggleHeadSit, "Movement", GH.T("desc_headsit"))
+	GH.RegisterToggleButton("VehicleFly", GH.T("toggle_vehiclefly"), Cheats_ToggleVehicleFly, "Movement", GH.T("desc_vehiclefly"))
+	GH.RegisterToggleButton("Spectate", GH.T("toggle_spectate"), Cheats_ToggleSpectate, "Movement", GH.T("desc_spectate"))
+	GH.RegisterToggleButton("GotoPart", GH.T("toggle_gotopart"), Cheats_ToggleGotoPart, "Movement", GH.T("desc_gotopart"))
 end

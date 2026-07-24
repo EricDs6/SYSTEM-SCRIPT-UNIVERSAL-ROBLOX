@@ -129,7 +129,7 @@ return function(GH)
 			spinForce.Attachment0 = hrp:FindFirstChildOfClass("Attachment") or Instance.new("Attachment", hrp)
 			spinForce.Parent = hrp
 
-			GH.ShowToast("Target Fling: " .. targetPlayer.Name, GH.Theme.Red, 2)
+			GH.ShowToast(string.format(GH.T("toast_target_fling"), targetPlayer.Name), GH.Theme.Red, 2)
 
 			GH.RegisterMasterLoop("TargetFling", "Heartbeat", function()
 				if GH.isClosing or not GH.States.TargetFling then
@@ -162,7 +162,7 @@ return function(GH)
 		end
 
 		local dropdown = GH.Tabs["Troll"]:AddDropdown("TargetFling_Select", {
-			Title = "Target Fling - Selecionar Alvo",
+			Title = GH.T("dropdown_targetfling_title"),
 			Values = {},
 			AllowNull = true,
 		})
@@ -243,7 +243,7 @@ return function(GH)
 					end
 				end
 			end
-			GH.ShowToast("Roupas removidas!", GH.Theme.On, 2)
+			GH.ShowToast(GH.T("toast_clothes_removed"), GH.Theme.On, 2)
 		end
 	end
 
@@ -261,7 +261,7 @@ return function(GH)
 					end
 				end
 			end
-			GH.ShowToast("Jogadores congelados!", GH.Theme.On, 2)
+			GH.ShowToast(GH.T("toast_players_frozen"), GH.Theme.On, 2)
 		else
 			for _, player in ipairs(Players:GetPlayers()) do
 				if player ~= LocalPlayer and player.Character then
@@ -272,16 +272,16 @@ return function(GH)
 					end
 				end
 			end
-			GH.ShowToast("Jogadores descongelados!", GH.Theme.Off, 2)
+			GH.ShowToast(GH.T("toast_players_unfrozen"), GH.Theme.Off, 2)
 		end
 	end
 
 	-- ==========================================
 	-- REGISTRAR BOTÕES
 	-- ==========================================
-	GH.RegisterToggleButton("TrollFling", "Tornado Fling", Cheats_ToggleTrollFling, "Troll", "Gira rapidamente para jogar outros jogadores")
-	GH.RegisterToggleButton("TargetFling", "Target Fling", Cheats_ToggleTargetFling, "Troll", "Seleciona um alvo e voa ate ele para derrubar")
-	GH.RegisterToggleButton("Spasms", "Spasmos", Cheats_ToggleSpasmos, "Troll", "Animacao de convulsao (requer R6)")
-	GH.RegisterToggleButton("Naked", "Naked", Cheats_ToggleNaked, "Troll", "Remove todas as roupas do seu personagem")
-	GH.RegisterToggleButton("Freeze", "Freeze All", Cheats_ToggleFreeze, "Troll", "Congela todos os jogadores no servidor")
+	GH.RegisterToggleButton("TrollFling", GH.T("toggle_trollfling"), Cheats_ToggleTrollFling, "Troll", GH.T("desc_trollfling"))
+	GH.RegisterToggleButton("TargetFling", GH.T("toggle_targetfling"), Cheats_ToggleTargetFling, "Troll", GH.T("desc_targetfling"))
+	GH.RegisterToggleButton("Spasms", GH.T("toggle_spasms"), Cheats_ToggleSpasmos, "Troll", GH.T("desc_spasms"))
+	GH.RegisterToggleButton("Naked", GH.T("toggle_naked"), Cheats_ToggleNaked, "Troll", GH.T("desc_naked"))
+	GH.RegisterToggleButton("Freeze", GH.T("toggle_freeze"), Cheats_ToggleFreeze, "Troll", GH.T("desc_freeze"))
 end
