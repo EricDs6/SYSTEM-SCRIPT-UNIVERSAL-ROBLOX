@@ -1201,6 +1201,10 @@ function GH.FullCleanup()
 		if GH.TargetGui:FindFirstChild("SystemScript") then
 			GH.TargetGui["SystemScript"]:Destroy()
 		end
+		-- Destruir GUI de stats
+		if GH.TargetGui:FindFirstChild("SystemScriptStats") then
+			GH.TargetGui["SystemScriptStats"]:Destroy()
+		end
 	end)
 
 	-- Limpar tabelas
@@ -1240,58 +1244,44 @@ function GH.Initialize()
 	-- STATS NO TOPBAR (discreto)
 	-- ==========================================
 	task.spawn(function()
-		task.wait(1.5) -- Esperar a janela renderizar completamente
+		task.wait(2) -- Esperar a janela Fluent renderizar
 
-		-- Encontrar o ScreenGui do Fluent
-		local screenGui = nil
-		for _, gui in ipairs(GH.TargetGui:GetChildren()) do
-			if gui:IsA("ScreenGui") then
-				screenGui = gui
-				break
-			end
-		end
+		-- Criar ScreenGui separado para as metricas
+		local statsGui = Instance.new("ScreenGui")
+		statsGui.Name = "SystemScriptStats"
+		statsGui.DisplayOrder = 999
+		statsGui.IgnoreGuiInset = true
+		statsGui.Parent = GH.TargetGui
 
-		if not screenGui then return end
-
-		-- Encontrar o topbar procurando o frame que contem o titulo
-		local topBar = nil
-		for _, desc in ipairs(screenGui:GetDescendants()) do
-			if desc:IsA("TextLabel") and desc.Text:find("SYSTEM") then
-				topBar = desc.Parent
-				break
-			end
-		end
-
-		if not topBar then return end
-
-		-- Criar frame discreto para stats no topbar
+		-- Frame principal das stats (posicionado no topbar da janela)
 		local statsFrame = Instance.new("Frame")
 		statsFrame.Name = "StatsFrame"
-		statsFrame.Size = UDim2.new(0, 100, 0, 14)
-		statsFrame.Position = UDim2.new(0.5, -50, 0.5, -7)
-		statsFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-		statsFrame.BackgroundTransparency = 0.4
+		statsFrame.Size = UDim2.new(0, 90, 0, 14)
+		statsFrame.Position = UDim2.new(0.5, 40, 0, 3)
+		statsFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+		statsFrame.BackgroundTransparency = 0.2
 		statsFrame.BorderSizePixel = 0
-		statsFrame.Parent = topBar
+		statsFrame.Parent = statsGui
 
 		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 6)
+		corner.CornerRadius = UDim.new(0, 5)
 		corner.Parent = statsFrame
 
 		-- Texto de stats
 		local statsLabel = Instance.new("TextLabel")
 		statsLabel.Name = "StatsLabel"
-		statsLabel.Size = UDim2.new(1, -6, 1, 0)
-		statsLabel.Position = UDim2.new(0, 3, 0, 0)
+		statsLabel.Size = UDim2.new(1, -4, 1, 0)
+		statsLabel.Position = UDim2.new(0, 2, 0, 0)
 		statsLabel.BackgroundTransparency = 1
 		statsLabel.Text = "🟢 0 | 💉 0"
-		statsLabel.TextColor3 = Color3.fromRGB(160, 160, 160)
+		statsLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
 		statsLabel.TextSize = 9
 		statsLabel.Font = Enum.Font.GothamMedium
 		statsLabel.TextXAlignment = Enum.TextXAlignment.Center
 		statsLabel.Parent = statsFrame
 
 		GH.Objects.StatsLabel = statsLabel
+		GH.Objects.StatsGui = statsGui
 
 		-- Atualizar stats periodicamente
 		while true do
