@@ -5,11 +5,11 @@
 return function(GH)
 	local UserInputService = GH.Services.UserInputService
 	local RunService = GH.Services.RunService
-	local Players = GH.Services.Players
 	local LocalPlayer = GH.LocalPlayer
 
 	local flySpeedMult = 1
 	local noclipParts = {}
+	local keys = { W = false, A = false, S = false, D = false, Space = false, LeftShift = false }
 
 	local function clearNoclip()
 		for p, _ in pairs(noclipParts) do
@@ -22,6 +22,8 @@ return function(GH)
 
 	function Cheats_ToggleFly(state, btn)
 		GH.Disconnect("Fly_Stepped")
+		GH.Disconnect("Fly_InputBegan")
+		GH.Disconnect("Fly_InputEnded")
 		GH.Disconnect("Fly_Scroll")
 		clearNoclip()
 
@@ -42,6 +44,7 @@ return function(GH)
 				hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
 				hum:ChangeState(Enum.HumanoidStateType.GettingUp)
 			end
+			for k in pairs(keys) do keys[k] = false end
 			return
 		end
 
@@ -51,11 +54,13 @@ return function(GH)
 		if not hum or not hrp then return end
 
 		flySpeedMult = 1
+		for k in pairs(keys) do keys[k] = false end
+
 		hum.AutoRotate = false
 		hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, false)
 		hum:ChangeState(Enum.HumanoidStateType.Running)
 
-		-- LinearVelocity para movimento
+		-- LinearVelocity
 		local lv = Instance.new("LinearVelocity")
 		lv.Name = "GH_FlyLV"
 		lv.MaxForce = math.huge
@@ -64,7 +69,7 @@ return function(GH)
 		lv.VelocityConstraintMode = Enum.VelocityConstraintMode.Vector
 		lv.Parent = hrp
 
-		-- AngularVelocity para estabilidade
+		-- AngularVelocity
 		local av = Instance.new("AngularVelocity")
 		av.Name = "GH_FlyAV"
 		av.MaxTorque = math.huge
@@ -72,7 +77,25 @@ return function(GH)
 		av.AngularVelocity = Vector3.zero
 		av.Parent = hrp
 
-		-- Scroll para ajustar velocidade
+		-- InputBegan: teclas pressionadas
+		GH.Connections.Fly_InputBegan = UserInputService.InputBegan:Connect(function(input, gpe)
+			if gpe then return end
+			if not GH.States.Fly then return end
+			local name = input.KeyCode.Name
+			if keys[name] ~= nil then
+				keys[name] = true
+			end
+		end)
+
+		-- InputEnded: teclas soltas
+		GH.Connections.Fly_InputEnded = UserInputService.InputEnded:Connect(function(input)
+			local name = input.KeyCode.Name
+			if keys[name] ~= nil then
+				keys[name] = false
+			end
+		end)
+
+		-- Scroll: ajustar velocidade
 		GH.Connections.Fly_Scroll = UserInputService.InputChanged:Connect(function(input)
 			if not GH.States.Fly then return end
 			if input.UserInputType == Enum.UserInputType.MouseWheel then
@@ -81,11 +104,13 @@ return function(GH)
 			end
 		end)
 
-		-- Loop principal
-		GH.Connections.Fly_Stepped = RunService.Stepped:Connect(function()
+		-- Loop principal (camera-based)
+		GH.Connections.Fly_Stepped = RunService.RenderStepped:Connect(function(dt)
 			if GH.isClosing then return end
 			if not LocalPlayer.Character or not hrp.Parent or hum.Health <= 0 then
 				GH.Disconnect("Fly_Stepped")
+				GH.Disconnect("Fly_InputBegan")
+				GH.Disconnect("Fly_InputEnded")
 				GH.Disconnect("Fly_Scroll")
 				clearNoclip()
 				return
@@ -94,36 +119,46 @@ return function(GH)
 			hum.PlatformStand = false
 			av.AngularVelocity = Vector3.zero
 
-			-- Velocidade base do slider + multiplicador do scroll
+			-- Velocidade
 			local baseSpeed = GH.FlySpeed or 20
 			local flySpeed = baseSpeed * flySpeedMult
 
-			-- Boost com LeftControl (2x velocidade)
-			if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+			-- Boost com LeftControl
+			if keys.LeftShift then
 				flySpeed = flySpeed * 2
 			end
 
-			-- Movimento horizontal (WASD)
-			local vel = Vector3.zero
-			if hum.MoveDirection.Magnitude > 0 then
-				vel = hum.MoveDirection * flySpeed
-			end
+			-- Camera vectors
+			local cam = workspace.CurrentCamera
+			if not cam then return end
+			local camCF = cam.CFrame
+			local lookVec = camCF.LookVector
+			local rightVec = camCF.RightVector
 
-			-- Movimento vertical (Space = subir, Shift = descer)
+			-- Direcao do movimento baseada na camera
+			local moveDir = Vector3.zero
+			moveDir = moveDir + lookVec * ((keys.W and 1 or 0) + (keys.S and -1 or 0))
+			moveDir = moveDir + rightVec * ((keys.D and 1 or 0) + (keys.A and -1 or 0))
+
+			-- Vertical
 			local vert = 0
-			if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+			if keys.Space then
 				vert = flySpeed
-			elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+			elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
 				vert = -flySpeed
 			end
 
-			lv.VectorVelocity = Vector3.new(vel.X, vert, vel.Z)
+			-- Normalizar e aplicar velocidade
+			if moveDir.Magnitude > 0 then
+				moveDir = moveDir.Unit * flySpeed
+			end
 
-			-- Noclip enquanto voa (desativa CanCollide de partes proximas)
+			lv.VectorVelocity = Vector3.new(moveDir.X, vert, moveDir.Z)
+
+			-- Noclip
 			local r = 3
-			local char = LocalPlayer.Character
-			if char then
-				-- Restaurar partes que nao estao mais proximas
+			local myChar = LocalPlayer.Character
+			if myChar then
 				for p, _ in pairs(noclipParts) do
 					if not p or not p.Parent then
 						noclipParts[p] = nil
@@ -136,16 +171,14 @@ return function(GH)
 					end
 				end
 
-				-- Desativar CanCollide de partes proximas
-				for _, part in ipairs(char:GetDescendants()) do
+				for _, part in ipairs(myChar:GetDescendants()) do
 					if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
 						part.CanCollide = false
 					end
 				end
 
-				-- Desativar de partes do mapa proximas
 				local overlapParams = OverlapParams.new()
-				overlapParams.FilterDescendantsInstances = { char }
+				overlapParams.FilterDescendantsInstances = { myChar }
 				overlapParams.FilterType = Enum.RaycastFilterType.Exclude
 				local parts = workspace:GetPartBoundsInBox(hrp.CFrame, Vector3.new(r, r, r), overlapParams)
 				for _, p in ipairs(parts) do
@@ -157,10 +190,10 @@ return function(GH)
 			end
 		end)
 
-		GH.ShowToast("Fly ativado! WASD + Space/Shift | Scroll = velocidade", GH.Theme.On, 3)
+		GH.ShowToast("Fly: WASD + Space/Ctrl | Shift=boost | Scroll=velocidade", GH.Theme.On, 3)
 	end
 
-	-- Parar fly ao morrer
+	-- Reconectar ao respawn
 	GH.Connections.Fly_CharAdded = LocalPlayer.CharacterAdded:Connect(function()
 		if GH.States.Fly then
 			task.wait(0.5)
