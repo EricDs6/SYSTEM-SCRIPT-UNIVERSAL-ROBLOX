@@ -967,10 +967,10 @@ function GH.ShowPlayerPicker(title, callback)
 			if player then
 				if myTeam and player.Team and player.Team == myTeam then
 					tag = "[ALIADO] "
-					nameColor = Color3.fromRGB(0, 200, 80)
+					nameColor = player.Team.TeamColor.Color
 				elseif myTeam and player.Team and player.Team ~= myTeam then
 					tag = "[INIMIGO] "
-					nameColor = Color3.fromRGB(255, 60, 60)
+					nameColor = player.Team.TeamColor.Color
 				else
 					tag = "[NEUTRO] "
 					nameColor = Color3.fromRGB(180, 180, 190)
@@ -1006,7 +1006,7 @@ function GH.ShowPlayerPicker(title, callback)
 			nameLbl.Position = UDim2.new(0, 60, 0, 0)
 			nameLbl.BackgroundTransparency = 1
 			nameLbl.Text = name
-			nameLbl.TextColor3 = Color3.fromRGB(235, 235, 240)
+			nameLbl.TextColor3 = nameColor
 			nameLbl.Font = Enum.Font.GothamMedium
 			nameLbl.TextSize = 11
 			nameLbl.TextXAlignment = Enum.TextXAlignment.Left
