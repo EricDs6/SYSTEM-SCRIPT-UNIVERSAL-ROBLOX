@@ -1561,8 +1561,8 @@ function GH.Initialize()
 	CloseBtn.BackgroundColor3 = W11.Surface
 	CloseBtn.Text = "X"
 	CloseBtn.TextColor3 = W11.Text
-	CloseBtn.Font = Font
-	CloseBtn.TextSize = 10
+	CloseBtn.Font = Enum.Font.SourceSans
+	CloseBtn.TextSize = 14
 	CloseBtn.AutoButtonColor = false
 	CloseBtn.ZIndex = 4
 	CloseBtn.Parent = Topbar
@@ -1573,10 +1573,10 @@ function GH.Initialize()
 	MinBtn.Size = UDim2.new(0, BTN_SIZE, 0, BTN_SIZE)
 	MinBtn.Position = UDim2.new(1, -BTN_SIZE * 2 - 14, 0.5, -BTN_SIZE / 2)
 	MinBtn.BackgroundColor3 = W11.Surface
-	MinBtn.Text = "—"
+	MinBtn.Text = "-"
 	MinBtn.TextColor3 = W11.TextSecondary
-	MinBtn.Font = Font
-	MinBtn.TextSize = 10
+	MinBtn.Font = Enum.Font.SourceSans
+	MinBtn.TextSize = 14
 	MinBtn.AutoButtonColor = false
 	MinBtn.ZIndex = 4
 	MinBtn.Parent = Topbar
