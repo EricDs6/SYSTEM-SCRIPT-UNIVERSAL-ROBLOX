@@ -259,84 +259,89 @@ return function(GH)
 				local myPos = minhaHrp.Position
 
 				for jogador, data in pairs(espData) do
-					if not (jogador and jogador.Parent and jogador.Character) then continue end
+					pcall(function()
+						if not (jogador and jogador.Parent and jogador.Character) then return end
 
-					local char = jogador.Character
-					local head = char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart")
-					local hum = char:FindFirstChildOfClass("Humanoid")
-					local bg = data.gui
-					local hl = data.hl
-					if not (head and hum and bg and bg.Parent) then continue end
+						local char = jogador.Character
+						local head = char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart")
+						local hum = char:FindFirstChildOfClass("Humanoid")
+						local bg = data.gui
+						local hl = data.hl
+						if not (head and hum and bg and bg.Parent) then return end
 
-					-- Distancia
-					local dist = (myPos - head.Position).Magnitude
-					local isFar = dist > GH.Settings.ESPMaxDistance
+						-- Distancia
+						local dist = (myPos - head.Position).Magnitude
+						local isFar = dist > GH.Settings.ESPMaxDistance
 
-					if isFar then
-						bg.Enabled = false
-						if hl then hl.Enabled = false end
-						continue
-					else
+						if isFar then
+							bg.Enabled = false
+							if hl then hl.Enabled = false end
+							return
+						end
+
 						bg.Enabled = true
 						if hl then hl.Enabled = true end
-					end
 
-					-- Relation
-					local relation = GetPlayerRelation(jogador)
-					if not relation then continue end
-					local colors = ESPColors[relation]
+						-- Aplicar configs PRIMEIRO (antes de qualquer continue)
+						local tagLabel = bg:FindFirstChild("GH_ESP_Tag")
+						local nameLabel = bg:FindFirstChild("GH_ESP_Name")
+						local hpBarBg = bg:FindFirstChild("GH_ESP_HpBarBg")
+						local distLabel = bg:FindFirstChild("GH_ESP_Dist")
 
-					-- Tag
-					local tagLabel = bg:FindFirstChild("GH_ESP_Tag")
-					if tagLabel then
-						tagLabel.Visible = GH.Settings.ESPShowTag
-						tagLabel.Text = colors.Tag
-						tagLabel.TextColor3 = colors.Main
-					end
+						if tagLabel then tagLabel.Visible = GH.Settings.ESPShowTag end
+						if nameLabel then nameLabel.Visible = GH.Settings.ESPShowName end
+						if hpBarBg then hpBarBg.Visible = GH.Settings.ESPShowHealth end
+						if distLabel then distLabel.Visible = GH.Settings.ESPShowDistance end
 
-					-- Highlight cor
-					if hl then
-						hl.OutlineColor = colors.Main
-					end
+						-- Relation
+						local relation = GetPlayerRelation(jogador)
+						if not relation then return end
+						local colors = ESPColors[relation]
 
-					-- Nome
-					local nameLabel = bg:FindFirstChild("GH_ESP_Name")
-					if nameLabel then nameLabel.Visible = GH.Settings.ESPShowName end
+						-- Tag
+						if tagLabel then
+							tagLabel.Text = colors.Tag
+							tagLabel.TextColor3 = colors.Main
+						end
 
-					-- Vida
-					dist = math.floor(dist)
-					local hp = math.floor(hum.Health)
-					local maxHp = math.floor(hum.MaxHealth)
-					local ratio = maxHp > 0 and math.clamp(hp / maxHp, 0, 1) or 0
+						-- Highlight cor
+						if hl then
+							hl.OutlineColor = colors.Main
+						end
 
-					-- Barra de vida horizontal
-					local hpBarBg = bg:FindFirstChild("GH_ESP_HpBarBg")
-					if hpBarBg then
-						hpBarBg.Visible = GH.Settings.ESPShowHealth
-						local hpBarFill = hpBarBg:FindFirstChild("GH_ESP_HpBarFill")
-						if hpBarFill then
-							hpBarFill.Size = UDim2.new(ratio, 0, 1, 0)
-							if ratio >= 0.6 then
-								hpBarFill.BackgroundColor3 = Color3.fromRGB(0, 220, 80)
-							elseif ratio >= 0.3 then
-								hpBarFill.BackgroundColor3 = Color3.fromRGB(255, 180, 0)
-							else
-								hpBarFill.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+						-- Nome
+						if nameLabel then nameLabel.Text = jogador.Name end
+
+						-- Vida
+						dist = math.floor(dist)
+						local hp = math.floor(hum.Health)
+						local maxHp = math.floor(hum.MaxHealth)
+						local ratio = maxHp > 0 and math.clamp(hp / maxHp, 0, 1) or 0
+
+						-- Barra de vida
+						if hpBarBg then
+							local hpBarFill = hpBarBg:FindFirstChild("GH_ESP_HpBarFill")
+							if hpBarFill then
+								hpBarFill.Size = UDim2.new(ratio, 0, 1, 0)
+								if ratio >= 0.6 then
+									hpBarFill.BackgroundColor3 = Color3.fromRGB(0, 220, 80)
+								elseif ratio >= 0.3 then
+									hpBarFill.BackgroundColor3 = Color3.fromRGB(255, 180, 0)
+								else
+									hpBarFill.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+								end
+							end
+							local hpText = hpBarBg:FindFirstChild("GH_ESP_HpText")
+							if hpText then
+								hpText.Text = hp .. "/" .. maxHp
 							end
 						end
-						-- Texto HP dentro da barra
-						local hpText = hpBarBg:FindFirstChild("GH_ESP_HpText")
-						if hpText then
-							hpText.Text = hp .. "/" .. maxHp
-						end
-					end
 
-					-- Distancia
-					local distLabel = bg:FindFirstChild("GH_ESP_Dist")
-					if distLabel then
-						distLabel.Visible = GH.Settings.ESPShowDistance
-						distLabel.Text = dist .. "M"
-					end
+						-- Distancia
+						if distLabel then
+							distLabel.Text = dist .. "M"
+						end
+					end)
 				end
 			end)
 		end
