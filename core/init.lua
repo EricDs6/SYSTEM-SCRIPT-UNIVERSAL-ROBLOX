@@ -941,6 +941,7 @@ function GH.ShowPlayerPicker(title, callback)
 		for _, c in ipairs(scroll:GetChildren()) do
 			if c:IsA("TextButton") or c:IsA("TextLabel") then c:Destroy() end
 		end
+		local myTeam = LocalPlayer.Team
 		local names = {}
 		for _, p in ipairs(Players:GetPlayers()) do
 			if p ~= LocalPlayer then
@@ -960,19 +961,58 @@ function GH.ShowPlayerPicker(title, callback)
 			return
 		end
 		for i, name in ipairs(names) do
+			local player = Players:FindFirstChild(name)
+			local tag = ""
+			local nameColor = Color3.fromRGB(235, 235, 240)
+			if player then
+				if myTeam and player.Team and player.Team == myTeam then
+					tag = "[ALIADO] "
+					nameColor = Color3.fromRGB(0, 200, 80)
+				elseif myTeam and player.Team and player.Team ~= myTeam then
+					tag = "[INIMIGO] "
+					nameColor = Color3.fromRGB(255, 60, 60)
+				else
+					tag = "[NEUTRO] "
+					nameColor = Color3.fromRGB(180, 180, 190)
+				end
+			end
 			local b = Instance.new("TextButton")
 			b.Name = name
 			b.Size = UDim2.new(1, 0, 0, 28)
 			b.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
-			b.Text = "  " .. name
-			b.TextColor3 = Color3.fromRGB(235, 235, 240)
-			b.Font = Enum.Font.GothamMedium
-			b.TextSize = 11
-			b.TextXAlignment = Enum.TextXAlignment.Left
+			b.Text = ""
 			b.AutoButtonColor = false
 			b.LayoutOrder = i
 			b.Parent = scroll
 			Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
+
+			-- Tag label
+			if tag ~= "" then
+				local tagLbl = Instance.new("TextLabel")
+				tagLbl.Size = UDim2.new(0, 55, 1, 0)
+				tagLbl.Position = UDim2.new(0, 6, 0, 0)
+				tagLbl.BackgroundTransparency = 1
+				tagLbl.Text = tag
+				tagLbl.TextColor3 = nameColor
+				tagLbl.Font = Enum.Font.GothamBold
+				tagLbl.TextSize = 9
+				tagLbl.TextXAlignment = Enum.TextXAlignment.Left
+				tagLbl.Parent = b
+			end
+
+			-- Name label
+			local nameLbl = Instance.new("TextLabel")
+			nameLbl.Size = UDim2.new(1, -65, 1, 0)
+			nameLbl.Position = UDim2.new(0, 60, 0, 0)
+			nameLbl.BackgroundTransparency = 1
+			nameLbl.Text = name
+			nameLbl.TextColor3 = Color3.fromRGB(235, 235, 240)
+			nameLbl.Font = Enum.Font.GothamMedium
+			nameLbl.TextSize = 11
+			nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+			nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
+			nameLbl.Parent = b
+
 			b.MouseEnter:Connect(function()
 				if selectedName ~= name then
 					TS:Create(b, GH.TI, { BackgroundColor3 = Color3.fromRGB(38, 38, 42) }):Play()
