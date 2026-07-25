@@ -1553,8 +1553,8 @@ function GH.Initialize()
 
 	-- Topbar buttons
 	local TopbarBtns = Instance.new("Frame")
-	TopbarBtns.Size = UDim2.new(0, 60, 1, 0)
-	TopbarBtns.Position = UDim2.new(1, -106, 0, 0)
+	TopbarBtns.Size = UDim2.new(0, 80, 1, 0)
+	TopbarBtns.Position = UDim2.new(1, -86, 0, 0)
 	TopbarBtns.BackgroundTransparency = 1
 	TopbarBtns.ZIndex = 3
 	TopbarBtns.Parent = Topbar
@@ -1568,12 +1568,12 @@ function GH.Initialize()
 	local function MakeTopbarBtn(name, text, color)
 		local btn = Instance.new("TextButton")
 		btn.Name = name
-		btn.Size = UDim2.new(0, 28, 0, 22)
+		btn.Size = UDim2.new(0, 36, 1, 0)
 		btn.BackgroundColor3 = W11.Surface
 		btn.Text = text
 		btn.TextColor3 = color or W11.TextSecondary
 		btn.Font = FontBold
-		btn.TextSize = 10
+		btn.TextSize = 11
 		btn.AutoButtonColor = false
 		btn.ZIndex = 4
 		btn.Parent = TopbarBtns
@@ -1582,20 +1582,7 @@ function GH.Initialize()
 	end
 
 	local MinBtn = MakeTopbarBtn("Minimize", "—", W11.TextSecondary)
-
-	-- Close button: Windows 11 style (full topbar height, red hover) - parented to Topbar directly
-	local CloseBtn = Instance.new("TextButton")
-	CloseBtn.Name = "Close"
-	CloseBtn.Size = UDim2.new(0, 46, 1, 0)
-	CloseBtn.Position = UDim2.new(1, -46, 0, 0)
-	CloseBtn.BackgroundColor3 = W11.Surface
-	CloseBtn.Text = "✕"
-	CloseBtn.TextColor3 = W11.Text
-	CloseBtn.Font = FontBold
-	CloseBtn.TextSize = 10
-	CloseBtn.AutoButtonColor = false
-	CloseBtn.ZIndex = 4
-	CloseBtn.Parent = Topbar
+	local CloseBtn = MakeTopbarBtn("Close", "✕", W11.Text)
 
 	-- ==========================================
 	-- SIDEBAR
@@ -2419,16 +2406,18 @@ function GH.Initialize()
 		pcall(function() ScreenGui:Destroy() end)
 	end)
 
-	-- Topbar hover
-	MinBtn.MouseEnter:Connect(function() TweenService:Create(MinBtn, GH.TI, { BackgroundColor3 = W11.SurfaceHover }):Play() end)
-	MinBtn.MouseLeave:Connect(function() TweenService:Create(MinBtn, GH.TI, { BackgroundColor3 = W11.Surface }):Play() end)
-
 	-- Close button: Windows 11 style (red hover, white X)
 	CloseBtn.MouseEnter:Connect(function()
 		TweenService:Create(CloseBtn, GH.TI, { BackgroundColor3 = W11.Red, TextColor3 = Color3.new(1, 1, 1) }):Play()
 	end)
 	CloseBtn.MouseLeave:Connect(function()
 		TweenService:Create(CloseBtn, GH.TI, { BackgroundColor3 = W11.Surface, TextColor3 = W11.Text }):Play()
+	end)
+	MinBtn.MouseEnter:Connect(function()
+		TweenService:Create(MinBtn, GH.TI, { BackgroundColor3 = W11.SurfaceHover }):Play()
+	end)
+	MinBtn.MouseLeave:Connect(function()
+		TweenService:Create(MinBtn, GH.TI, { BackgroundColor3 = W11.Surface }):Play()
 	end)
 
 	-- ==========================================
