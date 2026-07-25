@@ -3152,6 +3152,7 @@ function GH.Initialize()
 					GH.States[name] = true
 					local btn = GH.Buttons[name]
 					if btn and btn.SetValue then pcall(btn.SetValue, btn, true) end
+					pcall(GH.Callbacks[name], true, btn)
 				end
 			end
 			GH.SilentRestore = false
