@@ -1,62 +1,86 @@
 -- =============================================================================
 -- COMMAND: PUSH ALL
--- Empurra todos os jogadores proximos com LinearVelocity
+-- Cria projetil fisico que empurra jogadores (replica pro servidor)
 -- =============================================================================
 return function(GH)
 	local Players = GH.Services.Players
 	local RunService = GH.Services.RunService
 	local LocalPlayer = GH.LocalPlayer
 
+	local pushCooldown = false
+
 	function Cheats_TogglePushAll(state, btn)
-		GH.UnregisterMasterLoop("PushAll")
+		GH.Disconnect("PushAll_Key")
 
 		if not state then return end
 
-		GH.RegisterMasterLoop("PushAll", "Heartbeat", function()
-			if GH.isClosing or not GH.States.PushAll then
-				GH.UnregisterMasterLoop("PushAll")
-				return
-			end
+		-- Ativar com tecla X
+		GH.Connections.PushAll_Key = GH.Services.UserInputService.InputBegan:Connect(function(input, gpe)
+			if gpe then return end
+			if not GH.States.PushAll then return end
+			if input.KeyCode ~= Enum.KeyCode.X then return end
+			if pushCooldown then return end
+			pushCooldown = true
 
 			local myChar = LocalPlayer.Character
 			local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-			if not myRoot then return end
+			if not myRoot then pushCooldown = false; return end
 
-			for _, player in ipairs(Players:GetPlayers()) do
-				if player ~= LocalPlayer and player.Character then
-					local targetRoot = player.Character:FindFirstChild("HumanoidRootPart")
-					local targetHum = player.Character:FindFirstChildOfClass("Humanoid")
-					if targetRoot and targetHum and targetHum.Health > 0 then
-						local dist = (targetRoot.Position - myRoot.Position).Magnitude
-						if dist < 20 then
-							-- Direcao do empurao (longe de voce)
-							local pushDir = (targetRoot.Position - myRoot.Position).Unit
-							local pushForce = 80 / math.max(dist, 1)
+			-- Criar projetil fisico
+			local ball = Instance.new("Part")
+			ball.Name = "GH_PushBall"
+			ball.Size = Vector3.new(4, 4, 4)
+			ball.Shape = Enum.PartType.Ball
+			ball.Material = Enum.Material.Neon
+			ball.BrickColor = BrickColor.new("Really red")
+			ball.Position = myRoot.Position + myRoot.CFrame.LookVector * 5
+			ball.Anchored = false
+			ball.CanCollide = true
+			ball.Parent = workspace
 
-							-- Aplicar velocity direto no servidor
-							targetRoot.AssemblyLinearVelocity = pushDir * pushForce + Vector3.new(0, 20, 0)
+			-- Velocity na direcao que olha
+			local lv = Instance.new("LinearVelocity")
+			lv.MaxForce = math.huge
+			lv.Attachment0 = ball:FindFirstChildOfClass("Attachment") or Instance.new("Attachment", ball)
+			lv.VectorVelocity = myRoot.CFrame.LookVector * 150 + Vector3.new(0, 30, 0)
+			lv.VelocityConstraintMode = Enum.VelocityConstraintMode.Vector
+			lv.Parent = ball
 
-							-- Adicionar AngularVelocity pra girar
-							local spin = targetRoot:FindFirstChild("GH_PushSpin")
-							if not spin then
-								spin = Instance.new("AngularVelocity")
-								spin.Name = "GH_PushSpin"
-								spin.MaxTorque = math.huge
-								spin.AngularVelocity = Vector3.new(0, 50, 0)
-								spin.Parent = targetRoot
-							end
+			-- Spin
+			local av = Instance.new("AngularVelocity")
+			av.MaxTorque = math.huge
+			av.Attachment0 = lv.Attachment0
+			av.AngularVelocity = Vector3.new(50, 50, 50)
+			av.Parent = ball
 
-							-- Remover spin apos 0.5s
-							task.delay(0.5, function()
-								if spin and spin.Parent then spin:Destroy() end
-							end)
-						end
-					end
+			-- Destruir apos 3 segundos
+			task.delay(3, function()
+				if ball and ball.Parent then ball:Destroy() end
+			end)
+
+			-- Empurrar jogadores que o projetil atingir
+			local hitConn
+			hitConn = ball.Touched:Connect(function(hit)
+				if not hit or not hit.Parent then return end
+				local hitChar = hit.Parent
+				local hitHum = hitChar:FindFirstChildOfClass("Humanoid")
+				local hitRoot = hitChar:FindFirstChild("HumanoidRootPart")
+				if hitHum and hitRoot and hitChar ~= myChar then
+					local pushDir = (hitRoot.Position - ball.Position).Unit
+					hitRoot.AssemblyLinearVelocity = pushDir * 100 + Vector3.new(0, 50, 0)
 				end
-			end
+			end)
+
+			-- Cooldown
+			task.delay(1, function()
+				pushCooldown = false
+				if hitConn then hitConn:Disconnect() end
+			end)
+
+			GH.ShowToast("Push! projetil disparado", GH.Theme.Red, 1)
 		end)
 
-		GH.ShowToast("Push All: empurrando jogadores proximos!", GH.Theme.Red, 2)
+		GH.ShowToast("Push All: pressione X para disparar", GH.Theme.On, 2)
 	end
 
 	GH.RegisterToggleButton("PushAll", "toggle_pushall", Cheats_TogglePushAll, "Troll", "desc_pushall")
