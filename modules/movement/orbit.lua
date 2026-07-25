@@ -60,6 +60,10 @@ return function(GH)
 					if root and targetRoot then
 						rotation = rotation + 0.2
 						root.CFrame = CFrame.new(targetRoot.Position) * CFrame.Angles(0, math.rad(rotation), 0) * CFrame.new(6, 0, 0)
+					else
+						GH.UnregisterMasterLoop("Orbit")
+						GH.UnregisterMasterLoop("OrbitLook")
+						GH.States.Orbit = false
 					end
 				end)
 

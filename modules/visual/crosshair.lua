@@ -8,7 +8,7 @@ return function(GH)
 
 	function Cheats_ToggleCrosshair(state, btn)
 		if state then
-			if CacheCrosshair.Objects.Main then return end
+			if CacheCrosshair.Objects.GUI then return end
 			local gui = Instance.new("ScreenGui")
 			gui.Name = "GH_Crosshair"
 			gui.ResetOnSpawn = false

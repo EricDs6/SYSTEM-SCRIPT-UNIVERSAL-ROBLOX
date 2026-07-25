@@ -37,7 +37,7 @@ GH.Locales = {
 		-- Stats
 		stats_section = "Estatisticas",
 		stats_online = "Usuarios Online",
-		_stats_injections = "Injecoes Totais",
+		stats_injections = "Injecoes Totais",
 		stats_device = "Meu Device",
 		stats_status = "Status",
 		stats_active = "Ativo",
@@ -166,7 +166,7 @@ GH.Locales = {
 		desc_fireproximityprompts = "Ativa todos os ProximityPrompts do mapa",
 		desc_btools = "Ferramentas de construcao (HopperBins)",
 		desc_breakvelocity = "Reseta toda velocidade do personagem",
-		desc_invisibleparts = "Mostra partes que estao invisiveis no mapa",
+		desc_invisible_parts = "Mostra partes que estao invisiveis no mapa",
 		desc_trollfling = "Gira rapidamente para jogar outros jogadores",
 		desc_targetfling = "Seleciona um alvo e voa ate ele para derrubar",
 		desc_spasms = "Animacao de convulsao (requer R6)",
@@ -918,6 +918,7 @@ end
 -- ==========================================
 function GH.TweenTeleport(hrp, targetCFrame, duration)
 	if not hrp then return end
+	if not LocalPlayer.Character then return end
 	duration = duration or 0.15
 
 	local originalCollisions = {}
@@ -1520,10 +1521,12 @@ function GH.Initialize()
 			toggle:OnChanged(function()
 				local state = toggle.Value
 				GH.States[pending.name] = state
-				if state then
-					GH.ShowToast(pending.name .. " " .. GH.T("toast_activated"), GH.Theme.On, 2)
-				else
-					GH.ShowToast(pending.name .. " " .. GH.T("toast_deactivated"), GH.Theme.Off, 2)
+				if not GH.SilentRestore then
+					if state then
+						GH.ShowToast(GH.T(pending.localeKey or pending.name) .. " " .. GH.T("toast_activated"), GH.Theme.On, 2)
+					else
+						GH.ShowToast(GH.T(pending.localeKey or pending.name) .. " " .. GH.T("toast_deactivated"), GH.Theme.Off, 2)
+					end
 				end
 				pcall(pending.callback, state, toggle)
 			end)
@@ -1558,7 +1561,7 @@ function GH.Initialize()
 	})
 
 	SettingsSection:AddToggle("DebugMode", {
-		Title = "Debug Mode",
+		Title = GH.T("settings_debug_mode"),
 		Default = GH.Settings.DebugMode,
 		Callback = function(value)
 			GH.Settings.DebugMode = value
@@ -1827,7 +1830,9 @@ function GH.Initialize()
 			GH.States[name] = false
 			local btn = GH.Buttons[name]
 			local callback = GH.Callbacks[name]
-			if btn and callback then callback(false, btn) end
+			if btn and callback then
+				pcall(callback, false, btn)
+			end
 			if btn and btn.SetValue then
 				pcall(function() btn:SetValue(false) end)
 			end
@@ -1846,7 +1851,7 @@ function GH.Initialize()
 					if btn and btn.SetValue then
 						pcall(function() btn:SetValue(true) end)
 					end
-					GH.Callbacks[name](true, btn)
+					-- SetValue já dispara o OnChanged que chama o callback
 				end
 			end
 			GH.SilentRestore = false

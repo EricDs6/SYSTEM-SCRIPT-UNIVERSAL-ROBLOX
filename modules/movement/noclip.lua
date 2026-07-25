@@ -22,7 +22,7 @@ return function(GH)
 			local cachedOverlapParams = OverlapParams.new()
 			cachedOverlapParams.FilterType = Enum.RaycastFilterType.Exclude
 
-			GH.RegisterMasterLoop("NoClip", "PreSim", function()
+			GH.RegisterMasterLoop("NoClip", "Heartbeat", function()
 				if GH.isClosing or not GH.States.NoClip then
 					GH.UnregisterMasterLoop("NoClip")
 					for p, _ in pairs(NoClipDisabledParts) do

@@ -9,14 +9,12 @@ return function(GH)
 	local LocalPlayer = GH.LocalPlayer
 
 	function Cheats_ToggleAntiAFK(state, btn)
-		GH.Disconnect("AntiAFK")
+		if GH.Cache.AntiAFKThread then
+			task.cancel(GH.Cache.AntiAFKThread)
+			GH.Cache.AntiAFKThread = nil
+		end
 		if state then
-			GH.Connections.AntiAFK = RunService.Heartbeat:Connect(function()
-				if not GH.States.AntiAFK then
-					GH.Disconnect("AntiAFK"); return
-				end
-			end)
-			task.spawn(function()
+			GH.Cache.AntiAFKThread = task.spawn(function()
 				while GH.States.AntiAFK do
 					task.wait(math.random(120, 300))
 					if not GH.States.AntiAFK then break end

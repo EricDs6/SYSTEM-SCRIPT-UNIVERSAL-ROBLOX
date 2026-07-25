@@ -51,7 +51,9 @@ return function(GH)
 				local player = Players:FindFirstChild(name)
 				if player then
 					GH.Disconnect("SpectateDied")
-					workspace.CurrentCamera.CameraSubject = player.Character
+					if player.Character then
+						workspace.CurrentCamera.CameraSubject = player.Character
+					end
 					GH.Connections.SpectateDied = player.CharacterAdded:Connect(function(char)
 						workspace.CurrentCamera.CameraSubject = char
 					end)

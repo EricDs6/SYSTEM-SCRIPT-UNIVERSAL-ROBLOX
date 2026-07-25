@@ -10,7 +10,10 @@ return function(GH)
 		if self:IsA("Humanoid") then
 			local char = self.Parent
 			if char and char == LocalPlayer.Character then
-				if args[1] and typeof(args[1]) == "number" and args[1] > 0 then return true end
+				if args[1] and typeof(args[1]) == "number" and args[1] > 0 then
+				args[1] = 0
+				return true
+			end
 			end
 		end
 		return false

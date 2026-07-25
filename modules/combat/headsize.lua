@@ -67,9 +67,24 @@ return function(GH)
 					if not GH.Cache.OrigHeadSizes[player] then
 						GH.Cache.OrigHeadSizes[player] = head.Size
 					end
+					GH.Cache.OrigHeadSizes._selected = name
 					head.Size = Vector3.new(5, 5, 5)
 					head.CanCollide = false
 					GH.ShowToast(string.format(GH.T("toast_head_amplified"), name), GH.Theme.Red, 2)
+
+					-- Re-aplicar quando o player respawnar
+					player.CharacterAdded:Connect(function(newChar)
+						if not GH.States.HeadSize then return end
+						task.wait(0.5)
+						local newHead = newChar:FindFirstChild("Head")
+						if newHead and newHead:IsA("BasePart") then
+							if not GH.Cache.OrigHeadSizes[player] then
+								GH.Cache.OrigHeadSizes[player] = newHead.Size
+							end
+							newHead.Size = Vector3.new(5, 5, 5)
+							newHead.CanCollide = false
+						end
+					end)
 				end
 			end
 		end)

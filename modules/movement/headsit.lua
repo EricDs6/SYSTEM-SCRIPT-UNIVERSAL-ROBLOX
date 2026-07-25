@@ -58,7 +58,7 @@ return function(GH)
 					local target = Players:FindFirstChild(targetName)
 					local targetRoot = target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")
 					if root and targetRoot and myHum and myHum.Sit then
-						root.CFrame = targetRoot.CFrame * CFrame.Angles(0, math.rad(0), 0) * CFrame.new(0, 1.6, 0.4)
+						root.CFrame = targetRoot.CFrame * CFrame.new(0, 1.6, 0.4)
 					else
 						GH.UnregisterMasterLoop("HeadSit")
 						GH.States.HeadSit = false

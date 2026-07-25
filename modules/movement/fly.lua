@@ -28,7 +28,7 @@ return function(GH)
 		if not char then return end
 		for _, desc in ipairs(char:GetDescendants()) do
 			if desc:IsA("Motor6D") then
-				pcall(function() desc:SetJointFrozen(Enum.JointType.Motor, frozen) end)
+				pcall(function() desc:SetJointFrozen(Enum.JointType.Motor6D, frozen) end)
 			end
 		end
 	end

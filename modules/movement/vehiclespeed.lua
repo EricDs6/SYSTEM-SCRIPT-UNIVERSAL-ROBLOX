@@ -10,6 +10,7 @@ return function(GH)
 
 		-- Restaurar valores originais do veiculo
 		if not state and GH.Cache.OrigVehicleSpeed then
+			-- Tentar restaurar no veiculo atual
 			pcall(function()
 				local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 				if hum and hum.SeatPart and hum.SeatPart:IsA("VehicleSeat") then
@@ -17,6 +18,16 @@ return function(GH)
 					hum.SeatPart.Torque = GH.Cache.OrigVehicleSpeed.Torque
 				end
 			end)
+			-- Também tentar restaurar no veiculo original
+			if GH.Cache.OrigVehicleSpeed.Seat then
+				pcall(function()
+					local seat = GH.Cache.OrigVehicleSpeed.Seat
+					if seat and seat.Parent then
+						seat.MaxSpeed = GH.Cache.OrigVehicleSpeed.MaxSpeed
+						seat.Torque = GH.Cache.OrigVehicleSpeed.Torque
+					end
+				end)
+			end
 			GH.Cache.OrigVehicleSpeed = nil
 		end
 
@@ -30,6 +41,7 @@ return function(GH)
 							GH.Cache.OrigVehicleSpeed = {
 								MaxSpeed = hum.SeatPart.MaxSpeed,
 								Torque = hum.SeatPart.Torque,
+								Seat = hum.SeatPart,
 							}
 						end
 						hum.SeatPart.MaxSpeed = 100

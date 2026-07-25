@@ -29,6 +29,15 @@ return function(GH)
 					end
 				end
 			end
+			-- Também limpar do Character (ferramenta equipada)
+			local char = LocalPlayer.Character
+			if char then
+				for _, v in ipairs(char:GetChildren()) do
+					if v:IsA("HopperBin") and v.Name:sub(1, 6) == "BTool_" then
+						v:Destroy()
+					end
+				end
+			end
 		end
 	end
 
