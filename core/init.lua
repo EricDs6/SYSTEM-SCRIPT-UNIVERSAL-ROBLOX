@@ -937,6 +937,7 @@ function GH.ShowPlayerPicker(title, callback)
 	searchBox.TextSize = 11
 	searchBox.TextXAlignment = Enum.TextXAlignment.Left
 	searchBox.ClearTextOnFocus = false
+	searchBox.ZIndex = 10
 	searchBox.Parent = content
 	Instance.new("UICorner", searchBox).CornerRadius = UDim.new(0, 4)
 	Instance.new("UIPadding", searchBox).PaddingLeft = UDim.new(0, 6)
@@ -2180,27 +2181,6 @@ function GH.Initialize()
 	Instance.new("UIPadding", Content).PaddingRight = UDim.new(0, 4)
 
 	-- ==========================================
-	-- SEARCH BAR (filtra comandos em todas as tabs)
-	-- ==========================================
-	local SearchBar = Instance.new("TextBox")
-	SearchBar.Name = "SearchBar"
-	SearchBar.Size = UDim2.new(1, 0, 0, 26)
-	SearchBar.Position = UDim2.new(0, 0, 0, 0)
-	SearchBar.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
-	SearchBar.PlaceholderText = "Procurar comando..."
-	SearchBar.PlaceholderColor3 = Color3.fromRGB(100, 100, 115)
-	SearchBar.Text = ""
-	SearchBar.TextColor3 = Color3.fromRGB(235, 235, 240)
-	SearchBar.Font = Enum.Font.GothamMedium
-	SearchBar.TextSize = 11
-	SearchBar.TextXAlignment = Enum.TextXAlignment.Left
-	SearchBar.ClearTextOnFocus = false
-	SearchBar.ZIndex = 4
-	SearchBar.Parent = Content
-	Instance.new("UICorner", SearchBar).CornerRadius = UDim.new(0, 4)
-	Instance.new("UIPadding", SearchBar).PaddingLeft = UDim.new(0, 6)
-
-	-- ==========================================
 	-- SETTINGS TAB (via sidebar, same as other tabs)
 	-- ==========================================
 	local SettingsContainer = Instance.new("ScrollingFrame")
@@ -2317,6 +2297,27 @@ function GH.Initialize()
 
 		TabButtons[cat.Name] = btn
 	end
+
+	-- ==========================================
+	-- SEARCH BAR (DEPOIS das tabs para ficar por cima)
+	-- ==========================================
+	local SearchBar = Instance.new("TextBox")
+	SearchBar.Name = "SearchBar"
+	SearchBar.Size = UDim2.new(1, 0, 0, 26)
+	SearchBar.Position = UDim2.new(0, 0, 0, 0)
+	SearchBar.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
+	SearchBar.PlaceholderText = "Procurar comando..."
+	SearchBar.PlaceholderColor3 = Color3.fromRGB(100, 100, 115)
+	SearchBar.Text = ""
+	SearchBar.TextColor3 = Color3.fromRGB(235, 235, 240)
+	SearchBar.Font = Enum.Font.GothamMedium
+	SearchBar.TextSize = 11
+	SearchBar.TextXAlignment = Enum.TextXAlignment.Left
+	SearchBar.ClearTextOnFocus = false
+	SearchBar.ZIndex = 10
+	SearchBar.Parent = Content
+	Instance.new("UICorner", SearchBar).CornerRadius = UDim.new(0, 4)
+	Instance.new("UIPadding", SearchBar).PaddingLeft = UDim.new(0, 6)
 
 	GH.Tabs = TabAPIs
 
