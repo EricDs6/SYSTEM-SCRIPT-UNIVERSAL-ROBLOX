@@ -856,6 +856,7 @@ function GH.ShowPlayerPicker(title, callback)
 	frame.Position = UDim2.new(0.5, -W / 2, 0.5, -H / 2)
 	frame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
 	frame.BorderSizePixel = 0
+	frame.Active = true
 	frame.Parent = gui
 	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
 	local s = Instance.new("UIStroke")
@@ -1080,23 +1081,33 @@ function GH.ShowPlayerPicker(title, callback)
 		end
 	end)
 
-	-- Drag (via topbar, com cleanup)
+	-- Drag (via topbar, so inicia se clicar no frame da topbar, nao nos botoes)
 	local dragging, dragStart, startPos
 	local dragConn
-	tb.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
-			dragStart = input.Position
-			startPos = frame.Position
-			if dragConn then dragConn:Disconnect() end
-			dragConn = GH.Services.RunService.Heartbeat:Connect(function()
-				if not dragging then return end
-				local delta = GH.Services.UserInputService:GetMouseLocation() - dragStart
-				frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-			end)
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragging = false
+	tb.InputBegan:Connect(function(input, gpe)
+		if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then return end
+		-- Verificar se o clique e no topo da topbar (nao nos botoes)
+		local mouse = GH.Services.UserInputService:GetMouseLocation()
+		local tbAbsPos = tb.AbsolutePosition
+		local tbAbsSize = tb.AbsoluteSize
+		local minX = tbAbsPos.X
+		local maxX = tbAbsPos.X + tbAbsSize.X
+		local minY = tbAbsPos.Y
+		local maxY = tbAbsPos.Y + tbAbsSize.Y
+		-- Botoes ocupam os ultimos 56px da direita
+		if mouse.X > maxX - 56 then return end
+		dragging = true
+		dragStart = input.Position
+		startPos = frame.Position
+		if dragConn then dragConn:Disconnect() end
+		dragConn = GH.Services.RunService.Heartbeat:Connect(function()
+			if not dragging then return end
+			local delta = GH.Services.UserInputService:GetMouseLocation() - dragStart
+			frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end)
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
 					if dragConn then dragConn:Disconnect(); dragConn = nil end
 				end
 			end)
@@ -1143,6 +1154,7 @@ function GH.ShowInputPicker(title, placeholder, callback)
 	frame.Position = UDim2.new(0.5, -W / 2, 0.5, -H / 2)
 	frame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
 	frame.BorderSizePixel = 0
+	frame.Active = true
 	frame.Parent = gui
 	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
 	local s = Instance.new("UIStroke")
@@ -1242,27 +1254,30 @@ function GH.ShowInputPicker(title, placeholder, callback)
 		GH._InputPickerGui = nil
 	end)
 
-	-- Drag
+	-- Drag (so inicia no espaco livre da topbar, nao nos botoes)
 	local dragging, dragStart, startPos
 	local dragConn
 	tb.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
-			dragStart = input.Position
-			startPos = frame.Position
-			if dragConn then dragConn:Disconnect() end
-			dragConn = GH.Services.RunService.Heartbeat:Connect(function()
-				if not dragging then return end
-				local delta = GH.Services.UserInputService:GetMouseLocation() - dragStart
-				frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-			end)
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragging = false
-					if dragConn then dragConn:Disconnect(); dragConn = nil end
-				end
-			end)
-		end
+		if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then return end
+		local mouse = GH.Services.UserInputService:GetMouseLocation()
+		local tbAbsPos = tb.AbsolutePosition
+		local tbAbsSize = tb.AbsoluteSize
+		if mouse.X > tbAbsPos.X + tbAbsSize.X - 56 then return end
+		dragging = true
+		dragStart = input.Position
+		startPos = frame.Position
+		if dragConn then dragConn:Disconnect() end
+		dragConn = GH.Services.RunService.Heartbeat:Connect(function()
+			if not dragging then return end
+			local delta = GH.Services.UserInputService:GetMouseLocation() - dragStart
+			frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end)
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+				if dragConn then dragConn:Disconnect(); dragConn = nil end
+			end
+		end)
 	end)
 
 	return {
