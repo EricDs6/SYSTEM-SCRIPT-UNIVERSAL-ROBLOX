@@ -1,5 +1,6 @@
 -- =============================================================================
 -- COMMAND: FREECAM (Estilo FE Cosmic — Spring-based)
+-- Camera livre + interacao (F = teleportar personagem)
 -- =============================================================================
 return function(GH)
 	local Players = GH.Services.Players
@@ -125,6 +126,72 @@ return function(GH)
 		return kMouse
 	end
 
+	-- Teleportar personagem pra posicao da camera
+	local function FCTeleportToCamera()
+		local cam = workspace.CurrentCamera
+		local char = LocalPlayer.Character
+		local hrp = char and char:FindFirstChild("HumanoidRootPart")
+		local hum = char and char:FindFirstChildOfClass("Humanoid")
+		if cam and hrp and hum then
+			-- Raycast pra encontrar o chao abaixo da camera
+			local rayParams = RaycastParams.new()
+			rayParams.FilterDescendantsInstances = { char }
+			rayParams.FilterType = Enum.RaycastFilterType.Exclude
+			local ray = workspace:Raycast(cam.CFrame.Position, Vector3.new(0, -50, 0), rayParams)
+
+			local targetPos
+			if ray then
+				targetPos = ray.Position + Vector3.new(0, 3, 0)
+			else
+				targetPos = cam.CFrame.Position + Vector3.new(0, 3, 0)
+			end
+
+			hrp.CFrame = CFrame.new(targetPos, targetPos + cam.CFrame.LookVector)
+			hum.PlatformStand = false
+			hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+			GH.ShowToast("Teleportado!", GH.Theme.On, 1)
+		end
+	end
+
+	-- Interagir com ClickDetector/ProximityPrompt mais proximo
+	local function FCInteract()
+		local cam = workspace.CurrentCamera
+		if not cam then return end
+
+		-- Raycast na direcao da camera
+		local rayParams = RaycastParams.new()
+		rayParams.FilterDescendantsInstances = { LocalPlayer.Character }
+		rayParams.FilterType = Enum.RaycastFilterType.Exclude
+
+		local ray = workspace:Raycast(cam.CFrame.Position, cam.CFrame.LookVector * 50, rayParams)
+		if not ray then return end
+
+		local hit = ray.Instance
+		if not hit then return end
+
+		-- Procurar ClickDetector ou ProximityPrompt
+		local detector = hit:FindFirstChildWhichIsA("ClickDetector")
+			or hit.Parent:FindFirstChildWhichIsA("ClickDetector")
+			or hit:FindFirstChildWhichIsA("ProximityPrompt")
+			or hit.Parent:FindFirstChildWhichIsA("ProximityPrompt")
+
+		if detector then
+			if detector:IsA("ClickDetector") then
+				detector:FireClick()
+				GH.ShowToast("ClickDetector ativado!", GH.Theme.On, 1)
+			elseif detector:IsA("ProximityPrompt") then
+				pcall(function() detector:InputBegin(LocalPlayer) end)
+				task.delay(0.1, function()
+					pcall(function() detector:InputEnd(LocalPlayer) end)
+				end)
+				GH.ShowToast("ProximityPrompt ativado!", GH.Theme.On, 1)
+			end
+		else
+			-- Sem detector, teleportar pro objeto
+			FCTeleportToCamera()
+		end
+	end
+
 	local function FCStep(dt)
 		if not FCState.running then return end
 		local vel = FCState.velSpring:Update(dt, FCVel())
@@ -143,6 +210,7 @@ return function(GH)
 
 	function Cheats_ToggleFreecam(state, btn)
 		GH.Disconnect("Freecam")
+		GH.Disconnect("Freecam_Input")
 
 		if FCState.running then
 			FCStopCapture()
@@ -176,6 +244,22 @@ return function(GH)
 			FCStartCapture()
 			FCState.running = true
 			RunService:BindToRenderStep("GH_Freecam", Enum.RenderPriority.Camera.Value, FCStep)
+
+			-- Teclas de interacao
+			GH.Connections.Freecam_Input = UserInputService.InputBegan:Connect(function(input, gpe)
+				if gpe then return end
+				if not GH.States.Freecam then return end
+				-- F = teleportar personagem
+				if input.KeyCode == Enum.KeyCode.F then
+					FCTeleportToCamera()
+				end
+				-- G = interagir com ClickDetector/ProximityPrompt
+				if input.KeyCode == Enum.KeyCode.G then
+					FCInteract()
+				end
+			end)
+
+			GH.ShowToast("Freecam: WASD+QE+Mouse | F=TP | G=Interagir", GH.Theme.On, 3)
 		end
 	end
 
