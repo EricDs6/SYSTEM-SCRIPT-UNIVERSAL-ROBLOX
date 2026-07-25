@@ -8,7 +8,6 @@ return function(GH)
 	local LocalPlayer = GH.LocalPlayer
 
 	local keys = { W = false, A = false, S = false, D = false, E = false, Q = false }
-	local flySpeedMult = 1
 
 	function Cheats_ToggleVehicleFly(state, btn)
 		GH.Disconnect("VFly_Stepped")
@@ -29,7 +28,6 @@ return function(GH)
 		local hum = char and char:FindFirstChildOfClass("Humanoid")
 		if not hum or not hrp then return end
 
-		flySpeedMult = 1
 		for k in pairs(keys) do keys[k] = false end
 
 		hum.PlatformStand = false
@@ -70,8 +68,9 @@ return function(GH)
 		GH.Connections.VFly_Scroll = UserInputService.InputChanged:Connect(function(input)
 			if not GH.States.VehicleFly then return end
 			if input.UserInputType == Enum.UserInputType.MouseWheel then
-				local dir = input.Position.Z > 0 and 1 or -1
-				flySpeedMult = math.clamp(flySpeedMult + dir * 0.5, 0.5, 10)
+				local dir = input.Position.Z > 0 and 5 or -5
+				GH.FlySpeed = math.clamp((GH.FlySpeed or 20) + dir, 5, 200)
+				GH.ShowToast("Vehicle Fly Speed: " .. GH.FlySpeed, GH.Theme.Accent, 1)
 			end
 		end)
 
@@ -101,8 +100,7 @@ return function(GH)
 			h.PlatformStand = false
 			av.AngularVelocity = Vector3.zero
 
-			local baseSpeed = GH.FlySpeed or 20
-			local flySpeed = baseSpeed * flySpeedMult
+			local flySpeed = GH.FlySpeed or 20
 
 			-- Camera vectors
 			local camCF = cam.CFrame
@@ -128,7 +126,7 @@ return function(GH)
 			lv.VectorVelocity = Vector3.new(moveDir.X, vert, moveDir.Z)
 		end)
 
-		GH.ShowToast("Vehicle Fly: WASD+QE | Scroll=velocidade", GH.Theme.On, 3)
+		GH.ShowToast("Vehicle Fly: WASD+QE | Scroll=velocidade (" .. (GH.FlySpeed or 20) .. ")", GH.Theme.On, 3)
 	end
 
 	GH.RegisterToggleButton("VehicleFly", "toggle_vehiclefly", Cheats_ToggleVehicleFly, "Movement", "desc_vehiclefly")

@@ -99,7 +99,6 @@ return function(GH)
 			if input.UserInputType == Enum.UserInputType.MouseWheel then
 				local dir = input.Position.Z > 0 and 5 or -5
 				GH.FlySpeed = math.clamp((GH.FlySpeed or 20) + dir, 5, 200)
-				GH.ShowToast("Fly Speed: " .. GH.FlySpeed, GH.Theme.Accent, 1)
 			end
 		end)
 
