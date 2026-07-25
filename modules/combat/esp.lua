@@ -169,11 +169,11 @@ return function(GH)
 		hpBarFill.Parent = hpBarBg
 		Instance.new("UICorner", hpBarFill).CornerRadius = UDim.new(1, 0)
 
-		-- Texto HP
+		-- Texto HP (abaixo da barra, filho do bg)
 		local hpText = Instance.new("TextLabel")
 		hpText.Name = "GH_ESP_HpText"
-		hpText.Size = UDim2.new(1, 0, 0, 10)
-		hpText.Position = UDim2.new(0, 0, 0, 49)
+		hpText.Size = UDim2.new(0.5, 0, 0, 10)
+		hpText.Position = UDim2.new(0.25, 0, 0, 49)
 		hpText.BackgroundTransparency = 1
 		hpText.Text = "100/100"
 		hpText.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -259,6 +259,8 @@ return function(GH)
 						if nameLabel then nameLabel.Visible = GH.Settings.ESPShowName end
 						if hpBarBg then hpBarBg.Visible = GH.Settings.ESPShowHealth end
 						if distLabel then distLabel.Visible = GH.Settings.ESPShowDistance end
+						local hpText = bg:FindFirstChild("GH_ESP_HpText")
+						if hpText then hpText.Visible = GH.Settings.ESPShowHealth end
 
 						-- === PASSO 2: Verificar se player existe ===
 						if not (jogador and jogador.Parent and jogador.Character) then
