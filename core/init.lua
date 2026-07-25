@@ -923,10 +923,29 @@ function GH.ShowPlayerPicker(title, callback)
 	content.BackgroundTransparency = 1
 	content.Parent = frame
 
+	-- Search bar
+	local searchBox = Instance.new("TextBox")
+	searchBox.Name = "Search"
+	searchBox.Size = UDim2.new(1, 0, 0, 26)
+	searchBox.Position = UDim2.new(0, 0, 0, 0)
+	searchBox.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
+	searchBox.PlaceholderText = "Procurar player..."
+	searchBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 115)
+	searchBox.Text = ""
+	searchBox.TextColor3 = Color3.fromRGB(235, 235, 240)
+	searchBox.Font = Enum.Font.GothamMedium
+	searchBox.TextSize = 11
+	searchBox.TextXAlignment = Enum.TextXAlignment.Left
+	searchBox.ClearTextOnFocus = false
+	searchBox.Parent = content
+	Instance.new("UICorner", searchBox).CornerRadius = UDim.new(0, 4)
+	Instance.new("UIPadding", searchBox).PaddingLeft = UDim.new(0, 6)
+
 	-- ScrollingFrame
 	local scroll = Instance.new("ScrollingFrame")
 	scroll.Name = "List"
-	scroll.Size = UDim2.new(1, 0, 1, 0)
+	scroll.Size = UDim2.new(1, 0, 1, -30)
+	scroll.Position = UDim2.new(0, 0, 0, 30)
 	scroll.BackgroundTransparency = 1
 	scroll.ScrollBarThickness = 3
 	scroll.ScrollBarImageColor3 = Color3.fromRGB(0, 120, 212)
@@ -938,6 +957,7 @@ function GH.ShowPlayerPicker(title, callback)
 
 	local selectedName = nil
 	local minimized = false
+	local searchText = ""
 
 	local function buildList()
 		for _, c in ipairs(scroll:GetChildren()) do
@@ -947,7 +967,9 @@ function GH.ShowPlayerPicker(title, callback)
 		local names = {}
 		for _, p in ipairs(Players:GetPlayers()) do
 			if p ~= LocalPlayer then
-				table.insert(names, p.Name)
+				if searchText == "" or p.Name:lower():find(searchText:lower(), 1, true) then
+					table.insert(names, p.Name)
+				end
 			end
 		end
 		table.sort(names)
@@ -1053,6 +1075,12 @@ function GH.ShowPlayerPicker(title, callback)
 	end
 
 	buildList()
+
+	-- Search filter
+	searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+		searchText = searchBox.Text
+		buildList()
+	end)
 
 	-- Refresh
 	local connAdded = Players.PlayerAdded:Connect(function()
