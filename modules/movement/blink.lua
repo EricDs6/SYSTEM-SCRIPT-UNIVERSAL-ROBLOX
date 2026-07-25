@@ -1,5 +1,6 @@
 -- =============================================================================
 -- COMMAND: BLINK (Dash)
+-- Dash rapido na direcao que olha. Tecla Q
 -- =============================================================================
 return function(GH)
 	local UserInputService = GH.Services.UserInputService
@@ -15,10 +16,13 @@ return function(GH)
 				local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 				local cam = workspace.CurrentCamera
 				if hrp and cam then
-					GH.TweenTeleport(hrp, hrp.CFrame + cam.CFrame.LookVector * 15)
-					GH.ShowToast("Blink!", GH.Theme.Accent, 1)
+					-- Dash instantaneo na direcao da camera (igual Op.txt)
+					local direction = cam.CFrame.LookVector
+					hrp.CFrame = hrp.CFrame + direction * 15
+					GH.ShowToast("Blink! 15 studs a frente", GH.Theme.Accent, 1)
 				end
 			end)
+			GH.ShowToast("Blink: pressione Q para dash", GH.Theme.Accent, 2)
 		end
 	end
 
