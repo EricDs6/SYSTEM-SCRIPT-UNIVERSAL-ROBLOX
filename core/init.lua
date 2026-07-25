@@ -645,13 +645,13 @@ GH.TargetGui = (RunService:IsStudio() and LocalPlayer:WaitForChild("PlayerGui"))
 -- THEME (cores para uso interno dos módulos)
 -- ==========================================
 GH.Theme = {
-	BG = Color3.fromRGB(28, 28, 28), BGDark = Color3.fromRGB(20, 20, 20),
-	Topbar = Color3.fromRGB(35, 35, 35), Card = Color3.fromRGB(40, 40, 40),
-	CardHover = Color3.fromRGB(55, 55, 55), Accent = Color3.fromRGB(0, 120, 210),
-	AccentDim = Color3.fromRGB(0, 80, 150), On = Color3.fromRGB(0, 200, 100),
-	OnBG = Color3.fromRGB(15, 50, 30), Off = Color3.fromRGB(200, 200, 200),
-	OffBG = Color3.fromRGB(45, 45, 45), Text = Color3.fromRGB(240, 240, 240),
-	Border = Color3.fromRGB(70, 70, 70), Red = Color3.fromRGB(255, 70, 70),
+	BG = Color3.fromRGB(18, 18, 22), BGDark = Color3.fromRGB(12, 12, 15),
+	Topbar = Color3.fromRGB(22, 22, 26), Card = Color3.fromRGB(28, 28, 32),
+	CardHover = Color3.fromRGB(38, 38, 42), Accent = Color3.fromRGB(0, 120, 212),
+	AccentDim = Color3.fromRGB(0, 99, 177), On = Color3.fromRGB(0, 120, 212),
+	OnBG = Color3.fromRGB(10, 35, 60), Off = Color3.fromRGB(180, 180, 190),
+	OffBG = Color3.fromRGB(35, 35, 40), Text = Color3.fromRGB(235, 235, 240),
+	Border = Color3.fromRGB(50, 50, 58), Red = Color3.fromRGB(255, 60, 60),
 }
 
 -- TweenInfos
@@ -661,9 +661,9 @@ GH.TI_Slow = TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out
 -- ==========================================
 -- UI DIMENSIONS (mantidos para compatibilidade)
 -- ==========================================
-GH.PanelWidth = 520
-GH.PanelHeight = 300
-GH.TopbarHeight = 20
+GH.PanelWidth = 560
+GH.PanelHeight = 400
+GH.TopbarHeight = 32
 GH.SidebarWidth = 130
 GH.ButtonHeight = 30
 GH.SettingsWidth = 220
@@ -769,7 +769,7 @@ function GH.ShowToast(message, color, duration)
 		GH._toastIndex = (GH._toastIndex or 0) + 1
 		local toast = Instance.new("Frame")
 		toast.Size = UDim2.new(1, 0, 0, 0)
-		toast.BackgroundColor3 = Color3.fromRGB(32, 32, 32)
+		toast.BackgroundColor3 = Color3.fromRGB(22, 22, 26)
 		toast.BackgroundTransparency = 0.05
 		toast.BorderSizePixel = 0
 		toast.LayoutOrder = GH._toastIndex
@@ -1457,24 +1457,25 @@ function GH.Initialize()
 	-- THEME WIN11
 	-- ==========================================
 	local W11 = {
-		BG = Color3.fromRGB(25, 25, 25),
-		BGAlt = Color3.fromRGB(32, 32, 32),
-		Surface = Color3.fromRGB(40, 40, 40),
-		SurfaceHover = Color3.fromRGB(50, 50, 50),
-		SurfaceActive = Color3.fromRGB(55, 55, 55),
+		BG = Color3.fromRGB(18, 18, 22),
+		BGAlt = Color3.fromRGB(22, 22, 26),
+		Surface = Color3.fromRGB(28, 28, 32),
+		SurfaceHover = Color3.fromRGB(38, 38, 42),
+		SurfaceActive = Color3.fromRGB(42, 42, 46),
 		Accent = Color3.fromRGB(0, 120, 212),
 		AccentDark = Color3.fromRGB(0, 99, 177),
-		On = Color3.fromRGB(39, 174, 96),
-		OnBG = Color3.fromRGB(20, 50, 30),
-		Off = Color3.fromRGB(200, 200, 200),
-		OffBG = Color3.fromRGB(50, 50, 50),
-		Text = Color3.fromRGB(240, 240, 240),
-		TextSecondary = Color3.fromRGB(160, 160, 160),
-		TextMuted = Color3.fromRGB(120, 120, 120),
-		Border = Color3.fromRGB(55, 55, 55),
-		BorderSubtle = Color3.fromRGB(45, 45, 45),
-		Red = Color3.fromRGB(232, 17, 35),
-		RedHover = Color3.fromRGB(255, 30, 50),
+		AccentGlow = Color3.fromRGB(0, 150, 255),
+		On = Color3.fromRGB(0, 120, 212),
+		OnBG = Color3.fromRGB(10, 35, 60),
+		Off = Color3.fromRGB(180, 180, 190),
+		OffBG = Color3.fromRGB(35, 35, 40),
+		Text = Color3.fromRGB(235, 235, 240),
+		TextSecondary = Color3.fromRGB(140, 140, 155),
+		TextMuted = Color3.fromRGB(90, 90, 105),
+		Border = Color3.fromRGB(50, 50, 58),
+		BorderSubtle = Color3.fromRGB(40, 40, 48),
+		Red = Color3.fromRGB(255, 60, 60),
+		RedHover = Color3.fromRGB(255, 80, 80),
 	}
 	GH.Theme = W11
 
@@ -1495,11 +1496,11 @@ function GH.Initialize()
 	-- ==========================================
 	-- DIMENSIONS
 	-- ==========================================
-	local PanelW = 580
-	local PanelH = 420
-	local TopbarH = 36
-	local SidebarW = 140
-	local BtnH = 34
+	local PanelW = 560
+	local PanelH = 400
+	local TopbarH = 32
+	local SidebarW = 130
+	local BtnH = 30
 
 	-- ==========================================
 	-- MAIN FRAME
@@ -1512,11 +1513,11 @@ function GH.Initialize()
 	MainFrame.BorderSizePixel = 0
 	MainFrame.ClipsDescendants = true
 	MainFrame.Parent = ScreenGui
-	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
+	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 	local mainStroke = Instance.new("UIStroke")
 	mainStroke.Color = W11.Border
 	mainStroke.Thickness = 1
-	mainStroke.Transparency = 0.3
+	mainStroke.Transparency = 0.4
 	mainStroke.Parent = MainFrame
 
 	-- ==========================================
@@ -1535,9 +1536,9 @@ function GH.Initialize()
 	TitleLabel.Position = UDim2.new(0, 14, 0, 0)
 	TitleLabel.BackgroundTransparency = 1
 	TitleLabel.Text = "SYSTEM SCRIPT"
-	TitleLabel.TextColor3 = W11.Text
+	TitleLabel.TextColor3 = W11.Accent
 	TitleLabel.Font = FontBold
-	TitleLabel.TextSize = 12
+	TitleLabel.TextSize = 11
 	TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	TitleLabel.ZIndex = 3
 	TitleLabel.Parent = Topbar
@@ -1559,12 +1560,12 @@ function GH.Initialize()
 	local function MakeTopbarBtn(name, text, color)
 		local btn = Instance.new("TextButton")
 		btn.Name = name
-		btn.Size = UDim2.new(0, 28, 0, 22)
+		btn.Size = UDim2.new(0, 26, 0, 20)
 		btn.BackgroundColor3 = W11.Surface
 		btn.Text = text
 		btn.TextColor3 = color or W11.TextSecondary
 		btn.Font = FontBold
-		btn.TextSize = 11
+		btn.TextSize = 10
 		btn.AutoButtonColor = false
 		btn.ZIndex = 4
 		btn.Parent = TopbarBtns
@@ -1587,8 +1588,20 @@ function GH.Initialize()
 	Sidebar.BorderSizePixel = 0
 	Sidebar.ZIndex = 2
 	Sidebar.Parent = MainFrame
+
+	-- Accent bar left
+	local AccentBar = Instance.new("Frame")
+	AccentBar.Name = "AccentBar"
+	AccentBar.Size = UDim2.new(0, 2, 1, 0)
+	AccentBar.BackgroundColor3 = W11.Accent
+	AccentBar.BackgroundTransparency = 0.7
+	AccentBar.BorderSizePixel = 0
+	AccentBar.ZIndex = 3
+	AccentBar.Parent = Sidebar
+
 	local SidebarLayout = Instance.new("UIListLayout")
 	SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	SidebarLayout.Padding = UDim.new(0, 3)
 	SidebarLayout.Parent = Sidebar
 
 	-- ==========================================
@@ -1601,6 +1614,8 @@ function GH.Initialize()
 	Content.BackgroundTransparency = 1
 	Content.ZIndex = 2
 	Content.Parent = MainFrame
+	Instance.new("UIPadding", Content).PaddingLeft = UDim.new(0, 4)
+	Instance.new("UIPadding", Content).PaddingRight = UDim.new(0, 4)
 
 	-- ==========================================
 	-- SETTINGS PANEL
@@ -1615,11 +1630,11 @@ function GH.Initialize()
 	SettingsPanel.ClipsDescendants = true
 	SettingsPanel.ZIndex = 8
 	SettingsPanel.Parent = MainFrame
-	Instance.new("UICorner", SettingsPanel).CornerRadius = UDim.new(0, 6)
+	Instance.new("UICorner", SettingsPanel).CornerRadius = UDim.new(0, 8)
 	local spStroke = Instance.new("UIStroke")
 	spStroke.Color = W11.Border
 	spStroke.Thickness = 1
-	spStroke.Transparency = 0.5
+	spStroke.Transparency = 0.4
 	spStroke.Parent = SettingsPanel
 
 	local SettingsScroll = Instance.new("ScrollingFrame")
@@ -1655,10 +1670,11 @@ function GH.Initialize()
 	for _, cat in ipairs(Categories) do
 		local btn = Instance.new("TextButton")
 		btn.Name = cat.Name
-		btn.Size = UDim2.new(1, 0, 0, 32)
-		btn.BackgroundColor3 = (cat.Name == ActiveTab) and W11.Accent or W11.BGAlt
+		btn.Size = UDim2.new(1, -8, 0, 26)
+		btn.Position = UDim2.new(0, 4, 0, 0)
+		btn.BackgroundColor3 = (cat.Name == ActiveTab) and Color3.fromRGB(10, 35, 60) or W11.BGAlt
 		btn.Text = "  " .. cat.Name
-		btn.TextColor3 = (cat.Name == ActiveTab) and Color3.new(1, 1, 1) or W11.TextSecondary
+		btn.TextColor3 = (cat.Name == ActiveTab) and W11.Accent or W11.TextSecondary
 		btn.Font = FontBold
 		btn.TextSize = 11
 		btn.TextXAlignment = Enum.TextXAlignment.Left
@@ -1666,16 +1682,18 @@ function GH.Initialize()
 		btn.LayoutOrder = cat.Order
 		btn.ZIndex = 3
 		btn.Parent = Sidebar
-		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
 
 		btn.MouseEnter:Connect(function()
 			if ActiveTab ~= cat.Name then
 				TweenService:Create(btn, GH.TI, { BackgroundColor3 = W11.SurfaceHover }):Play()
+				TweenService:Create(btn, GH.TI, { TextColor3 = W11.Text }):Play()
 			end
 		end)
 		btn.MouseLeave:Connect(function()
 			if ActiveTab ~= cat.Name then
 				TweenService:Create(btn, GH.TI, { BackgroundColor3 = W11.BGAlt }):Play()
+				TweenService:Create(btn, GH.TI, { TextColor3 = W11.TextSecondary }):Play()
 			end
 		end)
 
@@ -1691,7 +1709,7 @@ function GH.Initialize()
 		container.Visible = (cat.Name == ActiveTab)
 		container.ZIndex = 3
 		container.Parent = Content
-		Instance.new("UIListLayout", container).Padding = UDim.new(0, 4)
+		Instance.new("UIListLayout", container).Padding = UDim.new(0, 3)
 		container.UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		Instance.new("UIPadding", container).PaddingTop = UDim.new(0, 2)
 
@@ -1705,7 +1723,7 @@ function GH.Initialize()
 			end
 			ActiveTab = cat.Name
 			if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = true end
-			TweenService:Create(btn, GH.TI, { BackgroundColor3 = W11.Accent, TextColor3 = Color3.new(1, 1, 1) }):Play()
+			TweenService:Create(btn, GH.TI, { BackgroundColor3 = Color3.fromRGB(10, 35, 60), TextColor3 = W11.Accent }):Play()
 		end)
 
 		TabButtons[cat.Name] = btn
@@ -1730,7 +1748,7 @@ function GH.Initialize()
 		frame.LayoutOrder = #target:GetChildren() + 1
 		frame.ZIndex = 4
 		frame.Parent = target
-		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 5)
 
 		local label = Instance.new("TextLabel")
 		label.Name = "GH_ToggleLabel"
@@ -1761,23 +1779,19 @@ function GH.Initialize()
 			descLabel.Parent = frame
 		end
 
-		-- Toggle switch (Win11)
+		-- Toggle switch (compacto estilo SKECH)
 		local switchBG = Instance.new("Frame")
-		switchBG.Size = UDim2.new(0, 36, 0, 18)
-		switchBG.Position = UDim2.new(1, -46, 0.5, -9)
+		switchBG.Size = UDim2.new(0, 32, 0, 16)
+		switchBG.Position = UDim2.new(1, -42, 0.5, -8)
 		switchBG.BackgroundColor3 = W11.Surface
 		switchBG.BorderSizePixel = 0
 		switchBG.ZIndex = 5
 		switchBG.Parent = frame
 		Instance.new("UICorner", switchBG).CornerRadius = UDim.new(1, 0)
-		local switchStroke = Instance.new("UIStroke")
-		switchStroke.Color = W11.Border
-		switchStroke.Thickness = 1
-		switchStroke.Parent = switchBG
 
 		local switchKnob = Instance.new("Frame")
-		switchKnob.Size = UDim2.new(0, 14, 0, 14)
-		switchKnob.Position = UDim2.new(0, 2, 0.5, -7)
+		switchKnob.Size = UDim2.new(0, 12, 0, 12)
+		switchKnob.Position = UDim2.new(0, 2, 0.5, -6)
 		switchKnob.BackgroundColor3 = W11.TextSecondary
 		switchKnob.BorderSizePixel = 0
 		switchKnob.ZIndex = 6
@@ -1788,27 +1802,25 @@ function GH.Initialize()
 			GH.States[name] = state
 			if state then
 				TweenService:Create(switchBG, GH.TI, { BackgroundColor3 = W11.Accent }):Play()
-				TweenService:Create(switchStroke, GH.TI, { Color = W11.Accent }):Play()
-				TweenService:Create(switchKnob, GH.TI, { Position = UDim2.new(1, -16, 0.5, -7), BackgroundColor3 = Color3.new(1, 1, 1) }):Play()
+				TweenService:Create(switchKnob, GH.TI, { Position = UDim2.new(1, -14, 0.5, -6), BackgroundColor3 = Color3.new(1, 1, 1) }):Play()
 				TweenService:Create(frame, GH.TI, { BackgroundColor3 = W11.OnBG }):Play()
 				label.TextColor3 = W11.On
 			else
 				TweenService:Create(switchBG, GH.TI, { BackgroundColor3 = W11.Surface }):Play()
-				TweenService:Create(switchStroke, GH.TI, { Color = W11.Border }):Play()
-				TweenService:Create(switchKnob, GH.TI, { Position = UDim2.new(0, 2, 0.5, -7), BackgroundColor3 = W11.TextSecondary }):Play()
+				TweenService:Create(switchKnob, GH.TI, { Position = UDim2.new(0, 2, 0.5, -6), BackgroundColor3 = W11.TextSecondary }):Play()
 				TweenService:Create(frame, GH.TI, { BackgroundColor3 = W11.OffBG }):Play()
 				label.TextColor3 = W11.Off
 			end
 		end
 
 		frame.MouseEnter:Connect(function()
-			if not GH.States[name] then
-				TweenService:Create(frame, GH.TI, { BackgroundColor3 = W11.SurfaceHover }):Play()
-			end
+			TweenService:Create(frame, GH.TI, { BackgroundColor3 = W11.SurfaceHover }):Play()
 		end)
 		frame.MouseLeave:Connect(function()
 			if not GH.States[name] then
 				TweenService:Create(frame, GH.TI, { BackgroundColor3 = W11.OffBG }):Play()
+			else
+				TweenService:Create(frame, GH.TI, { BackgroundColor3 = W11.OnBG }):Play()
 			end
 		end)
 
@@ -1840,7 +1852,7 @@ function GH.Initialize()
 	local function stSection(text)
 		stOrder += 1
 		local s = Instance.new("TextLabel")
-		s.Size = UDim2.new(1, 0, 0, 16)
+		s.Size = UDim2.new(1, 0, 0, 14)
 		s.BackgroundTransparency = 1
 		s.Text = "── " .. text .. " ──"
 		s.TextColor3 = W11.TextMuted
@@ -1855,7 +1867,7 @@ function GH.Initialize()
 	local function stToggle(label, default, cb)
 		stOrder += 1
 		local frame = Instance.new("Frame")
-		frame.Size = UDim2.new(1, 0, 0, 28)
+		frame.Size = UDim2.new(1, 0, 0, 26)
 		frame.BackgroundColor3 = W11.Surface
 		frame.BorderSizePixel = 0
 		frame.LayoutOrder = stOrder
@@ -1876,8 +1888,8 @@ function GH.Initialize()
 		lbl.Parent = frame
 
 		local switchBG = Instance.new("Frame")
-		switchBG.Size = UDim2.new(0, 30, 0, 16)
-		switchBG.Position = UDim2.new(1, -38, 0.5, -8)
+		switchBG.Size = UDim2.new(0, 28, 0, 14)
+		switchBG.Position = UDim2.new(1, -36, 0.5, -7)
 		switchBG.BackgroundColor3 = default and W11.Accent or W11.Surface
 		switchBG.BorderSizePixel = 0
 		switchBG.ZIndex = 10
@@ -1885,8 +1897,8 @@ function GH.Initialize()
 		Instance.new("UICorner", switchBG).CornerRadius = UDim.new(1, 0)
 
 		local knob = Instance.new("Frame")
-		knob.Size = UDim2.new(0, 12, 0, 12)
-		knob.Position = UDim2.new(0, default and 16 or 2, 0.5, -6)
+		knob.Size = UDim2.new(0, 10, 0, 10)
+		knob.Position = UDim2.new(0, default and 16 or 2, 0.5, -5)
 		knob.BackgroundColor3 = default and Color3.new(1, 1, 1) or W11.TextSecondary
 		knob.BorderSizePixel = 0
 		knob.ZIndex = 11
@@ -1898,7 +1910,7 @@ function GH.Initialize()
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
 				isOn = not isOn
 				TweenService:Create(switchBG, GH.TI, { BackgroundColor3 = isOn and W11.Accent or W11.Surface }):Play()
-				TweenService:Create(knob, GH.TI, { Position = UDim2.new(0, isOn and 16 or 2, 0.5, -6), BackgroundColor3 = isOn and Color3.new(1, 1, 1) or W11.TextSecondary }):Play()
+				TweenService:Create(knob, GH.TI, { Position = UDim2.new(0, isOn and 16 or 2, 0.5, -5), BackgroundColor3 = isOn and Color3.new(1, 1, 1) or W11.TextSecondary }):Play()
 				if cb then cb(isOn) end
 			end
 		end)
@@ -1907,7 +1919,7 @@ function GH.Initialize()
 	local function stSlider(label, min, max, default, cb)
 		stOrder += 1
 		local frame = Instance.new("Frame")
-		frame.Size = UDim2.new(1, 0, 0, 40)
+		frame.Size = UDim2.new(1, 0, 0, 38)
 		frame.BackgroundColor3 = W11.Surface
 		frame.BorderSizePixel = 0
 		frame.LayoutOrder = stOrder
@@ -1942,7 +1954,7 @@ function GH.Initialize()
 		local bar = Instance.new("Frame")
 		bar.Size = UDim2.new(0.88, 0, 0, 4)
 		bar.Position = UDim2.new(0.06, 0, 0, 28)
-		bar.BackgroundColor3 = W11.BG
+		bar.BackgroundColor3 = W11.BorderSubtle
 		bar.BorderSizePixel = 0
 		bar.ZIndex = 10
 		bar.Parent = frame
@@ -1955,8 +1967,8 @@ function GH.Initialize()
 		fill.Parent = bar
 
 		local knob = Instance.new("Frame")
-		knob.Size = UDim2.new(0, 10, 0, 10)
-		knob.Position = UDim2.new((default - min) / (max - min), -5, 0.5, -5)
+		knob.Size = UDim2.new(0, 8, 0, 8)
+		knob.Position = UDim2.new((default - min) / (max - min), -4, 0.5, -4)
 		knob.BackgroundColor3 = Color3.new(1, 1, 1)
 		knob.BorderSizePixel = 0
 		knob.ZIndex = 12
