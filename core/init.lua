@@ -2989,7 +2989,7 @@ function GH.Initialize()
 	-- MONTAR SETTINGS
 	-- ==========================================
 	stSection("GERAL")
-	stSlider("Velocidade Fly", 5, 100, 20, function(v) GH.FlySpeed = v end)
+	stSlider("Velocidade Fly", 5, 200, 20, function(v) GH.FlySpeed = v end)
 	stSlider("Raio NoClip", 1, 20, 3.8, function(v) GH.Settings.NoClipRadius = v end)
 
 	stSection("HITBOX")

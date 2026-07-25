@@ -7,7 +7,6 @@ return function(GH)
 	local RunService = GH.Services.RunService
 	local LocalPlayer = GH.LocalPlayer
 
-	local flySpeedMult = 1
 	local noclipParts = {}
 	local keys = { W = false, A = false, S = false, D = false, Space = false, LeftShift = false }
 
@@ -53,7 +52,6 @@ return function(GH)
 		local hrp = char and char:FindFirstChild("HumanoidRootPart")
 		if not hum or not hrp then return end
 
-		flySpeedMult = 1
 		for k in pairs(keys) do keys[k] = false end
 
 		hum.AutoRotate = false
@@ -99,8 +97,9 @@ return function(GH)
 		GH.Connections.Fly_Scroll = UserInputService.InputChanged:Connect(function(input)
 			if not GH.States.Fly then return end
 			if input.UserInputType == Enum.UserInputType.MouseWheel then
-				local dir = input.Position.Z > 0 and 1 or -1
-				flySpeedMult = math.clamp(flySpeedMult + dir * 0.25, 0.25, 10)
+				local dir = input.Position.Z > 0 and 5 or -5
+				GH.FlySpeed = math.clamp((GH.FlySpeed or 20) + dir, 5, 200)
+				GH.ShowToast("Fly Speed: " .. GH.FlySpeed, GH.Theme.Accent, 1)
 			end
 		end)
 
@@ -120,10 +119,9 @@ return function(GH)
 			av.AngularVelocity = Vector3.zero
 
 			-- Velocidade
-			local baseSpeed = GH.FlySpeed or 20
-			local flySpeed = baseSpeed * flySpeedMult
+			local flySpeed = GH.FlySpeed or 20
 
-			-- Boost com LeftControl
+			-- Boost com LeftShift
 			if keys.LeftShift then
 				flySpeed = flySpeed * 2
 			end
@@ -190,7 +188,7 @@ return function(GH)
 			end
 		end)
 
-		GH.ShowToast("Fly: WASD + Space/Ctrl | Shift=boost | Scroll=velocidade", GH.Theme.On, 3)
+		GH.ShowToast("Fly: WASD+Space/Ctrl | Shift=boost | Scroll=velocidade (" .. (GH.FlySpeed or 20) .. ")", GH.Theme.On, 3)
 	end
 
 	-- Reconectar ao respawn
