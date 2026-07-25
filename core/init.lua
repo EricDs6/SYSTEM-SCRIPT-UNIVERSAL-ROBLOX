@@ -823,27 +823,26 @@ end
 -- ==========================================
 -- PLAYER PICKER (GUI flutuante independente)
 -- ==========================================
+GH._Pickers = GH._Pickers or {}
+GH._PickerCount = GH._PickerCount or 0
+
 function GH.ShowPlayerPicker(title, callback)
-	if GH._PlayerPickerGui then
-		pcall(function() GH._PlayerPickerGui:Destroy() end)
-		GH._PlayerPickerGui = nil
-	end
-	if GH._PlayerPickerConn then
-		pcall(function() GH._PlayerPickerConn:Disconnect() end)
-		GH._PlayerPickerConn = nil
-	end
+	GH._PickerCount = GH._PickerCount + 1
+	local pickerId = GH._PickerCount
 
 	local Players = GH.Services.Players
 	local LocalPlayer = GH.LocalPlayer
 	local TS = GH.Services.TweenService
 
 	local gui = Instance.new("ScreenGui")
-	gui.Name = "GH_PlayerPicker"
+	gui.Name = "GH_PlayerPicker_" .. pickerId
 	gui.ResetOnSpawn = false
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	gui.DisplayOrder = 100
 	gui.Parent = GH.TargetGui
-	GH._PlayerPickerGui = gui
+
+	-- Posicionar cada novo picker deslocado
+	local offset = (pickerId % 5) * 30
 
 	local W = 200
 	local H = 280
@@ -853,7 +852,7 @@ function GH.ShowPlayerPicker(title, callback)
 	local frame = Instance.new("Frame")
 	frame.Name = "Frame"
 	frame.Size = UDim2.new(0, W, 0, H)
-	frame.Position = UDim2.new(0.5, -W / 2, 0.5, -H / 2)
+	frame.Position = UDim2.new(0.5, -W / 2 + offset, 0.5, -H / 2 + offset)
 	frame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
 	frame.BorderSizePixel = 0
 	frame.Active = true
@@ -1056,19 +1055,25 @@ function GH.ShowPlayerPicker(title, callback)
 	buildList()
 
 	-- Refresh
-	GH._PlayerPickerConn = Players.PlayerAdded:Connect(function()
-		if GH._PlayerPickerGui and GH._PlayerPickerGui.Parent then buildList() end
+	local connAdded = Players.PlayerAdded:Connect(function()
+		if gui and gui.Parent then buildList() end
 	end)
-	local conn2 = Players.PlayerRemoving:Connect(function()
-		if GH._PlayerPickerGui and GH._PlayerPickerGui.Parent then buildList() end
+	local connRemoving = Players.PlayerRemoving:Connect(function()
+		if gui and gui.Parent then buildList() end
 	end)
+
+	-- Salvar referencia do picker
+	GH._Pickers[pickerId] = { gui = gui, conns = { connAdded, connRemoving }, dragConn = nil }
 
 	-- Close
 	closeBtn.MouseButton1Click:Connect(function()
-		pcall(function() GH._PlayerPickerConn:Disconnect() end)
-		pcall(function() conn2:Disconnect() end)
+		pcall(function() connAdded:Disconnect() end)
+		pcall(function() connRemoving:Disconnect() end)
+		if GH._Pickers[pickerId] and GH._Pickers[pickerId].dragConn then
+			pcall(function() GH._Pickers[pickerId].dragConn:Disconnect() end)
+		end
+		GH._Pickers[pickerId] = nil
 		gui:Destroy()
-		GH._PlayerPickerGui = nil
 	end)
 
 	-- Minimize
@@ -1118,11 +1123,11 @@ function GH.ShowPlayerPicker(title, callback)
 
 	return {
 		Close = function()
-			pcall(function() GH._PlayerPickerConn:Disconnect() end)
-			pcall(function() conn2:Disconnect() end)
+			pcall(function() connAdded:Disconnect() end)
+			pcall(function() connRemoving:Disconnect() end)
 			if dragConn then pcall(function() dragConn:Disconnect() end) end
+			GH._Pickers[pickerId] = nil
 			gui:Destroy()
-			GH._PlayerPickerGui = nil
 		end,
 	}
 end
@@ -1131,20 +1136,20 @@ end
 -- INPUT PICKER (GUI flutuante para texto)
 -- ==========================================
 function GH.ShowInputPicker(title, placeholder, callback)
-	if GH._InputPickerGui then
-		pcall(function() GH._InputPickerGui:Destroy() end)
-		GH._InputPickerGui = nil
-	end
+	GH._PickerCount = GH._PickerCount + 1
+	local pickerId = GH._PickerCount
 
 	local TS = GH.Services.TweenService
 
 	local gui = Instance.new("ScreenGui")
-	gui.Name = "GH_InputPicker"
+	gui.Name = "GH_InputPicker_" .. pickerId
 	gui.ResetOnSpawn = false
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	gui.DisplayOrder = 100
 	gui.Parent = GH.TargetGui
-	GH._InputPickerGui = gui
+
+	-- Posicionar cada novo picker deslocado
+	local offset = (pickerId % 5) * 30
 
 	local W = 220
 	local H = 110
@@ -1153,7 +1158,7 @@ function GH.ShowInputPicker(title, placeholder, callback)
 	local frame = Instance.new("Frame")
 	frame.Name = "Frame"
 	frame.Size = UDim2.new(0, W, 0, H)
-	frame.Position = UDim2.new(0.5, -W / 2, 0.5, -H / 2)
+	frame.Position = UDim2.new(0.5, -W / 2 + offset, 0.5, -H / 2 + offset)
 	frame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
 	frame.BorderSizePixel = 0
 	frame.Active = true
@@ -1252,10 +1257,16 @@ function GH.ShowInputPicker(title, placeholder, callback)
 		end
 	end)
 
+	-- Salvar referencia do picker
+	GH._Pickers[pickerId] = { gui = gui, conns = {}, dragConn = nil }
+
 	-- Close
 	closeBtn.MouseButton1Click:Connect(function()
+		if GH._Pickers[pickerId] and GH._Pickers[pickerId].dragConn then
+			pcall(function() GH._Pickers[pickerId].dragConn:Disconnect() end)
+		end
+		GH._Pickers[pickerId] = nil
 		gui:Destroy()
-		GH._InputPickerGui = nil
 	end)
 
 	-- Drag (exatamente igual ao painel principal)
@@ -1294,8 +1305,8 @@ function GH.ShowInputPicker(title, placeholder, callback)
 	return {
 		Close = function()
 			if dragConn then pcall(function() dragConn:Disconnect() end) end
+			GH._Pickers[pickerId] = nil
 			gui:Destroy()
-			GH._InputPickerGui = nil
 		end,
 	}
 end
@@ -1925,6 +1936,17 @@ function GH.FullCleanup()
 		if GH.TargetGui:FindFirstChild("SystemScriptStats") then
 			GH.TargetGui["SystemScriptStats"]:Destroy()
 		end
+		-- Destruir todos os pickers abertos
+		for id, picker in pairs(GH._Pickers or {}) do
+			if picker then
+				for _, conn in ipairs(picker.conns or {}) do
+					pcall(function() conn:Disconnect() end)
+				end
+				if picker.dragConn then pcall(function() picker.dragConn:Disconnect() end) end
+				if picker.gui then pcall(function() picker.gui:Destroy() end) end
+			end
+		end
+		GH._Pickers = {}
 	end)
 
 	-- Limpar tabelas
