@@ -114,6 +114,7 @@ GH.Locales = {
 		toggle_spasms = "Spasmos",
 		toggle_naked = "Naked",
 		toggle_freeze = "Freeze All",
+		toggle_pushall = "Push All",
 		-- Toggle descriptions
 		desc_hitbox = "Expande a hitbox dos inimigos para acertar mais facil",
 		desc_esp = "Mostra nomes, vida e distancia dos jogadores atraves de paredes",
@@ -172,6 +173,7 @@ GH.Locales = {
 		desc_spasms = "Animacao de convulsao (requer R6)",
 		desc_naked = "Remove todas as roupas do seu personagem",
 		desc_freeze = "Congela todos os jogadores no servidor",
+		desc_pushall = "Empurra todos os jogadores proximos com forca",
 		-- Dropdown titles
 		dropdown_select_player = "Selecionar Player",
 		dropdown_select_target = "Selecionar Alvo",
@@ -311,6 +313,7 @@ GH.Locales = {
 		toggle_spasms = "Spasms",
 		toggle_naked = "Naked",
 		toggle_freeze = "Freeze All",
+		toggle_pushall = "Push All",
 		-- Toggle descriptions
 		desc_hitbox = "Expands enemy hitbox for easier hits",
 		desc_esp = "Shows names, health and distance through walls",
@@ -369,6 +372,7 @@ GH.Locales = {
 		desc_spasms = "Convulsion animation (requires R6)",
 		desc_naked = "Removes all clothes from your character",
 		desc_freeze = "Freezes all players in the server",
+		desc_pushall = "Pushes all nearby players away with force",
 		-- Dropdown titles
 		dropdown_select_player = "Select Player",
 		dropdown_select_target = "Select Target",
@@ -508,6 +512,7 @@ GH.Locales = {
 		toggle_spasms = "Espasmos",
 		toggle_naked = "Naked",
 		toggle_freeze = "Freeze All",
+		toggle_pushall = "Push All",
 		-- Toggle descriptions
 		desc_hitbox = "Expande la hitbox de los enemigos para acertar mas facil",
 		desc_esp = "Muestra nombres, vida y distancia de los jugadores a traves de paredes",
@@ -566,6 +571,7 @@ GH.Locales = {
 		desc_spasms = "Animacion de convulsion (requiere R6)",
 		desc_naked = "Elimina todas las ropas de tu personaje",
 		desc_freeze = "Congela a todos los jugadores en el servidor",
+		desc_pushall = "Empuja a todos los jugadores cercanos con fuerza",
 		-- Dropdown titles
 		dropdown_select_player = "Seleccionar Jugador",
 		dropdown_select_target = "Seleccionar Objetivo",

@@ -295,7 +295,7 @@ local categories = {
 		"breakvelocity", "invisibleparts"
 	}},
 	{ name = "Troll", files = {
-		"trollfling", "targetfling", "spasms", "naked", "freeze"
+		"trollfling", "targetfling", "spasms", "naked", "freeze", "pushall"
 	}}
 }
 
