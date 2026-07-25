@@ -61,6 +61,7 @@ return function(GH)
 		if espFolder then
 			pcall(function() espFolder:Destroy() end)
 			espFolder = nil
+			GH.Objects.ESP_Folder = nil
 		end
 		GH.Disconnect("ESP_Render")
 		GH.Disconnect("ESP_Added")
@@ -200,6 +201,7 @@ return function(GH)
 		if state then
 			espFolder = Instance.new("Folder")
 			espFolder.Name = "GH_ESP_Folder"
+			GH.Objects.ESP_Folder = espFolder
 			local ok = pcall(function() espFolder.Parent = GH.TargetGui end)
 			if not ok then
 				espFolder.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -210,7 +212,7 @@ return function(GH)
 			end
 
 			-- Armazenar conexoes CharacterAdded para limpar depois
-			local charAddedConns = {}
+			charAddedConns = {}
 
 			GH.Connections.ESP_Added = Players.PlayerAdded:Connect(function(jogador)
 				local conn = jogador.CharacterAdded:Connect(function()
