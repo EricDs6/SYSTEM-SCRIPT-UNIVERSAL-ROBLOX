@@ -1436,6 +1436,9 @@ function GH.Initialize()
 		return a.category < b.category
 	end)
 
+	-- Silenciar notificacoes durante a criacao dos toggles
+	GH.SilentRestore = true
+
 	for _, pending in ipairs(GH.PendingButtons) do
 		GH.States[pending.name] = false
 		local tab = Tabs[pending.category] or Tabs["Combat"]
@@ -1460,6 +1463,9 @@ function GH.Initialize()
 		GH.Buttons[pending.name] = toggle
 		GH.Callbacks[pending.name] = pending.callback
 	end
+
+	-- Restaurar notificacoes apos criacao dos toggles
+	GH.SilentRestore = false
 
 	-- ==========================================
 	-- SETTINGS TAB
