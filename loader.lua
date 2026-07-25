@@ -33,7 +33,7 @@ local FontBold = Enum.Font.GothamBold
 local FontMono = Enum.Font.RobotoMono
 
 -- ==========================================
--- TELA DE CARREGAMENTO (canto inferior direito, discreta)
+-- TELA DE CARREGAMENTO (canto inferior direito, minima)
 -- ==========================================
 local LoadGui = Instance.new("ScreenGui")
 LoadGui.Name = "GH_LoadingScreen"
@@ -42,34 +42,34 @@ LoadGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 LoadGui.IgnoreGuiInset = true
 LoadGui.Parent = CoreGui
 
--- Container principal (canto inferior direito)
+-- Container principal (canto inferior direito, bem pequeno)
 local Container = Instance.new("Frame")
 Container.Name = "Container"
 Container.AnchorPoint = Vector2.new(1, 1)
-Container.Position = UDim2.new(1, -12, 1, -12)
-Container.Size = UDim2.new(0, 220, 0, 56)
+Container.Position = UDim2.new(1, -8, 1, -8)
+Container.Size = UDim2.new(0, 160, 0, 36)
 Container.BackgroundColor3 = Theme.BG
-Container.BackgroundTransparency = 0.15
+Container.BackgroundTransparency = 0.4
 Container.BorderSizePixel = 0
 Container.Parent = LoadGui
-Instance.new("UICorner", Container).CornerRadius = UDim.new(0, 8)
+Instance.new("UICorner", Container).CornerRadius = UDim.new(0, 6)
 
 local ContainerStroke = Instance.new("UIStroke")
 ContainerStroke.Color = Theme.Border
 ContainerStroke.Thickness = 1
-ContainerStroke.Transparency = 0.3
+ContainerStroke.Transparency = 0.5
 ContainerStroke.Parent = Container
 
 -- ==========================================
 -- BARRA DE PROGRESSO FINA
 -- ==========================================
-local BAR_WIDTH = 200
-local BAR_HEIGHT = 4
+local BAR_WIDTH = 140
+local BAR_HEIGHT = 3
 
 local BarContainer = Instance.new("Frame")
 BarContainer.Name = "BarContainer"
 BarContainer.Size = UDim2.new(0, BAR_WIDTH, 0, BAR_HEIGHT)
-BarContainer.Position = UDim2.new(0.5, 0, 1, -10)
+BarContainer.Position = UDim2.new(0.5, 0, 1, -8)
 BarContainer.AnchorPoint = Vector2.new(0.5, 1)
 BarContainer.BackgroundTransparency = 1
 BarContainer.Parent = Container
@@ -79,7 +79,7 @@ local BarBg = Instance.new("Frame")
 BarBg.Name = "BarBg"
 BarBg.Size = UDim2.new(1, 0, 1, 0)
 BarBg.BackgroundColor3 = Theme.BGDark
-BarBg.BackgroundTransparency = 0.3
+BarBg.BackgroundTransparency = 0.4
 BarBg.BorderSizePixel = 0
 BarBg.Parent = BarContainer
 Instance.new("UICorner", BarBg).CornerRadius = UDim.new(1, 0)
@@ -99,13 +99,13 @@ Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
 -- Loading text (principal)
 local LoadingText = Instance.new("TextLabel")
 LoadingText.Name = "LoadingText"
-LoadingText.Size = UDim2.new(1, -16, 0, 14)
-LoadingText.Position = UDim2.new(0, 8, 0, 6)
+LoadingText.Size = UDim2.new(1, -12, 0, 12)
+LoadingText.Position = UDim2.new(0, 8, 0, 4)
 LoadingText.BackgroundTransparency = 1
 LoadingText.Text = "SYSTEM"
 LoadingText.TextColor3 = Theme.Accent
 LoadingText.Font = FontBold
-LoadingText.TextSize = 10
+LoadingText.TextSize = 9
 LoadingText.TextXAlignment = Enum.TextXAlignment.Left
 LoadingText.TextTransparency = 1
 LoadingText.Parent = Container
@@ -113,13 +113,13 @@ LoadingText.Parent = Container
 -- Percent label
 local ProgressLabel = Instance.new("TextLabel")
 ProgressLabel.Name = "Percent"
-ProgressLabel.Size = UDim2.new(0, 40, 0, 14)
-ProgressLabel.Position = UDim2.new(1, -48, 0, 6)
+ProgressLabel.Size = UDim2.new(0, 35, 0, 12)
+ProgressLabel.Position = UDim2.new(1, -40, 0, 4)
 ProgressLabel.BackgroundTransparency = 1
 ProgressLabel.Text = "0%"
 ProgressLabel.TextColor3 = Theme.TextDim
 ProgressLabel.Font = FontMono
-ProgressLabel.TextSize = 9
+ProgressLabel.TextSize = 8
 ProgressLabel.TextXAlignment = Enum.TextXAlignment.Right
 ProgressLabel.TextTransparency = 1
 ProgressLabel.Parent = Container
@@ -127,13 +127,13 @@ ProgressLabel.Parent = Container
 -- Status label
 local StatusLabel = Instance.new("TextLabel")
 StatusLabel.Name = "Status"
-StatusLabel.Size = UDim2.new(1, -16, 0, 12)
-StatusLabel.Position = UDim2.new(0, 8, 0, 22)
+StatusLabel.Size = UDim2.new(1, -12, 0, 10)
+StatusLabel.Position = UDim2.new(0, 8, 0, 17)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.Text = "Inicializando..."
 StatusLabel.TextColor3 = Theme.TextMuted
 StatusLabel.Font = Font
-StatusLabel.TextSize = 9
+StatusLabel.TextSize = 8
 StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
 StatusLabel.TextTransparency = 1
 StatusLabel.Parent = Container
@@ -147,8 +147,8 @@ local function animateIn()
 	Container.BackgroundTransparency = 1
 	ContainerStroke.Transparency = 1
 
-	TweenService:Create(Container, tFast, {BackgroundTransparency = 0.15}):Play()
-	TweenService:Create(ContainerStroke, tFast, {Transparency = 0.3}):Play()
+	TweenService:Create(Container, tFast, {BackgroundTransparency = 0.4}):Play()
+	TweenService:Create(ContainerStroke, tFast, {Transparency = 0.5}):Play()
 
 	TweenService:Create(LoadingText, tFast, {TextTransparency = 0}):Play()
 	TweenService:Create(ProgressLabel, tFast, {TextTransparency = 0}):Play()
