@@ -864,12 +864,14 @@ function GH.ShowPlayerPicker(title, callback)
 	s.Thickness = 1
 	s.Parent = frame
 
-	-- Topbar
-	local tb = Instance.new("Frame")
+	-- Topbar (TextButton para receber InputBegan do drag)
+	local tb = Instance.new("TextButton")
 	tb.Name = "Topbar"
 	tb.Size = UDim2.new(1, 0, 0, TOPBAR)
 	tb.BackgroundColor3 = Color3.fromRGB(16, 16, 20)
 	tb.BorderSizePixel = 0
+	tb.Text = ""
+	tb.AutoButtonColor = false
 	tb.Parent = frame
 
 	local titlelbl = Instance.new("TextLabel")
@@ -1154,12 +1156,14 @@ function GH.ShowInputPicker(title, placeholder, callback)
 	s.Thickness = 1
 	s.Parent = frame
 
-	-- Topbar
-	local tb = Instance.new("Frame")
+	-- Topbar (TextButton para receber InputBegan do drag)
+	local tb = Instance.new("TextButton")
 	tb.Name = "Topbar"
 	tb.Size = UDim2.new(1, 0, 0, TOPBAR)
 	tb.BackgroundColor3 = Color3.fromRGB(16, 16, 20)
 	tb.BorderSizePixel = 0
+	tb.Text = ""
+	tb.AutoButtonColor = false
 	tb.Parent = frame
 
 	local titlelbl = Instance.new("TextLabel")
