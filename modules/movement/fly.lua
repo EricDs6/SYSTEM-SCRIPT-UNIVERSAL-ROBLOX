@@ -143,7 +143,7 @@ return function(GH)
 	end
 
 	-- Parar fly ao morrer/respawnar
-	LocalPlayer.CharacterAdded:Connect(function()
+	GH.Connections.Fly_CharAdded = LocalPlayer.CharacterAdded:Connect(function()
 		if GH.States.Fly then
 			task.wait(0.5)
 			stopFly()

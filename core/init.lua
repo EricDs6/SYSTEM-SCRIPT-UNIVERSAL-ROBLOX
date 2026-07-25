@@ -1,5 +1,5 @@
 -- =============================================================================
--- CORE — Sistema compartilhado entre todos os módulos (Fluent UI)
+-- CORE — Sistema compartilhado entre todos os módulos (GUI Custom Win11)
 -- =============================================================================
 --!nonstrict
 
@@ -679,6 +679,8 @@ GH.Connections = {} :: {[string]: RBXScriptConnection}
 GH.Objects = {}
 GH.isClosing = false
 GH.SilentRestore = false
+GH.Stopped = false
+GH.Version = { Hash = "unknown", Date = "unknown" }
 
 -- ==========================================
 -- CONNECTION MANAGEMENT
@@ -742,18 +744,79 @@ function GH.InputManager.IsHeld(keyCode)
 end
 
 -- ==========================================
--- NOTIFICATION SYSTEM (via Fluent)
+-- NOTIFICATION SYSTEM (Toast customizado Win11)
 -- ==========================================
 function GH.ShowToast(message, color, duration)
 	if GH.SilentRestore then return end
-	if not GH.Fluent then return end
+	if not GH.ScreenGui or not GH.ScreenGui.Parent then return end
 
 	pcall(function()
-		GH.Fluent:Notify({
-			Title = "SYSTEM",
-			Content = message,
-			Duration = duration or 3,
-		})
+		if not GH.ToastContainer then
+			GH.ToastContainer = Instance.new("Frame")
+			GH.ToastContainer.Name = "GH_ToastContainer"
+			GH.ToastContainer.Size = UDim2.new(0, 280, 1, 0)
+			GH.ToastContainer.Position = UDim2.new(1, -290, 0, 40)
+			GH.ToastContainer.BackgroundTransparency = 1
+			GH.ToastContainer.ZIndex = 9999
+			GH.ToastContainer.Parent = GH.ScreenGui
+			local layout = Instance.new("UIListLayout")
+			layout.Padding = UDim.new(0, 6)
+			layout.SortOrder = Enum.SortOrder.LayoutOrder
+			layout.VerticalAlignment = Enum.VerticalAlignment.Top
+			layout.Parent = GH.ToastContainer
+		end
+
+		GH._toastIndex = (GH._toastIndex or 0) + 1
+		local toast = Instance.new("Frame")
+		toast.Size = UDim2.new(1, 0, 0, 0)
+		toast.BackgroundColor3 = Color3.fromRGB(32, 32, 32)
+		toast.BackgroundTransparency = 0.05
+		toast.BorderSizePixel = 0
+		toast.LayoutOrder = GH._toastIndex
+		toast.ZIndex = 10000
+		toast.ClipsDescendants = true
+		toast.Parent = GH.ToastContainer
+		Instance.new("UICorner", toast).CornerRadius = UDim.new(0, 8)
+
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = color or GH.Theme.Accent
+		stroke.Thickness = 1
+		stroke.Transparency = 0.5
+		stroke.Parent = toast
+
+		local accent = Instance.new("Frame")
+		accent.Size = UDim2.new(0, 3, 1, 0)
+		accent.BackgroundColor3 = color or GH.Theme.Accent
+		accent.BorderSizePixel = 0
+		accent.Parent = toast
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1, -14, 1, 0)
+		label.Position = UDim2.new(0, 10, 0, 0)
+		label.BackgroundTransparency = 1
+		label.Text = message
+		label.TextColor3 = GH.Theme.Text
+		label.Font = Enum.Font.GothamMedium
+		label.TextSize = 11
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.TextWrapped = true
+		label.ZIndex = 10001
+		label.Parent = toast
+
+		TweenService:Create(toast, GH.TI_Slow, {
+			Size = UDim2.new(1, 0, 0, 32),
+		}):Play()
+
+		task.delay(duration or 3, function()
+			if toast and toast.Parent then
+				TweenService:Create(toast, GH.TI_Slow, {
+					Size = UDim2.new(1, 0, 0, 0),
+				}):Play()
+				task.delay(0.35, function()
+					if toast and toast.Parent then toast:Destroy() end
+				end)
+			end
+		end)
 	end)
 end
 
@@ -820,25 +883,13 @@ end
 -- UI REFRESH (atualiza textos ao trocar idioma)
 -- ==========================================
 function GH.RefreshUI()
-	-- Atualizar toggles
 	for _, pending in ipairs(GH.PendingButtons) do
 		local btn = GH.Buttons[pending.name]
-		if btn then
-			pcall(function()
-				btn:SetTitle(GH.T(pending.localeKey))
-			end)
-			if pending.descKey then
-				pcall(function()
-					btn:SetDesc(GH.T(pending.descKey))
-				end)
+		if btn and btn:IsA("TextButton") then
+			local lbl = btn:FindFirstChild("GH_ToggleLabel")
+			if lbl then
+				pcall(function() lbl.Text = "  " .. GH.T(pending.localeKey) end)
 			end
-		end
-	end
-
-	-- Atualizar titulos das abas (categories)
-	if GH.Tabs then
-		for _, cat in ipairs(GH.Categories) do
-			-- Fluent tabs nao temSetTitle, mas o titulo e fixo em ingles
 		end
 	end
 end
@@ -1083,9 +1134,9 @@ function GH.Stats.Start()
 
 	-- Enviar heartbeat a cada 60 segundos
 	task.spawn(function()
-		while GH.Stats.IsOnline do
+		while GH.Stats.IsOnline and not GH.Stopped do
 			task.wait(60)
-			if GH.Stats.IsOnline then
+			if GH.Stats.IsOnline and not GH.Stopped then
 				GH.Stats.SendHeartbeat()
 			end
 		end
@@ -1107,6 +1158,7 @@ function GH.FullCleanup()
 	if GH._cleaningUp then return end
 	GH._cleaningUp = true
 	GH.isClosing = true
+	GH.Stopped = true
 
 	-- Enviar evento de desligamento
 	if GH.Stats then
@@ -1393,7 +1445,7 @@ function GH.FullCleanup()
 end
 
 -- ==========================================
--- INITIALIZE: Monta UI via Fluent e processa módulos
+-- INITIALIZE: GUI Customizada Win11 (sem Fluent)
 -- ==========================================
 function GH.Initialize()
 	-- Limpar GUI antiga
@@ -1401,362 +1453,757 @@ function GH.Initialize()
 		GH.TargetGui["SystemScript"]:Destroy()
 	end
 
-	-- Carregar Fluent UI
-	local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-	local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-	local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+	-- ==========================================
+	-- THEME WIN11
+	-- ==========================================
+	local W11 = {
+		BG = Color3.fromRGB(25, 25, 25),
+		BGAlt = Color3.fromRGB(32, 32, 32),
+		Surface = Color3.fromRGB(40, 40, 40),
+		SurfaceHover = Color3.fromRGB(50, 50, 50),
+		SurfaceActive = Color3.fromRGB(55, 55, 55),
+		Accent = Color3.fromRGB(0, 120, 212),
+		AccentDark = Color3.fromRGB(0, 99, 177),
+		On = Color3.fromRGB(39, 174, 96),
+		OnBG = Color3.fromRGB(20, 50, 30),
+		Off = Color3.fromRGB(200, 200, 200),
+		OffBG = Color3.fromRGB(50, 50, 50),
+		Text = Color3.fromRGB(240, 240, 240),
+		TextSecondary = Color3.fromRGB(160, 160, 160),
+		TextMuted = Color3.fromRGB(120, 120, 120),
+		Border = Color3.fromRGB(55, 55, 55),
+		BorderSubtle = Color3.fromRGB(45, 45, 45),
+		Red = Color3.fromRGB(232, 17, 35),
+		RedHover = Color3.fromRGB(255, 30, 50),
+	}
+	GH.Theme = W11
 
-	GH.Fluent = Fluent
-	GH.SaveManager = SaveManager
-
-	-- Criar Window
-	local Window = Fluent:CreateWindow({
-		Title = "SYSTEM SCRIPT",
-		SubTitle = "v2.0",
-		TabWidth = 160,
-		Size = UDim2.fromOffset(580, 460),
-		Theme = "Dark",
-		MinimizeKey = Enum.KeyCode.RightControl,
-	})
-	GH.Window = Window
+	local Font = Enum.Font.GothamMedium
+	local FontBold = Enum.Font.GothamBold
 
 	-- ==========================================
-	-- STATS NO TOPBAR (discreto)
+	-- SCREEN GUI
 	-- ==========================================
-	task.spawn(function()
-		task.wait(2) -- Esperar a janela Fluent renderizar
+	local ScreenGui = Instance.new("ScreenGui")
+	ScreenGui.Name = "SystemScript"
+	ScreenGui.ResetOnSpawn = false
+	ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	ScreenGui.DisplayOrder = 10
+	ScreenGui.Parent = GH.TargetGui
+	GH.ScreenGui = ScreenGui
 
-		-- Criar ScreenGui separado para as metricas
-		local statsGui = Instance.new("ScreenGui")
-		statsGui.Name = "SystemScriptStats"
-		statsGui.DisplayOrder = 999
-		statsGui.IgnoreGuiInset = true
-		statsGui.Parent = GH.TargetGui
+	-- ==========================================
+	-- DIMENSIONS
+	-- ==========================================
+	local PanelW = 580
+	local PanelH = 420
+	local TopbarH = 36
+	local SidebarW = 140
+	local BtnH = 34
 
-		-- Frame principal das stats (posicionado no topbar da janela)
-		local statsFrame = Instance.new("Frame")
-		statsFrame.Name = "StatsFrame"
-		statsFrame.Size = UDim2.new(0, 90, 0, 14)
-		statsFrame.Position = UDim2.new(0.5, 40, 0, 3)
-		statsFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-		statsFrame.BackgroundTransparency = 0.2
-		statsFrame.BorderSizePixel = 0
-		statsFrame.Parent = statsGui
+	-- ==========================================
+	-- MAIN FRAME
+	-- ==========================================
+	local MainFrame = Instance.new("Frame")
+	MainFrame.Name = "MainFrame"
+	MainFrame.Size = UDim2.new(0, PanelW, 0, PanelH)
+	MainFrame.Position = UDim2.new(0.5, -PanelW / 2, 0.5, -PanelH / 2)
+	MainFrame.BackgroundColor3 = W11.BG
+	MainFrame.BorderSizePixel = 0
+	MainFrame.ClipsDescendants = true
+	MainFrame.Parent = ScreenGui
+	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
+	local mainStroke = Instance.new("UIStroke")
+	mainStroke.Color = W11.Border
+	mainStroke.Thickness = 1
+	mainStroke.Transparency = 0.3
+	mainStroke.Parent = MainFrame
 
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 5)
-		corner.Parent = statsFrame
+	-- ==========================================
+	-- TOPBAR
+	-- ==========================================
+	local Topbar = Instance.new("Frame")
+	Topbar.Name = "Topbar"
+	Topbar.Size = UDim2.new(1, 0, 0, TopbarH)
+	Topbar.BackgroundColor3 = W11.BGAlt
+	Topbar.BorderSizePixel = 0
+	Topbar.ZIndex = 2
+	Topbar.Parent = MainFrame
 
-		-- Texto de stats
-		local statsLabel = Instance.new("TextLabel")
-		statsLabel.Name = "StatsLabel"
-		statsLabel.Size = UDim2.new(1, -4, 1, 0)
-		statsLabel.Position = UDim2.new(0, 2, 0, 0)
-		statsLabel.BackgroundTransparency = 1
-		statsLabel.Text = "🟢 0 | 💉 0"
-		statsLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-		statsLabel.TextSize = 9
-		statsLabel.Font = Enum.Font.GothamMedium
-		statsLabel.TextXAlignment = Enum.TextXAlignment.Center
-		statsLabel.Parent = statsFrame
+	local TitleLabel = Instance.new("TextLabel")
+	TitleLabel.Size = UDim2.new(1, -120, 1, 0)
+	TitleLabel.Position = UDim2.new(0, 14, 0, 0)
+	TitleLabel.BackgroundTransparency = 1
+	TitleLabel.Text = "SYSTEM SCRIPT"
+	TitleLabel.TextColor3 = W11.Text
+	TitleLabel.Font = FontBold
+	TitleLabel.TextSize = 12
+	TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	TitleLabel.ZIndex = 3
+	TitleLabel.Parent = Topbar
 
-		GH.Objects.StatsLabel = statsLabel
-		GH.Objects.StatsGui = statsGui
+	-- Topbar buttons
+	local TopbarBtns = Instance.new("Frame")
+	TopbarBtns.Size = UDim2.new(0, 80, 1, 0)
+	TopbarBtns.Position = UDim2.new(1, -84, 0, 0)
+	TopbarBtns.BackgroundTransparency = 1
+	TopbarBtns.ZIndex = 3
+	TopbarBtns.Parent = Topbar
+	local TopbarBtnsLayout = Instance.new("UIListLayout")
+	TopbarBtnsLayout.FillDirection = Enum.FillDirection.Horizontal
+	TopbarBtnsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+	TopbarBtnsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	TopbarBtnsLayout.Padding = UDim.new(0, 4)
+	TopbarBtnsLayout.Parent = TopbarBtns
 
-		-- Atualizar stats periodicamente
-		while true do
-			task.wait(15)
-			pcall(function()
-				if statsLabel and statsLabel.Parent then
-					statsLabel.Text = string.format("🟢 %d | 💉 %d",
-						GH.Stats.OnlineUsers,
-						GH.Stats.TotalInjections
-					)
+	local function MakeTopbarBtn(name, text, color)
+		local btn = Instance.new("TextButton")
+		btn.Name = name
+		btn.Size = UDim2.new(0, 28, 0, 22)
+		btn.BackgroundColor3 = W11.Surface
+		btn.Text = text
+		btn.TextColor3 = color or W11.TextSecondary
+		btn.Font = FontBold
+		btn.TextSize = 11
+		btn.AutoButtonColor = false
+		btn.ZIndex = 4
+		btn.Parent = TopbarBtns
+		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+		return btn
+	end
+
+	local SettingsBtn = MakeTopbarBtn("Settings", "⚙", W11.TextSecondary)
+	local MinBtn = MakeTopbarBtn("Minimize", "—", W11.TextSecondary)
+	local CloseBtn = MakeTopbarBtn("Close", "✕", W11.Red)
+
+	-- ==========================================
+	-- SIDEBAR
+	-- ==========================================
+	local Sidebar = Instance.new("Frame")
+	Sidebar.Name = "Sidebar"
+	Sidebar.Size = UDim2.new(0, SidebarW, 1, -TopbarH)
+	Sidebar.Position = UDim2.new(0, 0, 0, TopbarH)
+	Sidebar.BackgroundColor3 = W11.BGAlt
+	Sidebar.BorderSizePixel = 0
+	Sidebar.ZIndex = 2
+	Sidebar.Parent = MainFrame
+	local SidebarLayout = Instance.new("UIListLayout")
+	SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	SidebarLayout.Parent = Sidebar
+
+	-- ==========================================
+	-- CONTENT AREA
+	-- ==========================================
+	local Content = Instance.new("Frame")
+	Content.Name = "Content"
+	Content.Size = UDim2.new(1, -(SidebarW + 2), 1, -(TopbarH + 8))
+	Content.Position = UDim2.new(0, SidebarW + 1, 0, TopbarH + 4)
+	Content.BackgroundTransparency = 1
+	Content.ZIndex = 2
+	Content.Parent = MainFrame
+
+	-- ==========================================
+	-- SETTINGS PANEL
+	-- ==========================================
+	local SettingsPanel = Instance.new("Frame")
+	SettingsPanel.Name = "SettingsPanel"
+	SettingsPanel.Size = UDim2.new(1, -(SidebarW + 2), 1, -(TopbarH + 8))
+	SettingsPanel.Position = UDim2.new(1, 10, 0, TopbarH + 4)
+	SettingsPanel.BackgroundColor3 = W11.BG
+	SettingsPanel.BackgroundTransparency = 0.05
+	SettingsPanel.BorderSizePixel = 0
+	SettingsPanel.ClipsDescendants = true
+	SettingsPanel.ZIndex = 8
+	SettingsPanel.Parent = MainFrame
+	Instance.new("UICorner", SettingsPanel).CornerRadius = UDim.new(0, 6)
+	local spStroke = Instance.new("UIStroke")
+	spStroke.Color = W11.Border
+	spStroke.Thickness = 1
+	spStroke.Transparency = 0.5
+	spStroke.Parent = SettingsPanel
+
+	local SettingsScroll = Instance.new("ScrollingFrame")
+	SettingsScroll.Size = UDim2.new(1, -12, 1, -12)
+	SettingsScroll.Position = UDim2.new(0, 6, 0, 6)
+	SettingsScroll.BackgroundTransparency = 1
+	SettingsScroll.ScrollBarThickness = 3
+	SettingsScroll.ScrollBarImageColor3 = W11.Accent
+	SettingsScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	SettingsScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+	SettingsScroll.BorderSizePixel = 0
+	SettingsScroll.ZIndex = 9
+	SettingsScroll.Parent = SettingsPanel
+	Instance.new("UIListLayout", SettingsScroll).Padding = UDim.new(0, 6)
+	SettingsScroll.UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+	local settingsOpen = false
+
+	-- ==========================================
+	-- TOAST CONTAINER
+	-- ==========================================
+	GH.ToastContainer = nil
+	GH._toastIndex = 0
+
+	-- ==========================================
+	-- SIDEBAR TABS + CONTENT TABS
+	-- ==========================================
+	local Categories = GH.Categories
+	local TabContainers = {}
+	local TabButtons = {}
+	local ActiveTab = "Combat"
+
+	for _, cat in ipairs(Categories) do
+		local btn = Instance.new("TextButton")
+		btn.Name = cat.Name
+		btn.Size = UDim2.new(1, 0, 0, 32)
+		btn.BackgroundColor3 = (cat.Name == ActiveTab) and W11.Accent or W11.BGAlt
+		btn.Text = "  " .. cat.Name
+		btn.TextColor3 = (cat.Name == ActiveTab) and Color3.new(1, 1, 1) or W11.TextSecondary
+		btn.Font = FontBold
+		btn.TextSize = 11
+		btn.TextXAlignment = Enum.TextXAlignment.Left
+		btn.AutoButtonColor = false
+		btn.LayoutOrder = cat.Order
+		btn.ZIndex = 3
+		btn.Parent = Sidebar
+		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+
+		btn.MouseEnter:Connect(function()
+			if ActiveTab ~= cat.Name then
+				TweenService:Create(btn, GH.TI, { BackgroundColor3 = W11.SurfaceHover }):Play()
+			end
+		end)
+		btn.MouseLeave:Connect(function()
+			if ActiveTab ~= cat.Name then
+				TweenService:Create(btn, GH.TI, { BackgroundColor3 = W11.BGAlt }):Play()
+			end
+		end)
+
+		local container = Instance.new("ScrollingFrame")
+		container.Name = "Tab_" .. cat.Name
+		container.Size = UDim2.new(1, 0, 1, 0)
+		container.BackgroundTransparency = 1
+		container.ScrollBarThickness = 3
+		container.ScrollBarImageColor3 = W11.Accent
+		container.AutomaticCanvasSize = Enum.AutomaticSize.Y
+		container.CanvasSize = UDim2.new(0, 0, 0, 0)
+		container.BorderSizePixel = 0
+		container.Visible = (cat.Name == ActiveTab)
+		container.ZIndex = 3
+		container.Parent = Content
+		Instance.new("UIListLayout", container).Padding = UDim.new(0, 4)
+		container.UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		Instance.new("UIPadding", container).PaddingTop = UDim.new(0, 2)
+
+		TabContainers[cat.Name] = container
+
+		btn.MouseButton1Click:Connect(function()
+			if ActiveTab == cat.Name then return end
+			if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = false end
+			if TabButtons[ActiveTab] then
+				TweenService:Create(TabButtons[ActiveTab], GH.TI, { BackgroundColor3 = W11.BGAlt, TextColor3 = W11.TextSecondary }):Play()
+			end
+			ActiveTab = cat.Name
+			if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = true end
+			TweenService:Create(btn, GH.TI, { BackgroundColor3 = W11.Accent, TextColor3 = Color3.new(1, 1, 1) }):Play()
+		end)
+
+		TabButtons[cat.Name] = btn
+	end
+
+	GH.Tabs = TabContainers
+
+	-- ==========================================
+	-- CREATE TOGGLE BUTTON (Win11 style)
+	-- ==========================================
+	local function CreateToggle(name, displayName, desc, category, callback)
+		local target = TabContainers[category] or TabContainers["Combat"]
+		if not target then return end
+		GH.States[name] = false
+
+		local frame = Instance.new("TextButton")
+		frame.Name = name
+		frame.Size = UDim2.new(1, 0, 0, BtnH)
+		frame.BackgroundColor3 = W11.OffBG
+		frame.Text = ""
+		frame.AutoButtonColor = false
+		frame.LayoutOrder = #target:GetChildren() + 1
+		frame.ZIndex = 4
+		frame.Parent = target
+		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+
+		local label = Instance.new("TextLabel")
+		label.Name = "GH_ToggleLabel"
+		label.Size = UDim2.new(1, -50, 1, 0)
+		label.Position = UDim2.new(0, 10, 0, 0)
+		label.BackgroundTransparency = 1
+		label.Text = "  " .. displayName
+		label.TextColor3 = W11.Off
+		label.Font = Font
+		label.TextSize = 11
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.ZIndex = 5
+		label.Parent = frame
+
+		if desc and desc ~= "" then
+			local descLabel = Instance.new("TextLabel")
+			descLabel.Name = "GH_DescLabel"
+			descLabel.Size = UDim2.new(1, -50, 0, 12)
+			descLabel.Position = UDim2.new(0, 10, 1, -14)
+			descLabel.BackgroundTransparency = 1
+			descLabel.Text = "  " .. desc
+			descLabel.TextColor3 = W11.TextMuted
+			descLabel.Font = Enum.Font.Gotham
+			descLabel.TextSize = 8
+			descLabel.TextXAlignment = Enum.TextXAlignment.Left
+			descLabel.TextTruncate = Enum.TextTruncate.AtEnd
+			descLabel.ZIndex = 5
+			descLabel.Parent = frame
+		end
+
+		-- Toggle switch (Win11)
+		local switchBG = Instance.new("Frame")
+		switchBG.Size = UDim2.new(0, 36, 0, 18)
+		switchBG.Position = UDim2.new(1, -46, 0.5, -9)
+		switchBG.BackgroundColor3 = W11.Surface
+		switchBG.BorderSizePixel = 0
+		switchBG.ZIndex = 5
+		switchBG.Parent = frame
+		Instance.new("UICorner", switchBG).CornerRadius = UDim.new(1, 0)
+		local switchStroke = Instance.new("UIStroke")
+		switchStroke.Color = W11.Border
+		switchStroke.Thickness = 1
+		switchStroke.Parent = switchBG
+
+		local switchKnob = Instance.new("Frame")
+		switchKnob.Size = UDim2.new(0, 14, 0, 14)
+		switchKnob.Position = UDim2.new(0, 2, 0.5, -7)
+		switchKnob.BackgroundColor3 = W11.TextSecondary
+		switchKnob.BorderSizePixel = 0
+		switchKnob.ZIndex = 6
+		switchKnob.Parent = switchBG
+		Instance.new("UICorner", switchKnob).CornerRadius = UDim.new(1, 0)
+
+		local function setToggle(state)
+			GH.States[name] = state
+			if state then
+				TweenService:Create(switchBG, GH.TI, { BackgroundColor3 = W11.Accent }):Play()
+				TweenService:Create(switchStroke, GH.TI, { Color = W11.Accent }):Play()
+				TweenService:Create(switchKnob, GH.TI, { Position = UDim2.new(1, -16, 0.5, -7), BackgroundColor3 = Color3.new(1, 1, 1) }):Play()
+				TweenService:Create(frame, GH.TI, { BackgroundColor3 = W11.OnBG }):Play()
+				label.TextColor3 = W11.On
+			else
+				TweenService:Create(switchBG, GH.TI, { BackgroundColor3 = W11.Surface }):Play()
+				TweenService:Create(switchStroke, GH.TI, { Color = W11.Border }):Play()
+				TweenService:Create(switchKnob, GH.TI, { Position = UDim2.new(0, 2, 0.5, -7), BackgroundColor3 = W11.TextSecondary }):Play()
+				TweenService:Create(frame, GH.TI, { BackgroundColor3 = W11.OffBG }):Play()
+				label.TextColor3 = W11.Off
+			end
+		end
+
+		frame.MouseEnter:Connect(function()
+			if not GH.States[name] then
+				TweenService:Create(frame, GH.TI, { BackgroundColor3 = W11.SurfaceHover }):Play()
+			end
+		end)
+		frame.MouseLeave:Connect(function()
+			if not GH.States[name] then
+				TweenService:Create(frame, GH.TI, { BackgroundColor3 = W11.OffBG }):Play()
+			end
+		end)
+
+		frame.MouseButton1Click:Connect(function()
+			local newState = not GH.States[name]
+			setToggle(newState)
+			if not GH.SilentRestore then
+				local toastMsg = displayName .. (newState and (" " .. GH.T("toast_activated")) or (" " .. GH.T("toast_deactivated")))
+				GH.ShowToast(toastMsg, newState and W11.On or W11.TextSecondary, 2)
+			end
+			pcall(callback, newState, frame)
+		end)
+
+		-- Compatibilidade com modulos que chamam btn:SetValue/SetTitle/SetDesc
+		frame.SetValue = function(_, state) setToggle(state) end
+		frame.SetTitle = function(_, text) label.Text = "  " .. text end
+		frame.SetDesc = function(_, d) local dl = frame:FindFirstChild("GH_DescLabel"); if dl then dl.Text = "  " .. d end end
+		frame.Value = false
+
+		GH.Buttons[name] = frame
+		GH.Callbacks[name] = callback
+	end
+
+	-- ==========================================
+	-- SETTINGS UI HELPERS
+	-- ==========================================
+	local stOrder = 0
+
+	local function stSection(text)
+		stOrder += 1
+		local s = Instance.new("TextLabel")
+		s.Size = UDim2.new(1, 0, 0, 16)
+		s.BackgroundTransparency = 1
+		s.Text = "── " .. text .. " ──"
+		s.TextColor3 = W11.TextMuted
+		s.Font = FontBold
+		s.TextSize = 9
+		s.LayoutOrder = stOrder
+		s.ZIndex = 9
+		s.Parent = SettingsScroll
+		stOrder += 1
+	end
+
+	local function stToggle(label, default, cb)
+		stOrder += 1
+		local frame = Instance.new("Frame")
+		frame.Size = UDim2.new(1, 0, 0, 28)
+		frame.BackgroundColor3 = W11.Surface
+		frame.BorderSizePixel = 0
+		frame.LayoutOrder = stOrder
+		frame.ZIndex = 9
+		frame.Parent = SettingsScroll
+		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 4)
+
+		local lbl = Instance.new("TextLabel")
+		lbl.Size = UDim2.new(0.7, 0, 1, 0)
+		lbl.Position = UDim2.new(0, 8, 0, 0)
+		lbl.BackgroundTransparency = 1
+		lbl.Text = label
+		lbl.TextColor3 = W11.Off
+		lbl.Font = Font
+		lbl.TextSize = 10
+		lbl.TextXAlignment = Enum.TextXAlignment.Left
+		lbl.ZIndex = 10
+		lbl.Parent = frame
+
+		local switchBG = Instance.new("Frame")
+		switchBG.Size = UDim2.new(0, 30, 0, 16)
+		switchBG.Position = UDim2.new(1, -38, 0.5, -8)
+		switchBG.BackgroundColor3 = default and W11.Accent or W11.Surface
+		switchBG.BorderSizePixel = 0
+		switchBG.ZIndex = 10
+		switchBG.Parent = frame
+		Instance.new("UICorner", switchBG).CornerRadius = UDim.new(1, 0)
+
+		local knob = Instance.new("Frame")
+		knob.Size = UDim2.new(0, 12, 0, 12)
+		knob.Position = UDim2.new(0, default and 16 or 2, 0.5, -6)
+		knob.BackgroundColor3 = default and Color3.new(1, 1, 1) or W11.TextSecondary
+		knob.BorderSizePixel = 0
+		knob.ZIndex = 11
+		knob.Parent = switchBG
+		Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
+
+		local isOn = default
+		frame.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				isOn = not isOn
+				TweenService:Create(switchBG, GH.TI, { BackgroundColor3 = isOn and W11.Accent or W11.Surface }):Play()
+				TweenService:Create(knob, GH.TI, { Position = UDim2.new(0, isOn and 16 or 2, 0.5, -6), BackgroundColor3 = isOn and Color3.new(1, 1, 1) or W11.TextSecondary }):Play()
+				if cb then cb(isOn) end
+			end
+		end)
+	end
+
+	local function stSlider(label, min, max, default, cb)
+		stOrder += 1
+		local frame = Instance.new("Frame")
+		frame.Size = UDim2.new(1, 0, 0, 40)
+		frame.BackgroundColor3 = W11.Surface
+		frame.BorderSizePixel = 0
+		frame.LayoutOrder = stOrder
+		frame.ZIndex = 9
+		frame.Parent = SettingsScroll
+		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 4)
+
+		local lbl = Instance.new("TextLabel")
+		lbl.Size = UDim2.new(0.55, 0, 0, 16)
+		lbl.Position = UDim2.new(0, 8, 0, 4)
+		lbl.BackgroundTransparency = 1
+		lbl.Text = label
+		lbl.TextColor3 = W11.Off
+		lbl.Font = Font
+		lbl.TextSize = 10
+		lbl.TextXAlignment = Enum.TextXAlignment.Left
+		lbl.ZIndex = 10
+		lbl.Parent = frame
+
+		local valLabel = Instance.new("TextLabel")
+		valLabel.Size = UDim2.new(0.35, 0, 0, 16)
+		valLabel.Position = UDim2.new(0.58, 0, 0, 4)
+		valLabel.BackgroundTransparency = 1
+		valLabel.Text = tostring(default)
+		valLabel.TextColor3 = W11.Accent
+		valLabel.Font = FontBold
+		valLabel.TextSize = 10
+		valLabel.TextXAlignment = Enum.TextXAlignment.Right
+		valLabel.ZIndex = 10
+		valLabel.Parent = frame
+
+		local bar = Instance.new("Frame")
+		bar.Size = UDim2.new(0.88, 0, 0, 4)
+		bar.Position = UDim2.new(0.06, 0, 0, 28)
+		bar.BackgroundColor3 = W11.BG
+		bar.BorderSizePixel = 0
+		bar.ZIndex = 10
+		bar.Parent = frame
+
+		local fill = Instance.new("Frame")
+		fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+		fill.BackgroundColor3 = W11.Accent
+		fill.BorderSizePixel = 0
+		fill.ZIndex = 11
+		fill.Parent = bar
+
+		local knob = Instance.new("Frame")
+		knob.Size = UDim2.new(0, 10, 0, 10)
+		knob.Position = UDim2.new((default - min) / (max - min), -5, 0.5, -5)
+		knob.BackgroundColor3 = Color3.new(1, 1, 1)
+		knob.BorderSizePixel = 0
+		knob.ZIndex = 12
+		knob.Parent = bar
+		Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
+
+		local currentVal = default
+		local inputBtn = Instance.new("TextButton")
+		inputBtn.Size = UDim2.new(1, 10, 0, 20)
+		inputBtn.Position = UDim2.new(0, -5, 0.5, -10)
+		inputBtn.BackgroundTransparency = 1
+		inputBtn.Text = ""
+		inputBtn.ZIndex = 13
+		inputBtn.Parent = bar
+
+		inputBtn.MouseButton1Down:Connect(function()
+			GH._activeSlider = function(x)
+				local absPos = bar.AbsolutePosition.X
+				local absSize = bar.AbsoluteSize.X
+				if absSize == 0 then return end
+				local ratio = math.clamp((x - absPos) / absSize, 0, 1)
+				currentVal = math.floor(min + (max - min) * ratio)
+				valLabel.Text = tostring(currentVal)
+				fill.Size = UDim2.new(ratio, 0, 1, 0)
+				knob.Position = UDim2.new(ratio, -5, 0.5, -5)
+				if cb then cb(currentVal) end
+			end
+			GH._activeSlider(UserInputService:GetMouseLocation().X)
+		end)
+	end
+
+	-- ==========================================
+	-- MONTAR SETTINGS
+	-- ==========================================
+	stSection("GERAL")
+	stSlider("Velocidade Fly", 5, 100, 20, function(v) GH.FlySpeed = v end)
+	stSlider("Raio NoClip", 1, 20, 3.8, function(v) GH.Settings.NoClipRadius = v end)
+
+	stSection("HITBOX")
+	stSlider("Tamanho Hitbox", 5, 50, 15, function(v) GH.Settings.HitboxSize = v end)
+
+	stSection("ESP")
+	stToggle("Mostrar Tag", true, function(v) GH.Settings.ESPShowTag = v end)
+	stToggle("Mostrar Nome", true, function(v) GH.Settings.ESPShowName = v end)
+	stToggle("Mostrar Distancia", true, function(v) GH.Settings.ESPShowDistance = v end)
+	stToggle("Mostrar HP", true, function(v) GH.Settings.ESPShowHealth = v end)
+	stSlider("Distancia Max ESP", 50, 2000, 300, function(v) GH.Settings.ESPMaxDistance = v end)
+
+	-- ==========================================
+	-- FECHAR — Padrão Op.txt: botão → FullCleanup → Destroy
+	-- ==========================================
+	CloseBtn.MouseButton1Click:Connect(function()
+		GH.FullCleanup()
+		pcall(function() ScreenGui:Destroy() end)
+	end)
+
+	-- Topbar hover
+	for _, btn in ipairs({ SettingsBtn, MinBtn }) do
+		btn.MouseEnter:Connect(function() TweenService:Create(btn, GH.TI, { BackgroundColor3 = W11.SurfaceHover }):Play() end)
+		btn.MouseLeave:Connect(function() TweenService:Create(btn, GH.TI, { BackgroundColor3 = W11.Surface }):Play() end)
+	end
+	CloseBtn.MouseEnter:Connect(function() TweenService:Create(CloseBtn, GH.TI, { BackgroundColor3 = W11.RedHover }):Play() end)
+	CloseBtn.MouseLeave:Connect(function() TweenService:Create(CloseBtn, GH.TI, { BackgroundColor3 = W11.Red }):Play() end)
+
+	-- ==========================================
+	-- MINIMIZAR
+	-- ==========================================
+	local minimized = false
+	local NormalW, NormalH = PanelW, PanelH
+	local MiniW, MiniH = 200, TopbarH
+
+	MinBtn.MouseButton1Click:Connect(function()
+		minimized = not minimized
+		if minimized then
+			Sidebar.Visible = false
+			Content.Visible = false
+			for _, c in pairs(TabContainers) do c.Visible = false end
+			if settingsOpen then
+				SettingsPanel.Position = UDim2.new(1, 10, 0, TopbarH + 4)
+				settingsOpen = false
+			end
+			TweenService:Create(MainFrame, GH.TI_Slow, { Size = UDim2.new(0, MiniW, 0, MiniH) }):Play()
+			MinBtn.Text = "+"
+		else
+			TweenService:Create(MainFrame, GH.TI_Slow, { Size = UDim2.new(0, NormalW, 0, NormalH) }):Play()
+			MinBtn.Text = "—"
+			task.delay(0.15, function()
+				Sidebar.Visible = true
+				Content.Visible = true
+				if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = true end
+			end)
+		end
+	end)
+
+	-- ==========================================
+	-- SETTINGS PANEL (toggle)
+	-- ==========================================
+	SettingsBtn.MouseButton1Click:Connect(function()
+		settingsOpen = not settingsOpen
+		if settingsOpen then
+			TweenService:Create(SettingsPanel, GH.TI_Slow, { Position = UDim2.new(0, 6, 0, TopbarH + 4) }):Play()
+			SettingsBtn.BackgroundColor3 = W11.AccentDark
+			SettingsBtn.TextColor3 = Color3.new(1, 1, 1)
+			Content.Visible = false
+			Sidebar.Visible = false
+		else
+			TweenService:Create(SettingsPanel, GH.TI_Slow, { Position = UDim2.new(1, 10, 0, TopbarH + 4) }):Play()
+			SettingsBtn.BackgroundColor3 = W11.Surface
+			SettingsBtn.TextColor3 = W11.TextSecondary
+			Content.Visible = true
+			Sidebar.Visible = true
+			if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = true end
+		end
+	end)
+
+	-- ==========================================
+	-- DRAG (topbar)
+	-- ==========================================
+	local dragging, dragInput, dragStart, startPos
+	local dragConn = nil
+
+	Topbar.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = MainFrame.Position
+			if not dragConn then
+				dragConn = RunService.Heartbeat:Connect(function()
+					if not dragging then return end
+					if dragInput then
+						local delta = dragInput.Position - dragStart
+						MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+					end
+				end)
+			end
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+					if dragConn then dragConn:Disconnect(); dragConn = nil end
 				end
 			end)
 		end
 	end)
 
-	-- Iniciar sistema de metricas
-	task.spawn(function()
-		GH.Stats.Start()
+	Topbar.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
 	end)
 
-	-- Criar Tabs
-	local Tabs = {}
-	for _, cat in ipairs(GH.Categories) do
-		Tabs[cat.Name] = Window:AddTab({ Title = cat.Name, Icon = cat.Icon })
-	end
-	local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "settings" })
-	GH.Tabs = Tabs
+	-- Slider global input
+	GH.TrackGlobalConnection("SliderEnded", UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			GH._activeSlider = nil
+		end
+	end))
+	GH.TrackGlobalConnection("SliderChanged", UserInputService.InputChanged:Connect(function(input)
+		if GH._activeSlider and input.UserInputType == Enum.UserInputType.MouseMovement then
+			GH._activeSlider(UserInputService:GetMouseLocation().X)
+		end
+	end))
 
-	-- Processar toggles pendentes dos módulos
+	-- ==========================================
+	-- TOGGLE HOTKEY (RightCtrl)
+	-- ==========================================
+	local panelVisible = true
+	GH.InputManager.Bind(Enum.KeyCode.RightControl, function()
+		panelVisible = not panelVisible
+		MainFrame.Visible = panelVisible
+	end)
+
+	-- ==========================================
+	-- PROCESSAR MODULES (toggles pendentes)
+	-- ==========================================
 	if #GH.PendingButtons == 0 then
-		warn("[SYSTEM] AVISO: Nenhum modulo registrou toggle! Verifique se os modulos foram carregados.")
+		warn("[SYSTEM] AVISO: Nenhum modulo registrou toggle!")
 	end
 
 	pcall(function()
 		table.sort(GH.PendingButtons, function(a, b)
-			if a.category == b.category then
-				return (a.localeKey or ""):lower() < (b.localeKey or ""):lower()
-			end
+			if a.category == b.category then return (a.localeKey or ""):lower() < (b.localeKey or ""):lower() end
 			return (a.category or "") < (b.category or "")
 		end)
 	end)
 
-	-- Silenciar notificacoes durante a criacao dos toggles
 	GH.SilentRestore = true
-
 	for _, pending in ipairs(GH.PendingButtons) do
 		local ok, err = pcall(function()
-			GH.States[pending.name] = false
-			local tab = Tabs[pending.category] or Tabs["Combat"]
-
-			local toggle = tab:AddToggle(pending.name, {
-				Title = GH.T(pending.localeKey or pending.name),
-				Description = pending.descKey and GH.T(pending.descKey) or "",
-				Default = false,
-			})
-
-			toggle:OnChanged(function()
-				local state = toggle.Value
-				GH.States[pending.name] = state
-				if not GH.SilentRestore then
-					if state then
-						GH.ShowToast(GH.T(pending.localeKey or pending.name) .. " " .. GH.T("toast_activated"), GH.Theme.On, 2)
-					else
-						GH.ShowToast(GH.T(pending.localeKey or pending.name) .. " " .. GH.T("toast_deactivated"), GH.Theme.Off, 2)
-					end
-				end
-				pcall(pending.callback, state, toggle)
-			end)
-
-			GH.Buttons[pending.name] = toggle
-			GH.Callbacks[pending.name] = pending.callback
+			CreateToggle(
+				pending.name,
+				GH.T(pending.localeKey or pending.name),
+				pending.descKey and GH.T(pending.descKey) or "",
+				pending.category,
+				pending.callback
+			)
 		end)
-		if not ok then
-			warn("[SYSTEM] Erro ao criar toggle '" .. tostring(pending.name) .. "': " .. tostring(err))
-		end
+		if not ok then warn("[SYSTEM] Erro ao criar toggle '" .. tostring(pending.name) .. "': " .. tostring(err)) end
 	end
-
-	-- Restaurar notificacoes apos criacao dos toggles
 	GH.SilentRestore = false
 
 	-- ==========================================
-	-- SETTINGS TAB
+	-- CHARACTER ADDED: Reset + Restore
 	-- ==========================================
-	local SettingsSection = SettingsTab:AddSection(GH.T("settings_config"))
-
-	local LanguageMap = { ["Portugues"] = "pt", ["English"] = "en", ["Espanol"] = "es" }
-	local LanguageReverse = { pt = "Portugues", en = "English", es = "Espanol" }
-
-	SettingsSection:AddDropdown("Language", {
-		Title = GH.T("settings_language"),
-		Values = {"Portugues", "English", "Espanol"},
-		Default = LanguageReverse[GH.Settings.Language] or "Portugues",
-		Callback = function(value)
-			GH.Settings.Language = LanguageMap[value] or "pt"
-			GH.RefreshUI()
-		end,
-	})
-
-	SettingsSection:AddToggle("DebugMode", {
-		Title = GH.T("settings_debug_mode"),
-		Default = GH.Settings.DebugMode,
-		Callback = function(value)
-			GH.Settings.DebugMode = value
-		end,
-	})
-
-	SettingsSection:AddToggle("ESPShowDistance", {
-		Title = GH.T("settings_show_distance"),
-		Default = GH.Settings.ESPShowDistance,
-		Callback = function(value)
-			GH.Settings.ESPShowDistance = value
-		end,
-	})
-
-	SettingsSection:AddToggle("ESPShowHealth", {
-		Title = GH.T("settings_show_health"),
-		Default = GH.Settings.ESPShowHealth,
-		Callback = function(value)
-			GH.Settings.ESPShowHealth = value
-		end,
-	})
-
-	SettingsSection:AddToggle("ESPShowTag", {
-		Title = GH.T("settings_show_tag"),
-		Default = GH.Settings.ESPShowTag,
-		Callback = function(value)
-			GH.Settings.ESPShowTag = value
-		end,
-	})
-
-	SettingsSection:AddToggle("ESPShowName", {
-		Title = GH.T("settings_show_name"),
-		Default = GH.Settings.ESPShowName,
-		Callback = function(value)
-			GH.Settings.ESPShowName = value
-		end,
-	})
-
-	SettingsSection:AddSlider("HitboxSize", {
-		Title = GH.T("settings_hitbox_size"),
-		Default = GH.Settings.HitboxSize,
-		Min = 5,
-		Max = 50,
-		Rounding = 0,
-		Callback = function(value)
-			GH.Settings.HitboxSize = value
-		end,
-	})
-
-	SettingsSection:AddSlider("ESPMaxDistance", {
-		Title = GH.T("settings_esp_max_distance"),
-		Default = GH.Settings.ESPMaxDistance,
-		Min = 50,
-		Max = 2000,
-		Rounding = 0,
-		Callback = function(value)
-			GH.Settings.ESPMaxDistance = value
-		end,
-	})
-
-	SettingsSection:AddSlider("NoClipRadius", {
-		Title = GH.T("settings_noclip_radius"),
-		Default = GH.Settings.NoClipRadius,
-		Min = 1,
-		Max = 20,
-		Rounding = 1,
-		Callback = function(value)
-			GH.Settings.NoClipRadius = value
-		end,
-	})
-
-	SettingsSection:AddSlider("FlySpeed", {
-		Title = GH.T("settings_fly_speed"),
-		Default = GH.FlySpeed,
-		Min = 5,
-		Max = 100,
-		Rounding = 0,
-		Callback = function(value)
-			GH.FlySpeed = value
-		end,
-	})
-
-	-- ==========================================
-	-- SAVE / LOAD CONFIG
-	-- ==========================================
-	SaveManager:SetLibrary(Fluent)
-	InterfaceManager:SetLibrary(Fluent)
-	SaveManager:IgnoreThemeSettings()
-	SaveManager:SetIgnoreIndexes({})
-	SaveManager:SetFolder("SystemScript")
-	InterfaceManager:SetFolder("SystemScript")
-	InterfaceManager:BuildInterfaceSection(SettingsTab)
-	SaveManager:BuildConfigSection(SettingsTab)
-
-	-- ==========================================
-	-- UPDATE INFO (busca automatica do GitHub)
-	-- ==========================================
-	local UpdateSection = SettingsTab:AddSection(GH.T("update_section"))
-
-	local UpdateVersion = UpdateSection:AddParagraph({
-		Title = GH.T("update_version"),
-		Content = GH.T("update_loading"),
-	})
-
-	local UpdateDate = UpdateSection:AddParagraph({
-		Title = GH.T("update_date"),
-		Content = GH.T("update_loading"),
-	})
-
-	-- Converter UTC para Horario de Brasilia (UTC-3)
-	local function utcToBrasilia(dateRaw)
-		local year, month, day, hour, min, sec = dateRaw:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+):(%d+)")
-		if not year then return "N/A" end
-
-		year, month, day, hour, min, sec = tonumber(year), tonumber(month), tonumber(day), tonumber(hour), tonumber(min), tonumber(sec or 0)
-
-		-- Subtrair 3 horas (UTC-3)
-		hour = hour - 3
-		if hour < 0 then
-			hour = hour + 24
-			day = day - 1
-			if day < 1 then
-				month = month - 1
-				if month < 1 then
-					month = 12
-					year = year - 1
-				end
-				-- Dias no mes (simplificado)
-				local daysInMonth = {31,28,31,30,31,30,31,31,30,31,30,31}
-				if month == 2 and (year % 4 == 0 and (year % 100 ~= 0 or year % 400 == 0)) then
-					daysInMonth[2] = 29
-				end
-				day = daysInMonth[month]
-			end
+	GH.TrackGlobalConnection("CharacterAdded", GH.LocalPlayer.CharacterAdded:Connect(function(char)
+		if GH.Stopped then return end
+		local wasActive = {}
+		for name, state in pairs(GH.States) do
+			if state then wasActive[name] = true end
 		end
+		GH.SilentRestore = true
+		for name, _ in pairs(GH.States) do
+			GH.UnregisterMasterLoop(name)
+			GH.States[name] = false
+			local btn = GH.Buttons[name]
+			local callback = GH.Callbacks[name]
+			if btn and callback then pcall(callback, false, btn) end
+			if btn and btn.SetValue then pcall(btn.SetValue, btn, false) end
+		end
+		for name, conn in pairs(GH.Connections) do
+			if conn and conn.Connected then pcall(conn.Disconnect, conn) end
+		end
+		table.clear(GH.Connections)
+		task.defer(function()
+			if GH.Stopped then return end
+			for name, _ in pairs(wasActive) do
+				if GH.States[name] == false and GH.Buttons[name] and GH.Callbacks[name] then
+					GH.States[name] = true
+					local btn = GH.Buttons[name]
+					if btn and btn.SetValue then pcall(btn.SetValue, btn, true) end
+				end
+			end
+			GH.SilentRestore = false
+		end)
+	end))
 
-		return string.format("%02d/%02d/%04d %02d:%02d", day, month, year, hour, min)
+	-- ==========================================
+	-- CLEANUP HOOKS
+	-- ==========================================
+	Players.PlayerRemoving:Connect(function(player)
+		if player == GH.LocalPlayer then pcall(GH.FullCleanup) end
+	end)
+	if script then
+		script.Destroying:Connect(function() pcall(GH.FullCleanup) end)
 	end
 
-	-- Buscar info do GitHub automaticamente
-	task.spawn(function()
-		local ok, result = pcall(function()
-			return game:HttpGet("https://api.github.com/repos/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/commits/main", true)
-		end)
-
-		if ok and result then
-			local HttpService = game:GetService("HttpService")
-			local data = HttpService:JSONDecode(result)
-
-			if data and data.commit then
-				-- Versao (curto hash)
-				local sha = data.sha or "N/A"
-				local shortSha = string.sub(sha, 1, 7)
-
-				-- Data do commit (horario de Brasilia)
-				local dateRaw = data.commit.author and data.commit.author.date or ""
-				local dateFormatted = utcToBrasilia(dateRaw)
-
-				pcall(function()
-					UpdateVersion:SetDesc(shortSha)
-					UpdateDate:SetDesc(dateFormatted)
-				end)
-			end
-		else
-			pcall(function()
-				UpdateVersion:SetDesc(GH.T("update_error"))
-				UpdateDate:SetDesc(GH.T("update_error"))
-			end)
-		end
-	end)
-
-	-- Atualizar a cada 5 minutos
-	task.spawn(function()
-		while true do
-			task.wait(300)
-			pcall(function()
-				local ok, result = pcall(function()
-					return game:HttpGet("https://api.github.com/repos/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/commits/main", true)
-				end)
-
-				if ok and result then
-					local HttpService = game:GetService("HttpService")
-					local data = HttpService:JSONDecode(result)
-
-					if data and data.commit then
-						local dateRaw = data.commit.author and data.commit.author.date or ""
-						UpdateDate:SetDesc(utcToBrasilia(dateRaw))
-					end
-				end
-			end)
-		end
-	end)
-
 	-- ==========================================
-	-- INPUT MANAGER GLOBAL CONNECTIONS
+	-- INPUT MANAGER
 	-- ==========================================
 	GH.TrackGlobalConnection("InputManager_Began", UserInputService.InputBegan:Connect(function(input, gpe)
 		if gpe then return end
@@ -1764,7 +2211,6 @@ function GH.Initialize()
 		local binding = GH.InputManager._bindings[input.KeyCode]
 		if binding and binding.onDown then binding.onDown() end
 	end))
-
 	GH.TrackGlobalConnection("InputManager_Ended", UserInputService.InputEnded:Connect(function(input)
 		if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
 		local binding = GH.InputManager._bindings[input.KeyCode]
@@ -1780,14 +2226,10 @@ function GH.Initialize()
 			if GH.MasterTick.Render % 3 == 0 then pcall(callback) end
 		end
 	end))
-
 	GH.TrackGlobalConnection("MasterHeartbeat", RunService.Heartbeat:Connect(function()
 		GH.MasterTick.Heartbeat += 1
-		for name, callback in pairs(GH.MasterCallbacks.Heartbeat) do
-			pcall(callback)
-		end
+		for name, callback in pairs(GH.MasterCallbacks.Heartbeat) do pcall(callback) end
 	end))
-
 	GH.TrackGlobalConnection("MasterPreSim", RunService.PreSimulation:Connect(function()
 		GH.MasterTick.PreSim += 1
 		for name, callback in pairs(GH.MasterCallbacks.PreSim) do
@@ -1813,100 +2255,22 @@ function GH.Initialize()
 	end
 
 	-- ==========================================
-	-- CHARACTER ADDED: Reset + Restore
+	-- METRICS
 	-- ==========================================
-	GH.LocalPlayer.CharacterAdded:Connect(function(char)
-		local wasActive = {}
-		for name, state in pairs(GH.States) do
-			if state then wasActive[name] = true end
-		end
-
-		-- Silenciar notificacoes durante o reset/restore
-		GH.SilentRestore = true
-
-		-- Resetar todas as features
-		for name, _ in pairs(GH.States) do
-			GH.UnregisterMasterLoop(name)
-			GH.States[name] = false
-			local btn = GH.Buttons[name]
-			local callback = GH.Callbacks[name]
-			if btn and callback then
-				pcall(callback, false, btn)
-			end
-			if btn and btn.SetValue then
-				pcall(function() btn:SetValue(false) end)
-			end
-		end
-
-		-- Limpar conexoes (exceto as globais)
-		for name, conn in pairs(GH.Connections) do
-			if conn and conn.Connected then pcall(conn.Disconnect, conn) end
-		end
-		table.clear(GH.Connections)
-		task.defer(function()
-			for name, _ in pairs(wasActive) do
-				if GH.States[name] == false and GH.Buttons[name] and GH.Callbacks[name] then
-					GH.States[name] = true
-					local btn = GH.Buttons[name]
-					if btn and btn.SetValue then
-						pcall(function() btn:SetValue(true) end)
-					end
-					-- SetValue já dispara o OnChanged que chama o callback
-				end
-			end
-			GH.SilentRestore = false
-		end)
-	end)
+	task.spawn(function() GH.Stats.Start() end)
 
 	-- ==========================================
-	-- FECHAR (via botao do Fluent ou unloading)
+	-- TOAST DE CARREGAMENTO
 	-- ==========================================
-
-	-- Cleanup quando o player sai
-	Players.PlayerRemoving:Connect(function(player)
-		if player == GH.LocalPlayer then
-			pcall(function() GH.FullCleanup() end)
-		end
-	end)
-
-	-- Cleanup quando o script e destruido pelo executor
-	if script then
-		script.Destroying:Connect(function()
-			pcall(function() GH.FullCleanup() end)
-		end)
-	end
-
-	-- Hook no botao de fechar da janela Fluent
-	if Window.Window then
-		local closeBtn = Window.Window:FindFirstChild("CloseButton", true)
-			or Window.Window:FindFirstChild("X", true)
-		if closeBtn then
-			closeBtn.MouseButton1Click:Connect(function()
-				pcall(function() GH.FullCleanup() end)
-			end)
-		end
-	end
-
-	-- Fallback: detectar quando a janela e destruida
-	task.spawn(function()
-		while Window and Window.Window and Window.Window.Parent do
-			task.wait(0.5)
-		end
-		if not GH._cleaningUp then
-			pcall(function() GH.FullCleanup() end)
-		end
-	end)
-
-	-- Notificacao de carregamento
 	task.delay(0.5, function()
-		GH.ShowToast(GH.T("toast_script_loaded"), GH.Theme.On, 5)
+		local v = GH.Version and GH.Version.Hash or ""
+		local msg = GH.T("toast_script_loaded")
+		if v and v ~= "unknown" then msg = msg .. " (v" .. v .. ")" end
+		GH.ShowToast(msg, W11.On, 5)
 	end)
-
-	-- Selecionar primeira aba
-	Window:SelectTab(1)
 end
 
 -- ==========================================
 -- RETURN GH
 -- ==========================================
-return GH
+return GH

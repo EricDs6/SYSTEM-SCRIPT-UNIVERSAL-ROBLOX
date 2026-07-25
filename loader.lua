@@ -378,18 +378,56 @@ local function SetProgress(percent, detail)
 end
 
 -- ==========================================
--- LOGICA DE DOWNLOAD
+-- LOGICA DE DOWNLOAD (com retry e cache bust)
 -- ==========================================
-local CACHE_BUST = tostring(os.clock()):gsub("%.", "")
+local CACHE_BUST = tostring(os.clock()):gsub("%.", "") .. "_" .. tostring(math.random(100000, 999999))
 local BASE_URL = "https://raw.githubusercontent.com/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/main/"
 
-local function fetch_module(path)
-	local ok, content = pcall(function()
-		return game:HttpGet(BASE_URL .. path .. "?v=" .. CACHE_BUST, true)
+-- Verificar versao mais recente do GitHub
+local LatestCommitHash = "unknown"
+local LatestCommitDate = "unknown"
+do
+	local ok, result = pcall(function()
+		return game:HttpGet("https://api.github.com/repos/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/commits/main", true)
 	end)
+	if ok and result then
+		local HttpService = game:GetService("HttpService")
+		local data = HttpService:JSONDecode(result)
+		if data and data.sha then
+			LatestCommitHash = string.sub(data.sha, 1, 7)
+			local dateRaw = data.commit and data.commit.author and data.commit.author.date or ""
+			local year, month, day, hour, min = dateRaw:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+)")
+			if year then
+				LatestCommitDate = string.format("%s/%s/%s %s:%s", day, month, year, hour, min)
+			end
+			UpdateStatus("Versao detectada: " .. LatestCommitHash, "Commit: " .. LatestCommitDate)
+		end
+	end
+end
 
-	if not ok or not content or content == "" then
-		warn("[SYSTEM] Falha ao baixar: " .. path)
+local function fetch_module(path)
+	local MAX_RETRIES = 3
+	local content = nil
+
+	for attempt = 1, MAX_RETRIES do
+		local ok, result = pcall(function()
+			return game:HttpGet(BASE_URL .. path .. "?v=" .. CACHE_BUST, true)
+		end)
+
+		if ok and result and result ~= "" then
+			content = result
+			break
+		end
+
+		if attempt < MAX_RETRIES then
+			warn("[SYSTEM] Tentativa " .. attempt .. "/" .. MAX_RETRIES .. " falhou: " .. path .. " - retrying...")
+			task.wait(0.5 * attempt) -- Backoff: 0.5s, 1.0s
+		else
+			warn("[SYSTEM] FALHA ao baixar apos " .. MAX_RETRIES .. " tentativas: " .. path)
+		end
+	end
+
+	if not content then
 		return nil
 	end
 
@@ -413,7 +451,7 @@ end
 -- ==========================================
 -- 1. CORE
 -- ==========================================
-UpdateStatus("Carregando sistema...", "core/init.lua")
+UpdateStatus("Baixando core (ultima versao)...", "commit: " .. LatestCommitHash)
 SetProgress(2, "core/init.lua")
 local Core = load_and_run("core/init.lua")
 
@@ -431,7 +469,7 @@ if not Core then
 	return
 end
 
-SetProgress(5, "Core carregado")
+SetProgress(5, "Core: " .. LatestCommitHash)
 
 -- ==========================================
 -- 2. MODULOS (download paralelo)
@@ -469,7 +507,7 @@ end
 local downloaded = {}
 local completed = 0
 
-UpdateStatus("Baixando modulos...", "0/" .. totalFiles)
+UpdateStatus("Baixando modulos...", LatestCommitHash .. " | 0/" .. totalFiles)
 SetProgress(5)
 
 for _, cat in ipairs(categories) do
@@ -484,7 +522,7 @@ for _, cat in ipairs(categories) do
 			end
 			completed += 1
 			local percent = 5 + (completed / totalFiles) * 55
-			SetProgress(percent, completed .. "/" .. totalFiles .. " arquivos")
+			SetProgress(percent, completed .. "/" .. totalFiles .. " | " .. LatestCommitHash)
 		end)
 	end
 end
@@ -497,7 +535,7 @@ SetProgress(60, "Downloads concluidos")
 
 local executed = 0
 for _, cat in ipairs(categories) do
-	UpdateStatus("Carregando " .. cat.name .. "...", "")
+	UpdateStatus("Carregando " .. cat.name .. "...", LatestCommitHash)
 	for _, fileName in ipairs(cat.files) do
 		local key = cat.name .. "/" .. fileName
 		local loadFn = downloaded[key]
@@ -520,8 +558,8 @@ for _, cat in ipairs(categories) do
 	end
 end
 
-SetProgress(100, "Pronto!")
-UpdateStatus("Tudo pronto!", "Iniciando painel...")
+SetProgress(100, LatestCommitHash)
+UpdateStatus("Tudo pronto!", "v" .. LatestCommitHash .. " | " .. LatestCommitDate)
 LoadingText.Text = "COMPLETE"
 task.wait(0.3)
 
@@ -530,4 +568,8 @@ task.wait(0.3)
 -- ==========================================
 animateOut()
 task.wait(0.1)
+
+-- Passar versao para o Core
+Core.Version = { Hash = LatestCommitHash, Date = LatestCommitDate }
+
 Core.Initialize()

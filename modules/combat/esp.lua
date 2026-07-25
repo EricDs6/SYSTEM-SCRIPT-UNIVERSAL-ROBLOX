@@ -250,7 +250,13 @@ return function(GH)
 
 			-- Loop de atualizacao
 			GH.Connections.ESP_Render = RunService.RenderStepped:Connect(function()
-				if not GH.States.ESP then return end
+				if not GH.States.ESP or GH.isClosing then return end
+
+				-- Trava de seguranca: se a pasta foi deletada (painel fechado), auto-destruir
+				if not espFolder or not espFolder.Parent then
+					removerESP()
+					return
+				end
 
 				local meuChar = LocalPlayer.Character
 				local minhaHrp = meuChar and meuChar:FindFirstChild("HumanoidRootPart")
