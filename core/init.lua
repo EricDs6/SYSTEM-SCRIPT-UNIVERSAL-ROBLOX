@@ -829,6 +829,11 @@ function GH.ShowPlayerPicker(title, callback)
 		GH._PlayerPickerGui = nil
 	end
 
+	local Players = GH.Services.Players
+	local LocalPlayer = GH.LocalPlayer
+	local TS = GH.Services.TweenService
+	local UIS = GH.Services.UserInputService
+
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "GH_PlayerPicker"
 	gui.ResetOnSpawn = false
@@ -837,8 +842,9 @@ function GH.ShowPlayerPicker(title, callback)
 	gui.Parent = GH.TargetGui
 	GH._PlayerPickerGui = gui
 
-	local W = 180
-	local H = 220
+	local W = 200
+	local H = 260
+	local TopbarH = 32
 
 	local frame = Instance.new("Frame")
 	frame.Name = "PickerFrame"
@@ -848,24 +854,26 @@ function GH.ShowPlayerPicker(title, callback)
 	frame.BorderSizePixel = 0
 	frame.ClipsDescendants = true
 	frame.Parent = gui
-	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = Color3.fromRGB(60, 60, 70)
-	stroke.Thickness = 1
-	stroke.Transparency = 0.2
-	stroke.Parent = frame
+	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+	local mainStroke = Instance.new("UIStroke")
+	mainStroke.Color = Color3.fromRGB(60, 60, 70)
+	mainStroke.Thickness = 1
+	mainStroke.Transparency = 0.2
+	mainStroke.Parent = frame
 
-	-- Topbar
+	-- ==========================================
+	-- TOPBAR (igual ao painel principal)
+	-- ==========================================
 	local topbar = Instance.new("Frame")
 	topbar.Name = "Topbar"
-	topbar.Size = UDim2.new(1, 0, 0, 28)
+	topbar.Size = UDim2.new(1, 0, 0, TopbarH)
 	topbar.BackgroundColor3 = Color3.fromRGB(16, 16, 20)
 	topbar.BorderSizePixel = 0
 	topbar.ZIndex = 2
 	topbar.Parent = frame
 
 	local titleLabel = Instance.new("TextLabel")
-	titleLabel.Size = UDim2.new(1, -34, 1, 0)
+	titleLabel.Size = UDim2.new(1, -70, 1, 0)
 	titleLabel.Position = UDim2.new(0, 10, 0, 0)
 	titleLabel.BackgroundTransparency = 1
 	titleLabel.Text = title or "Select Player"
@@ -876,16 +884,38 @@ function GH.ShowPlayerPicker(title, callback)
 	titleLabel.ZIndex = 3
 	titleLabel.Parent = topbar
 
-	local closeBtn = Instance.new("TextButton")
-	closeBtn.Name = "Close"
-	closeBtn.Size = UDim2.new(0, 24, 0, 24)
-	closeBtn.Position = UDim2.new(1, -28, 0, 2)
-	closeBtn.BackgroundColor3 = GH.Theme.Card
-	closeBtn.Text = ""
-	closeBtn.AutoButtonColor = false
-	closeBtn.ZIndex = 3
-	closeBtn.Parent = topbar
-	Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 4)
+	-- Minimize button (igual ao principal)
+	local MinBtn = Instance.new("TextButton")
+	MinBtn.Name = "Minimize"
+	MinBtn.Size = UDim2.new(0, 24, 0, 24)
+	MinBtn.Position = UDim2.new(1, -56, 0.5, -12)
+	MinBtn.BackgroundColor3 = GH.Theme.Card
+	MinBtn.Text = ""
+	MinBtn.AutoButtonColor = false
+	MinBtn.ZIndex = 4
+	MinBtn.Parent = topbar
+	Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 4)
+	local minDash = Instance.new("TextLabel")
+	minDash.Size = UDim2.new(1, 0, 1, 0)
+	minDash.BackgroundTransparency = 1
+	minDash.Text = "-"
+	minDash.TextColor3 = GH.Theme.Off
+	minDash.Font = Enum.Font.SourceSans
+	minDash.TextSize = 16
+	minDash.ZIndex = 5
+	minDash.Parent = MinBtn
+
+	-- Close button (igual ao principal)
+	local CloseBtn = Instance.new("TextButton")
+	CloseBtn.Name = "Close"
+	CloseBtn.Size = UDim2.new(0, 24, 0, 24)
+	CloseBtn.Position = UDim2.new(1, -28, 0.5, -12)
+	CloseBtn.BackgroundColor3 = GH.Theme.Card
+	CloseBtn.Text = ""
+	CloseBtn.AutoButtonColor = false
+	CloseBtn.ZIndex = 4
+	CloseBtn.Parent = topbar
+	Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 4)
 	local closeX = Instance.new("TextLabel")
 	closeX.Size = UDim2.new(1, 0, 1, 0)
 	closeX.BackgroundTransparency = 1
@@ -893,28 +923,57 @@ function GH.ShowPlayerPicker(title, callback)
 	closeX.TextColor3 = GH.Theme.Text
 	closeX.Font = Enum.Font.SourceSans
 	closeX.TextSize = 14
-	closeX.ZIndex = 4
-	closeX.Parent = closeBtn
+	closeX.ZIndex = 5
+	closeX.Parent = CloseBtn
+
+	-- Minimize hover
+	MinBtn.MouseEnter:Connect(function()
+		TS:Create(MinBtn, GH.TI, { BackgroundColor3 = GH.Theme.CardHover }):Play()
+	end)
+	MinBtn.MouseLeave:Connect(function()
+		TS:Create(MinBtn, GH.TI, { BackgroundColor3 = GH.Theme.Card }):Play()
+	end)
+
+	-- Close hover
+	CloseBtn.MouseEnter:Connect(function()
+		TS:Create(CloseBtn, GH.TI, { BackgroundColor3 = GH.Theme.Red }):Play()
+	end)
+	CloseBtn.MouseLeave:Connect(function()
+		TS:Create(CloseBtn, GH.TI, { BackgroundColor3 = GH.Theme.Card }):Play()
+	end)
+
+	-- ==========================================
+	-- CONTENT AREA
+	-- ==========================================
+	local contentFrame = Instance.new("Frame")
+	contentFrame.Name = "Content"
+	contentFrame.Size = UDim2.new(1, 0, 1, -TopbarH)
+	contentFrame.Position = UDim2.new(0, 0, 0, TopbarH)
+	contentFrame.BackgroundTransparency = 1
+	contentFrame.ClipsDescendants = true
+	contentFrame.ZIndex = 2
+	contentFrame.Parent = frame
 
 	-- Player list
 	local listScroll = Instance.new("ScrollingFrame")
 	listScroll.Name = "PlayerList"
-	listScroll.Size = UDim2.new(1, -10, 1, -36)
-	listScroll.Position = UDim2.new(0, 5, 0, 32)
+	listScroll.Size = UDim2.new(1, -10, 1, -6)
+	listScroll.Position = UDim2.new(0, 5, 0, 3)
 	listScroll.BackgroundTransparency = 1
 	listScroll.ScrollBarThickness = 3
 	listScroll.ScrollBarImageColor3 = GH.Theme.Accent
 	listScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	listScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 	listScroll.BorderSizePixel = 0
-	listScroll.ZIndex = 2
-	listScroll.Parent = frame
+	listScroll.ZIndex = 3
+	listScroll.Parent = contentFrame
 	local listLayout = Instance.new("UIListLayout")
 	listLayout.Padding = UDim.new(0, 2)
 	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	listLayout.Parent = listScroll
 
 	local selectedName = nil
+	local minimized = false
 
 	local function buildList()
 		for _, child in ipairs(listScroll:GetChildren()) do
@@ -939,28 +998,28 @@ function GH.ShowPlayerPicker(title, callback)
 			btn.TextXAlignment = Enum.TextXAlignment.Left
 			btn.AutoButtonColor = false
 			btn.LayoutOrder = i
-			btn.ZIndex = 3
+			btn.ZIndex = 4
 			btn.Parent = listScroll
 			Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
 
 			btn.MouseEnter:Connect(function()
 				if selectedName ~= name then
-					GH.Services.TweenService:Create(btn, GH.TI, { BackgroundColor3 = GH.Theme.CardHover }):Play()
+					TS:Create(btn, GH.TI, { BackgroundColor3 = GH.Theme.CardHover }):Play()
 				end
 			end)
 			btn.MouseLeave:Connect(function()
 				if selectedName ~= name then
-					GH.Services.TweenService:Create(btn, GH.TI, { BackgroundColor3 = GH.Theme.Card }):Play()
+					TS:Create(btn, GH.TI, { BackgroundColor3 = GH.Theme.Card }):Play()
 				end
 			end)
 			btn.MouseButton1Click:Connect(function()
 				selectedName = name
 				for _, child in ipairs(listScroll:GetChildren()) do
 					if child:IsA("TextButton") then
-						GH.Services.TweenService:Create(child, GH.TI, { BackgroundColor3 = GH.Theme.Card }):Play()
+						TS:Create(child, GH.TI, { BackgroundColor3 = GH.Theme.Card }):Play()
 					end
 				end
-				GH.Services.TweenService:Create(btn, GH.TI, { BackgroundColor3 = GH.Theme.AccentDim }):Play()
+				TS:Create(btn, GH.TI, { BackgroundColor3 = GH.Theme.AccentDim }):Play()
 				if callback then pcall(callback, name) end
 			end)
 		end
@@ -976,18 +1035,26 @@ function GH.ShowPlayerPicker(title, callback)
 		if GH._PlayerPickerGui and GH._PlayerPickerGui.Parent then buildList() end
 	end)
 
-	-- Close button
-	closeBtn.MouseEnter:Connect(function()
-		GH.Services.TweenService:Create(closeBtn, GH.TI, { BackgroundColor3 = GH.Theme.Red }):Play()
-	end)
-	closeBtn.MouseLeave:Connect(function()
-		GH.Services.TweenService:Create(closeBtn, GH.TI, { BackgroundColor3 = GH.Theme.Card }):Play()
-	end)
-	closeBtn.MouseButton1Click:Connect(function()
+	-- Close
+	CloseBtn.MouseButton1Click:Connect(function()
 		pcall(function() connAdded:Disconnect() end)
 		pcall(function() connRemoving:Disconnect() end)
 		gui:Destroy()
 		GH._PlayerPickerGui = nil
+	end)
+
+	-- Minimize
+	MinBtn.MouseButton1Click:Connect(function()
+		minimized = not minimized
+		if minimized then
+			contentFrame.Visible = false
+			TS:Create(frame, GH.TI, { Size = UDim2.new(0, W, 0, TopbarH) }):Play()
+			minDash.Text = "+"
+		else
+			TS:Create(frame, GH.TI, { Size = UDim2.new(0, W, 0, H) }):Play()
+			minDash.Text = "-"
+			task.delay(0.15, function() contentFrame.Visible = true end)
+		end
 	end)
 
 	-- Drag
@@ -1007,7 +1074,7 @@ function GH.ShowPlayerPicker(title, callback)
 			dragInput = input
 		end
 	end)
-	GH.Services.UserInputService.InputChanged:Connect(function(input)
+	UIS.InputChanged:Connect(function(input)
 		if dragging and input == dragInput then
 			local delta = input.Position - dragStart
 			frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
@@ -1033,6 +1100,9 @@ function GH.ShowInputPicker(title, placeholder, callback)
 		GH._InputPickerGui = nil
 	end
 
+	local TS = GH.Services.TweenService
+	local UIS = GH.Services.UserInputService
+
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "GH_InputPicker"
 	gui.ResetOnSpawn = false
@@ -1041,8 +1111,9 @@ function GH.ShowInputPicker(title, placeholder, callback)
 	gui.Parent = GH.TargetGui
 	GH._InputPickerGui = gui
 
-	local W = 200
-	local H = 100
+	local W = 220
+	local H = 110
+	local TopbarH = 32
 
 	local frame = Instance.new("Frame")
 	frame.Name = "PickerFrame"
@@ -1052,24 +1123,24 @@ function GH.ShowInputPicker(title, placeholder, callback)
 	frame.BorderSizePixel = 0
 	frame.ClipsDescendants = true
 	frame.Parent = gui
-	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = Color3.fromRGB(60, 60, 70)
-	stroke.Thickness = 1
-	stroke.Transparency = 0.2
-	stroke.Parent = frame
+	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+	local mainStroke = Instance.new("UIStroke")
+	mainStroke.Color = Color3.fromRGB(60, 60, 70)
+	mainStroke.Thickness = 1
+	mainStroke.Transparency = 0.2
+	mainStroke.Parent = frame
 
 	-- Topbar
 	local topbar = Instance.new("Frame")
 	topbar.Name = "Topbar"
-	topbar.Size = UDim2.new(1, 0, 0, 28)
+	topbar.Size = UDim2.new(1, 0, 0, TopbarH)
 	topbar.BackgroundColor3 = Color3.fromRGB(16, 16, 20)
 	topbar.BorderSizePixel = 0
 	topbar.ZIndex = 2
 	topbar.Parent = frame
 
 	local titleLabel = Instance.new("TextLabel")
-	titleLabel.Size = UDim2.new(1, -34, 1, 0)
+	titleLabel.Size = UDim2.new(1, -70, 1, 0)
 	titleLabel.Position = UDim2.new(0, 10, 0, 0)
 	titleLabel.BackgroundTransparency = 1
 	titleLabel.Text = title or "Input"
@@ -1080,16 +1151,38 @@ function GH.ShowInputPicker(title, placeholder, callback)
 	titleLabel.ZIndex = 3
 	titleLabel.Parent = topbar
 
-	local closeBtn = Instance.new("TextButton")
-	closeBtn.Name = "Close"
-	closeBtn.Size = UDim2.new(0, 24, 0, 24)
-	closeBtn.Position = UDim2.new(1, -28, 0, 2)
-	closeBtn.BackgroundColor3 = GH.Theme.Card
-	closeBtn.Text = ""
-	closeBtn.AutoButtonColor = false
-	closeBtn.ZIndex = 3
-	closeBtn.Parent = topbar
-	Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 4)
+	-- Minimize
+	local MinBtn = Instance.new("TextButton")
+	MinBtn.Name = "Minimize"
+	MinBtn.Size = UDim2.new(0, 24, 0, 24)
+	MinBtn.Position = UDim2.new(1, -56, 0.5, -12)
+	MinBtn.BackgroundColor3 = GH.Theme.Card
+	MinBtn.Text = ""
+	MinBtn.AutoButtonColor = false
+	MinBtn.ZIndex = 4
+	MinBtn.Parent = topbar
+	Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 4)
+	local minDash = Instance.new("TextLabel")
+	minDash.Size = UDim2.new(1, 0, 1, 0)
+	minDash.BackgroundTransparency = 1
+	minDash.Text = "-"
+	minDash.TextColor3 = GH.Theme.Off
+	minDash.Font = Enum.Font.SourceSans
+	minDash.TextSize = 16
+	minDash.ZIndex = 5
+	minDash.Parent = MinBtn
+
+	-- Close
+	local CloseBtn = Instance.new("TextButton")
+	CloseBtn.Name = "Close"
+	CloseBtn.Size = UDim2.new(0, 24, 0, 24)
+	CloseBtn.Position = UDim2.new(1, -28, 0.5, -12)
+	CloseBtn.BackgroundColor3 = GH.Theme.Card
+	CloseBtn.Text = ""
+	CloseBtn.AutoButtonColor = false
+	CloseBtn.ZIndex = 4
+	CloseBtn.Parent = topbar
+	Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 4)
 	local closeX = Instance.new("TextLabel")
 	closeX.Size = UDim2.new(1, 0, 1, 0)
 	closeX.BackgroundTransparency = 1
@@ -1097,13 +1190,36 @@ function GH.ShowInputPicker(title, placeholder, callback)
 	closeX.TextColor3 = GH.Theme.Text
 	closeX.Font = Enum.Font.SourceSans
 	closeX.TextSize = 14
-	closeX.ZIndex = 4
-	closeX.Parent = closeBtn
+	closeX.ZIndex = 5
+	closeX.Parent = CloseBtn
 
-	-- Input
+	-- Hover
+	MinBtn.MouseEnter:Connect(function()
+		TS:Create(MinBtn, GH.TI, { BackgroundColor3 = GH.Theme.CardHover }):Play()
+	end)
+	MinBtn.MouseLeave:Connect(function()
+		TS:Create(MinBtn, GH.TI, { BackgroundColor3 = GH.Theme.Card }):Play()
+	end)
+	CloseBtn.MouseEnter:Connect(function()
+		TS:Create(CloseBtn, GH.TI, { BackgroundColor3 = GH.Theme.Red }):Play()
+	end)
+	CloseBtn.MouseLeave:Connect(function()
+		TS:Create(CloseBtn, GH.TI, { BackgroundColor3 = GH.Theme.Card }):Play()
+	end)
+
+	-- Content
+	local contentFrame = Instance.new("Frame")
+	contentFrame.Name = "Content"
+	contentFrame.Size = UDim2.new(1, 0, 1, -TopbarH)
+	contentFrame.Position = UDim2.new(0, 0, 0, TopbarH)
+	contentFrame.BackgroundTransparency = 1
+	contentFrame.ClipsDescendants = true
+	contentFrame.ZIndex = 2
+	contentFrame.Parent = frame
+
 	local inputBox = Instance.new("TextBox")
 	inputBox.Size = UDim2.new(1, -20, 0, 28)
-	inputBox.Position = UDim2.new(0, 10, 0, 36)
+	inputBox.Position = UDim2.new(0, 10, 0, 10)
 	inputBox.BackgroundColor3 = GH.Theme.Card
 	inputBox.PlaceholderText = placeholder or "Type here..."
 	inputBox.PlaceholderColor3 = GH.Theme.Off
@@ -1114,7 +1230,7 @@ function GH.ShowInputPicker(title, placeholder, callback)
 	inputBox.TextXAlignment = Enum.TextXAlignment.Left
 	inputBox.ClearTextOnFocus = false
 	inputBox.ZIndex = 3
-	inputBox.Parent = frame
+	inputBox.Parent = contentFrame
 	Instance.new("UICorner", inputBox).CornerRadius = UDim.new(0, 4)
 	Instance.new("UIPadding", inputBox).PaddingLeft = UDim.new(0, 6)
 
@@ -1125,14 +1241,23 @@ function GH.ShowInputPicker(title, placeholder, callback)
 		end
 	end)
 
+	-- Minimize
+	local minimized = false
+	MinBtn.MouseButton1Click:Connect(function()
+		minimized = not minimized
+		if minimized then
+			contentFrame.Visible = false
+			TS:Create(frame, GH.TI, { Size = UDim2.new(0, W, 0, TopbarH) }):Play()
+			minDash.Text = "+"
+		else
+			TS:Create(frame, GH.TI, { Size = UDim2.new(0, W, 0, H) }):Play()
+			minDash.Text = "-"
+			task.delay(0.15, function() contentFrame.Visible = true end)
+		end
+	end)
+
 	-- Close
-	closeBtn.MouseEnter:Connect(function()
-		GH.Services.TweenService:Create(closeBtn, GH.TI, { BackgroundColor3 = GH.Theme.Red }):Play()
-	end)
-	closeBtn.MouseLeave:Connect(function()
-		GH.Services.TweenService:Create(closeBtn, GH.TI, { BackgroundColor3 = GH.Theme.Card }):Play()
-	end)
-	closeBtn.MouseButton1Click:Connect(function()
+	CloseBtn.MouseButton1Click:Connect(function()
 		gui:Destroy()
 		GH._InputPickerGui = nil
 	end)
@@ -1154,7 +1279,7 @@ function GH.ShowInputPicker(title, placeholder, callback)
 			dragInput = input
 		end
 	end)
-	GH.Services.UserInputService.InputChanged:Connect(function(input)
+	UIS.InputChanged:Connect(function(input)
 		if dragging and input == dragInput then
 			local delta = input.Position - dragStart
 			frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
