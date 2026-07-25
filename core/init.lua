@@ -1476,7 +1476,7 @@ function GH.Initialize()
 	-- Processar toggles pendentes dos módulos
 	table.sort(GH.PendingButtons, function(a, b)
 		if a.category == b.category then
-			return a.text:lower() < b.text:lower()
+			return a.localeKey:lower() < b.localeKey:lower()
 		end
 		return a.category < b.category
 	end)
