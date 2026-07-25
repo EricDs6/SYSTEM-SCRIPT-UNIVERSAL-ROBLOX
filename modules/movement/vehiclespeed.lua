@@ -1,55 +1,40 @@
 -- =============================================================================
 -- COMMAND: VEHICLE SPEED
+-- Aumenta velocidade e torque de veiculos
 -- =============================================================================
 return function(GH)
 	local RunService = GH.Services.RunService
 	local LocalPlayer = GH.LocalPlayer
 
-	function Cheats_ToggleVehicleSpeed(state, btn)
-		GH.Disconnect("VehicleSpeed")
+	local vehicleSpeed = 200
 
-		-- Restaurar valores originais do veiculo
-		if not state and GH.Cache.OrigVehicleSpeed then
-			-- Tentar restaurar no veiculo atual
+	function Cheats_ToggleVehicleSpeed(state, btn)
+		GH.UnregisterMasterLoop("VehicleSpeed")
+
+		if not state then return end
+
+		GH.RegisterMasterLoop("VehicleSpeed", "Heartbeat", function()
+			if GH.isClosing or not GH.States.VehicleSpeed then
+				GH.UnregisterMasterLoop("VehicleSpeed")
+				return
+			end
+
 			pcall(function()
-				local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-				if hum and hum.SeatPart and hum.SeatPart:IsA("VehicleSeat") then
-					hum.SeatPart.MaxSpeed = GH.Cache.OrigVehicleSpeed.MaxSpeed
-					hum.SeatPart.Torque = GH.Cache.OrigVehicleSpeed.Torque
+				local char = LocalPlayer.Character
+				if not char then return end
+
+				local hum = char:FindFirstChildOfClass("Humanoid")
+				if hum and hum.SeatPart then
+					local seat = hum.SeatPart
+					if seat:IsA("VehicleSeat") then
+						seat.MaxSpeed = vehicleSpeed
+						seat.Torque = vehicleSpeed * 2
+					end
 				end
 			end)
-			-- Também tentar restaurar no veiculo original
-			if GH.Cache.OrigVehicleSpeed.Seat then
-				pcall(function()
-					local seat = GH.Cache.OrigVehicleSpeed.Seat
-					if seat and seat.Parent then
-						seat.MaxSpeed = GH.Cache.OrigVehicleSpeed.MaxSpeed
-						seat.Torque = GH.Cache.OrigVehicleSpeed.Torque
-					end
-				end)
-			end
-			GH.Cache.OrigVehicleSpeed = nil
-		end
+		end)
 
-		if state then
-			GH.Connections.VehicleSpeed = RunService.Heartbeat:Connect(function()
-				if GH.isClosing or not GH.States.VehicleSpeed then return end
-				pcall(function()
-					local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-					if hum and hum.SeatPart and hum.SeatPart:IsA("VehicleSeat") then
-						if not GH.Cache.OrigVehicleSpeed then
-							GH.Cache.OrigVehicleSpeed = {
-								MaxSpeed = hum.SeatPart.MaxSpeed,
-								Torque = hum.SeatPart.Torque,
-								Seat = hum.SeatPart,
-							}
-						end
-						hum.SeatPart.MaxSpeed = 100
-						hum.SeatPart.Torque = 200
-					end
-				end)
-			end)
-		end
+		GH.ShowToast("Vehicle Speed: " .. vehicleSpeed, GH.Theme.On, 2)
 	end
 
 	GH.RegisterToggleButton("VehicleSpeed", "toggle_vehiclespeed", Cheats_ToggleVehicleSpeed, "Movement", "desc_vehiclespeed")
