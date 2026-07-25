@@ -1767,6 +1767,354 @@ function GH.Initialize()
 	GH.Tabs = TabContainers
 
 	-- ==========================================
+	-- FLUENT-LIKE API for TabContainers
+	-- ==========================================
+	local function WireTabAPI(container)
+		local orderCounter = 0
+
+		function container:AddDropdown(id, config)
+			orderCounter += 1
+			local frame = Instance.new("Frame")
+			frame.Name = id
+			frame.Size = UDim2.new(1, 0, 0, 38)
+			frame.BackgroundColor3 = W11.Surface
+			frame.BorderSizePixel = 0
+			frame.LayoutOrder = orderCounter * 100
+			frame.ZIndex = 4
+			frame.Parent = container
+			Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 5)
+
+			local title = Instance.new("TextLabel")
+			title.Size = UDim2.new(0.6, 0, 0, 14)
+			title.Position = UDim2.new(0, 10, 0, 4)
+			title.BackgroundTransparency = 1
+			title.Text = config.Title or id
+			title.TextColor3 = W11.TextSecondary
+			title.Font = Font
+			title.TextSize = 10
+			title.TextXAlignment = Enum.TextXAlignment.Left
+			title.ZIndex = 5
+			title.Parent = frame
+
+			-- Dropdown button
+			local dropBtn = Instance.new("TextButton")
+			dropBtn.Size = UDim2.new(0.38, -6, 0, 22)
+			dropBtn.Position = UDim2.new(0.6, 4, 0, 8)
+			dropBtn.BackgroundColor3 = W11.OffBG
+			dropBtn.Text = "  Select..."
+			dropBtn.TextColor3 = W11.TextMuted
+			dropBtn.Font = Font
+			dropBtn.TextSize = 10
+			dropBtn.TextXAlignment = Enum.TextXAlignment.Left
+			dropBtn.AutoButtonColor = false
+			dropBtn.ZIndex = 5
+			dropBtn.Parent = frame
+			Instance.new("UICorner", dropBtn).CornerRadius = UDim.new(0, 4)
+
+			-- Arrow indicator
+			local arrow = Instance.new("TextLabel")
+			arrow.Size = UDim2.new(0, 14, 1, 0)
+			arrow.Position = UDim2.new(1, -16, 0, 0)
+			arrow.BackgroundTransparency = 1
+			arrow.Text = "▼"
+			arrow.TextColor3 = W11.TextMuted
+			arrow.Font = Font
+			arrow.TextSize = 8
+			arrow.ZIndex = 6
+			arrow.Parent = dropBtn
+
+			-- Dropdown list (hidden by default)
+			local listFrame = Instance.new("Frame")
+			listFrame.Name = "DropdownList"
+			listFrame.Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, 0)
+			listFrame.Position = UDim2.new(0.6, 4, 0, 32)
+			listFrame.BackgroundColor3 = W11.Surface
+			listFrame.BorderSizePixel = 0
+			listFrame.ClipsDescendants = true
+			listFrame.ZIndex = 20
+			listFrame.Visible = false
+			listFrame.Parent = frame
+			Instance.new("UICorner", listFrame).CornerRadius = UDim.new(0, 4)
+			local listStroke = Instance.new("UIStroke")
+			listStroke.Color = W11.Border
+			listStroke.Thickness = 1
+			listStroke.Parent = listFrame
+
+			local listScroll = Instance.new("ScrollingFrame")
+			listScroll.Size = UDim2.new(1, -4, 1, -4)
+			listScroll.Position = UDim2.new(0, 2, 0, 2)
+			listScroll.BackgroundTransparency = 1
+			listScroll.ScrollBarThickness = 2
+			listScroll.ScrollBarImageColor3 = W11.Accent
+			listScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+			listScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+			listScroll.BorderSizePixel = 0
+			listScroll.ZIndex = 21
+			listScroll.Parent = listFrame
+			Instance.new("UIListLayout", listScroll).Padding = UDim.new(0, 1)
+			listScroll.UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+			local dropdownObj = {
+				Value = nil,
+				_values = config.Values or {},
+				_callbacks = {},
+				_listFrame = listFrame,
+				_dropBtn = dropBtn,
+				_title = title,
+			}
+
+			local function buildList(values)
+				for _, child in ipairs(listScroll:GetChildren()) do
+					if child:IsA("TextButton") then child:Destroy() end
+				end
+				for i, val in ipairs(values) do
+					local opt = Instance.new("TextButton")
+					opt.Name = val
+					opt.Size = UDim2.new(1, 0, 0, 24)
+					opt.BackgroundColor3 = W11.Surface
+					opt.Text = "  " .. tostring(val)
+					opt.TextColor3 = W11.TextSecondary
+					opt.Font = Font
+					opt.TextSize = 10
+					opt.TextXAlignment = Enum.TextXAlignment.Left
+					opt.AutoButtonColor = false
+					opt.LayoutOrder = i
+					opt.ZIndex = 22
+					opt.Parent = listScroll
+					Instance.new("UICorner", opt).CornerRadius = UDim.new(0, 3)
+
+					opt.MouseEnter:Connect(function()
+						TweenService:Create(opt, GH.TI, { BackgroundColor3 = W11.SurfaceHover }):Play()
+					end)
+					opt.MouseLeave:Connect(function()
+						TweenService:Create(opt, GH.TI, { BackgroundColor3 = W11.Surface }):Play()
+					end)
+					opt.MouseButton1Click:Connect(function()
+						dropdownObj.Value = val
+						dropBtn.Text = "  " .. tostring(val)
+						dropBtn.TextColor3 = W11.Text
+						TweenService:Create(listFrame, GH.TI, { Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, 0) }):Play()
+						task.delay(0.15, function() listFrame.Visible = false end)
+						for _, cb in ipairs(dropdownObj._callbacks) do
+							pcall(cb, val)
+						end
+					end)
+				end
+			end
+
+			function dropdownObj:SetValues(values)
+				self._values = values
+				buildList(values)
+			end
+
+			function dropdownObj:OnChanged(callback)
+				table.insert(self._callbacks, callback)
+			end
+
+			function dropdownObj:Destroy()
+				frame:Destroy()
+			end
+
+			buildList(dropdownObj._values)
+
+			-- Toggle list open/close
+			dropBtn.MouseButton1Click:Connect(function()
+				if listFrame.Visible then
+					TweenService:Create(listFrame, GH.TI, { Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, 0) }):Play()
+					task.delay(0.15, function() listFrame.Visible = false end)
+				else
+					listFrame.Visible = true
+					local itemCount = #dropdownObj._values
+					local listH = math.min(itemCount * 25 + 4, 150)
+					TweenService:Create(listFrame, GH.TI, { Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, listH) }):Play()
+				end
+			end)
+
+			-- Update list width when absolute size changes
+			dropBtn:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+				if listFrame.Visible then
+					listFrame.Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, listFrame.Size.Y.Offset)
+				end
+			end)
+
+			return dropdownObj
+		end
+
+		function container:AddSection(title)
+			orderCounter += 1
+			local sectionLabel = Instance.new("TextLabel")
+			sectionLabel.Size = UDim2.new(1, 0, 0, 18)
+			sectionLabel.BackgroundTransparency = 1
+			sectionLabel.Text = "── " .. title .. " ──"
+			sectionLabel.TextColor3 = W11.TextMuted
+			sectionLabel.Font = FontBold
+			sectionLabel.TextSize = 10
+			sectionLabel.TextXAlignment = Enum.TextXAlignment.Left
+			sectionLabel.LayoutOrder = orderCounter * 100
+			sectionLabel.ZIndex = 4
+			sectionLabel.Parent = container
+
+			local sectionObj = {}
+
+			function sectionObj:AddParagraph(config)
+				orderCounter += 1
+				local pFrame = Instance.new("Frame")
+				pFrame.Size = UDim2.new(1, 0, 0, 36)
+				pFrame.BackgroundColor3 = W11.Surface
+				pFrame.BackgroundTransparency = 0.3
+				pFrame.BorderSizePixel = 0
+				pFrame.LayoutOrder = orderCounter * 100
+				pFrame.ZIndex = 4
+				pFrame.Parent = container
+				Instance.new("UICorner", pFrame).CornerRadius = UDim.new(0, 4)
+
+				local pTitle = Instance.new("TextLabel")
+				pTitle.Size = UDim2.new(1, -12, 0, 14)
+				pTitle.Position = UDim2.new(0, 8, 0, 4)
+				pTitle.BackgroundTransparency = 1
+				pTitle.Text = config.Title or ""
+				pTitle.TextColor3 = W11.Text
+				pTitle.Font = FontBold
+				pTitle.TextSize = 10
+				pTitle.TextXAlignment = Enum.TextXAlignment.Left
+				pTitle.ZIndex = 5
+				pTitle.Parent = pFrame
+
+				local pContent = Instance.new("TextLabel")
+				pContent.Size = UDim2.new(1, -12, 0, 14)
+				pContent.Position = UDim2.new(0, 8, 0, 20)
+				pContent.BackgroundTransparency = 1
+				pContent.Text = config.Content or ""
+				pContent.TextColor3 = W11.Accent
+				pContent.Font = Font
+				pContent.TextSize = 10
+				pContent.TextXAlignment = Enum.TextXAlignment.Left
+				pContent.ZIndex = 5
+				pContent.Parent = pFrame
+
+				local pObj = {}
+				function pObj:SetTitle(t) pTitle.Text = t end
+				function pObj:SetDesc(d) pContent.Text = d end
+				function pObj:Destroy() pFrame:Destroy() end
+				return pObj
+			end
+
+			function sectionObj:AddButton(config)
+				orderCounter += 1
+				local bFrame = Instance.new("TextButton")
+				bFrame.Size = UDim2.new(1, 0, 0, 28)
+				bFrame.BackgroundColor3 = W11.AccentDim
+				bFrame.Text = ""
+				bFrame.AutoButtonColor = false
+				bFrame.LayoutOrder = orderCounter * 100
+				bFrame.ZIndex = 4
+				bFrame.Parent = container
+				Instance.new("UICorner", bFrame).CornerRadius = UDim.new(0, 4)
+
+				local bLabel = Instance.new("TextLabel")
+				bLabel.Size = UDim2.new(1, -16, 1, 0)
+				bLabel.Position = UDim2.new(0, 10, 0, 0)
+				bLabel.BackgroundTransparency = 1
+				bLabel.Text = config.Title or "Button"
+				bLabel.TextColor3 = W11.Text
+				bLabel.Font = Font
+				bLabel.TextSize = 11
+				bLabel.TextXAlignment = Enum.TextXAlignment.Left
+				bLabel.ZIndex = 5
+				bLabel.Parent = bFrame
+
+				bFrame.MouseEnter:Connect(function()
+					TweenService:Create(bFrame, GH.TI, { BackgroundColor3 = W11.Accent }):Play()
+				end)
+				bFrame.MouseLeave:Connect(function()
+					TweenService:Create(bFrame, GH.TI, { BackgroundColor3 = W11.AccentDim }):Play()
+				end)
+				bFrame.MouseButton1Click:Connect(function()
+					if config.Callback then pcall(config.Callback) end
+				end)
+
+				local bObj = {}
+				function bObj:Destroy() bFrame:Destroy() end
+				return bObj
+			end
+
+			function sectionObj:AddDropdown(id, config)
+				return container:AddDropdown(id, config)
+			end
+
+			return sectionObj
+		end
+
+		function container:AddInput(id, config)
+			orderCounter += 1
+			local frame = Instance.new("Frame")
+			frame.Name = id
+			frame.Size = UDim2.new(1, 0, 0, 38)
+			frame.BackgroundColor3 = W11.Surface
+			frame.BorderSizePixel = 0
+			frame.LayoutOrder = orderCounter * 100
+			frame.ZIndex = 4
+			frame.Parent = container
+			Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 5)
+
+			local title = Instance.new("TextLabel")
+			title.Size = UDim2.new(1, -12, 0, 14)
+			title.Position = UDim2.new(0, 10, 0, 4)
+			title.BackgroundTransparency = 1
+			title.Text = config.Title or id
+			title.TextColor3 = W11.TextSecondary
+			title.Font = Font
+			title.TextSize = 10
+			title.TextXAlignment = Enum.TextXAlignment.Left
+			title.ZIndex = 5
+			title.Parent = frame
+
+			local inputBox = Instance.new("TextBox")
+			inputBox.Size = UDim2.new(1, -20, 0, 20)
+			inputBox.Position = UDim2.new(0, 10, 0, 20)
+			inputBox.BackgroundColor3 = W11.OffBG
+			inputBox.PlaceholderText = config.Placeholder or ""
+			inputBox.PlaceholderColor3 = W11.TextMuted
+			inputBox.Text = ""
+			inputBox.TextColor3 = W11.Text
+			inputBox.Font = Font
+			inputBox.TextSize = 10
+			inputBox.TextXAlignment = Enum.TextXAlignment.Left
+			inputBox.ClearTextOnFocus = false
+			inputBox.ZIndex = 5
+			inputBox.Parent = frame
+			Instance.new("UICorner", inputBox).CornerRadius = UDim.new(0, 3)
+			Instance.new("UIPadding", inputBox).PaddingLeft = UDim.new(0, 6)
+
+			local inputObj = {}
+
+			if config.Callback then
+				if config.Finished then
+					inputBox.FocusLost:Connect(function(enterPressed)
+						if enterPressed then
+							pcall(config.Callback, inputBox.Text)
+						end
+					end)
+				else
+					inputBox:GetPropertyChangedSignal("Text"):Connect(function()
+						pcall(config.Callback, inputBox.Text)
+					end)
+				end
+			end
+
+			function inputObj:Destroy() frame:Destroy() end
+			return inputObj
+		end
+	end
+
+	-- Wire API to all tab containers
+	for _, cat in ipairs(Categories) do
+		if TabContainers[cat.Name] then
+			WireTabAPI(TabContainers[cat.Name])
+		end
+	end
+
+	-- ==========================================
 	-- CREATE TOGGLE BUTTON (Win11 style)
 	-- ==========================================
 	local function CreateToggle(name, displayName, desc, category, callback)
