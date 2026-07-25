@@ -1,68 +1,51 @@
 -- =============================================================================
 -- COMMAND: NOCLIP
+-- Atravessar paredes e objetos solidos
+-- Abordagem: Stepped direto (estilo FE Cosmic)
 -- =============================================================================
 return function(GH)
+	local Players = GH.Services.Players
 	local RunService = GH.Services.RunService
 	local LocalPlayer = GH.LocalPlayer
 
-	local NoClipDisabledParts = {}
+	local Clip = true
+	local Noclipping = nil
+	local NoclipParts = {}
 
 	function Cheats_ToggleNoClip(state, btn)
-		GH.Disconnect("NoClip")
-		GH.UnregisterMasterLoop("NoClip")
-
-		for p, _ in pairs(NoClipDisabledParts) do
-			if p and p.Parent then GH.SafeCall("NoClip:restore", function() p.CanCollide = true end) end
+		-- Desconectar anterior
+		if Noclipping then
+			pcall(function() Noclipping:Disconnect() end)
+			Noclipping = nil
 		end
-		table.clear(NoClipDisabledParts)
+
+		-- Restaurar CanCollide
+		Clip = true
+		for child, _ in pairs(NoclipParts) do
+			if typeof(child) == "Instance" and child:IsA("BasePart") and child.Parent then
+				pcall(function() child.CanCollide = true end)
+			end
+		end
+		NoclipParts = {}
 
 		if state then
-			local cachedRayParams = RaycastParams.new()
-			cachedRayParams.FilterType = Enum.RaycastFilterType.Exclude
-			local cachedOverlapParams = OverlapParams.new()
-			cachedOverlapParams.FilterType = Enum.RaycastFilterType.Exclude
-
-			GH.RegisterMasterLoop("NoClip", "Heartbeat", function()
-				if GH.isClosing or not GH.States.NoClip then
-					GH.UnregisterMasterLoop("NoClip")
-					for p, _ in pairs(NoClipDisabledParts) do
-						if p and p.Parent then pcall(function() p.CanCollide = true end) end
-					end
-					table.clear(NoClipDisabledParts)
-					return
-				end
-				local char = LocalPlayer.Character
-				local hrp = char and char:FindFirstChild("HumanoidRootPart")
-				if not char or not hrp then return end
-
-				cachedRayParams.FilterDescendantsInstances = { char }
-				cachedOverlapParams.FilterDescendantsInstances = { char }
-
-				local r = GH.Settings.NoClipRadius
-				local parts = workspace:GetPartBoundsInBox(hrp.CFrame, Vector3.new(r, r * 1.4, r), cachedOverlapParams)
-				local currentParts = {}
-
-				for _, p in ipairs(parts) do
-					if p:IsA("BasePart") and p.Name ~= "Terrain" and not p:HasTag("GH_NoClipIgnore") then
-						local parent = p.Parent
-						if parent and not parent:FindFirstChildOfClass("Humanoid") then
-							currentParts[p] = true
-							if p.CanCollide then
-								p.CanCollide = false
-								NoClipDisabledParts[p] = true
+			Clip = false
+			Noclipping = RunService.Stepped:Connect(function()
+				if Clip == false then
+					local char = LocalPlayer.Character
+					if char then
+						for _, child in pairs(char:GetDescendants()) do
+							if child:IsA("BasePart") and child.CanCollide == true then
+								child.CanCollide = false
+								NoclipParts[child] = true
 							end
 						end
 					end
 				end
-
-				for p, _ in pairs(NoClipDisabledParts) do
-					if not currentParts[p] then
-						if p and p.Parent then pcall(function() p.CanCollide = true end) end
-						NoClipDisabledParts[p] = nil
-					end
-				end
 			end)
 		end
+
+		GH.ShowToast(state and ("NoClip " .. GH.T("toast_activated")) or ("NoClip " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
 	GH.RegisterToggleButton("NoClip", "toggle_noclip", Cheats_ToggleNoClip, "Movement", "desc_noclip")
