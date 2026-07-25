@@ -16,7 +16,6 @@ local Theme = {
 	BGDark = Color3.fromRGB(12, 12, 15),
 	Topbar = Color3.fromRGB(22, 22, 26),
 	Card = Color3.fromRGB(28, 28, 32),
-	CardHover = Color3.fromRGB(38, 38, 44),
 	Accent = Color3.fromRGB(80, 140, 255),
 	AccentGlow = Color3.fromRGB(60, 120, 255),
 	AccentDim = Color3.fromRGB(40, 80, 180),
@@ -57,12 +56,12 @@ local Container = Instance.new("Frame")
 Container.Name = "Container"
 Container.AnchorPoint = Vector2.new(0.5, 0.5)
 Container.Position = UDim2.new(0.5, 0, 0.5, 0)
-Container.Size = UDim2.new(0, 340, 0, 200)
+Container.Size = UDim2.new(0, 340, 0, 130)
 Container.BackgroundColor3 = Theme.BG
 Container.BackgroundTransparency = 1
 Container.BorderSizePixel = 0
 Container.Parent = Backdrop
-Instance.new("UICorner", Container).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", Container).CornerRadius = UDim.new(0, 10)
 
 local ContainerStroke = Instance.new("UIStroke")
 ContainerStroke.Color = Theme.Border
@@ -70,177 +69,144 @@ ContainerStroke.Thickness = 1
 ContainerStroke.Transparency = 1
 ContainerStroke.Parent = Container
 
--- Linha de destaque no topo (accent glow bar)
-local AccentBar = Instance.new("Frame")
-AccentBar.Name = "AccentBar"
-AccentBar.Size = UDim2.new(0, 0, 0, 2)
-AccentBar.Position = UDim2.new(0.5, 0, 0, 0)
-AccentBar.AnchorPoint = Vector2.new(0.5, 0)
-AccentBar.BackgroundColor3 = Theme.Accent
-AccentBar.BackgroundTransparency = 0.15
-AccentBar.BorderSizePixel = 0
-AccentBar.Parent = Container
-Instance.new("UICorner", AccentBar).CornerRadius = UDim.new(1, 0)
+-- ==========================================
+-- BARRA SEGMENTADA
+-- ==========================================
+local BAR_SEGMENTS = 20
+local BAR_WIDTH = 290
+local BAR_HEIGHT = 24
+local SEG_GAP = 3
+local SEG_WIDTH = (BAR_WIDTH - (BAR_SEGMENTS - 1) * SEG_GAP) / BAR_SEGMENTS
 
--- Glow da accent bar
-local AccentGlow = Instance.new("Frame")
-AccentGlow.Name = "AccentGlow"
-AccentGlow.Size = UDim2.new(1, 20, 1, 10)
-AccentGlow.Position = UDim2.new(0.5, 0, 0, 0)
-AccentGlow.AnchorPoint = Vector2.new(0.5, 0)
-AccentGlow.BackgroundColor3 = Theme.AccentGlow
-AccentGlow.BackgroundTransparency = 0.92
-AccentGlow.BorderSizePixel = 0
-AccentGlow.ZIndex = 0
-AccentGlow.Parent = Container
-Instance.new("UICorner", AccentGlow).CornerRadius = UDim.new(1, 0)
+local BarContainer = Instance.new("Frame")
+BarContainer.Name = "BarContainer"
+BarContainer.Size = UDim2.new(0, BAR_WIDTH, 0, BAR_HEIGHT)
+BarContainer.Position = UDim2.new(0.5, 0, 0, 30)
+BarContainer.AnchorPoint = Vector2.new(0.5, 0)
+BarContainer.BackgroundTransparency = 1
+BarContainer.Parent = Container
 
--- Topbar
-local Topbar = Instance.new("Frame")
-Topbar.Name = "Topbar"
-Topbar.Size = UDim2.new(1, 0, 0, 44)
-Topbar.Position = UDim2.new(0, 0, 0, 8)
-Topbar.BackgroundTransparency = 1
-Topbar.BorderSizePixel = 0
-Topbar.Parent = Container
+-- Borda externa da barra
+local BarBorder = Instance.new("Frame")
+BarBorder.Name = "BarBorder"
+BarBorder.Size = UDim2.new(1, 6, 1, 6)
+BarBorder.Position = UDim2.new(0, -3, 0, -3)
+BarBorder.BackgroundColor3 = Theme.Border
+BarBorder.BackgroundTransparency = 0.3
+BarBorder.BorderSizePixel = 0
+BarBorder.ZIndex = 0
+BarBorder.Parent = BarContainer
+Instance.new("UICorner", BarBorder).CornerRadius = UDim.new(0, 4)
 
--- Titulo
-local Title = Instance.new("TextLabel")
-Title.Name = "Title"
-Title.Size = UDim2.new(1, -24, 0, 20)
-Title.Position = UDim2.new(0, 16, 0, 2)
-Title.BackgroundTransparency = 1
-Title.Text = "SYSTEM SCRIPT"
-Title.TextColor3 = Theme.Accent
-Title.Font = FontBold
-Title.TextSize = 16
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.TextTransparency = 1
-Title.Parent = Topbar
+-- Fundo da barra
+local BarBg = Instance.new("Frame")
+BarBg.Name = "BarBg"
+BarBg.Size = UDim2.new(1, 0, 1, 0)
+BarBg.BackgroundColor3 = Theme.BGDark
+BarBg.BackgroundTransparency = 0.3
+BarBg.BorderSizePixel = 0
+BarBg.Parent = BarContainer
+Instance.new("UICorner", BarBg).CornerRadius = UDim.new(0, 3)
 
--- Subtitle / versao badge
-local VersionBadge = Instance.new("Frame")
-VersionBadge.Name = "VersionBadge"
-VersionBadge.Size = UDim2.new(0, 36, 0, 16)
-VersionBadge.Position = UDim2.new(0, 16, 0, 24)
-VersionBadge.BackgroundColor3 = Theme.AccentDim
-VersionBadge.BackgroundTransparency = 0.6
-VersionBadge.BorderSizePixel = 0
-VersionBadge.Parent = Topbar
-Instance.new("UICorner", VersionBadge).CornerRadius = UDim.new(0, 4)
+-- Glow da barra
+local BarGlow = Instance.new("Frame")
+BarGlow.Name = "BarGlow"
+BarGlow.Size = UDim2.new(1, 14, 1, 14)
+BarGlow.Position = UDim2.new(0, -7, 0, -7)
+BarGlow.BackgroundColor3 = Theme.AccentGlow
+BarGlow.BackgroundTransparency = 0.94
+BarGlow.BorderSizePixel = 0
+BarGlow.ZIndex = -1
+BarGlow.Parent = BarContainer
+Instance.new("UICorner", BarGlow).CornerRadius = UDim.new(0, 6)
 
-local VersionText = Instance.new("TextLabel")
-VersionText.Name = "VersionText"
-VersionText.Size = UDim2.new(1, 0, 1, 0)
-VersionText.BackgroundTransparency = 1
-VersionText.Text = "v2.0"
-VersionText.TextColor3 = Theme.Accent
-VersionText.Font = FontMono
-VersionText.TextSize = 9
-VersionText.TextTransparency = 1
-VersionText.Parent = VersionBadge
+-- Criar segmentos
+local Segments = {}
+for i = 1, BAR_SEGMENTS do
+	local seg = Instance.new("Frame")
+	seg.Name = "Seg_" .. i
+	seg.Size = UDim2.new(0, SEG_WIDTH, 1, -4)
+	seg.Position = UDim2.new(0, (i - 1) * (SEG_WIDTH + SEG_GAP), 0, 2)
+	seg.BackgroundColor3 = Theme.AccentDim
+	seg.BackgroundTransparency = 1
+	seg.BorderSizePixel = 0
+	seg.Parent = BarContainer
+	Instance.new("UICorner", seg).CornerRadius = UDim.new(0, 2)
 
--- Conteudo
-local Content = Instance.new("Frame")
-Content.Name = "Content"
-Content.Size = UDim2.new(1, -32, 1, -68)
-Content.Position = UDim2.new(0, 16, 0, 60)
-Content.BackgroundTransparency = 1
-Content.Parent = Container
+	Segments[i] = seg
+end
 
--- Status label
-local StatusLabel = Instance.new("TextLabel")
-StatusLabel.Name = "Status"
-StatusLabel.Size = UDim2.new(1, 0, 0, 16)
-StatusLabel.Position = UDim2.new(0, 0, 0, 0)
-StatusLabel.BackgroundTransparency = 1
-StatusLabel.Text = "Inicializando..."
-StatusLabel.TextColor3 = Theme.Text
-StatusLabel.Font = Font
-StatusLabel.TextSize = 12
-StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
-StatusLabel.TextTransparency = 1
-StatusLabel.Parent = Content
-
--- Progress bar container
-local ProgressContainer = Instance.new("Frame")
-ProgressContainer.Name = "ProgressContainer"
-ProgressContainer.Size = UDim2.new(1, 0, 0, 22)
-ProgressContainer.Position = UDim2.new(0, 0, 0, 22)
-ProgressContainer.BackgroundTransparency = 1
-ProgressContainer.Parent = Content
-
--- Progress bar background
-local ProgressBg = Instance.new("Frame")
-ProgressBg.Name = "ProgressBg"
-ProgressBg.Size = UDim2.new(1, 0, 0, 6)
-ProgressBg.Position = UDim2.new(0, 0, 0, 4)
-ProgressBg.BackgroundColor3 = Theme.BGDark
-ProgressBg.BorderSizePixel = 0
-ProgressBg.BackgroundTransparency = 1
-ProgressBg.Parent = ProgressContainer
-Instance.new("UICorner", ProgressBg).CornerRadius = UDim.new(1, 0)
-
--- Progress bar fill
-local ProgressFill = Instance.new("Frame")
-ProgressFill.Name = "Fill"
-ProgressFill.Size = UDim2.new(0, 0, 1, 0)
-ProgressFill.BackgroundColor3 = Theme.Accent
-ProgressFill.BorderSizePixel = 0
-ProgressFill.BackgroundTransparency = 1
-ProgressFill.Parent = ProgressBg
-Instance.new("UICorner", ProgressFill).CornerRadius = UDim.new(1, 0)
-
--- Glow no progress bar
-local ProgressGlow = Instance.new("Frame")
-ProgressGlow.Name = "Glow"
-ProgressGlow.Size = UDim2.new(1, 6, 1, 6)
-ProgressGlow.Position = UDim2.new(0, -3, 0, -3)
-ProgressGlow.BackgroundColor3 = Theme.AccentGlow
-ProgressGlow.BackgroundTransparency = 0.88
-ProgressGlow.BorderSizePixel = 0
-ProgressGlow.ZIndex = 0
-ProgressGlow.Parent = ProgressBg
-Instance.new("UICorner", ProgressGlow).CornerRadius = UDim.new(1, 0)
-
--- Shimmer effect na progress bar
+-- Shimmer effect
 local Shimmer = Instance.new("Frame")
 Shimmer.Name = "Shimmer"
-Shimmer.Size = UDim2.new(0, 60, 1, 0)
-Shimmer.Position = UDim2.new(0, -60, 0, 0)
+Shimmer.Size = UDim2.new(0, 50, 1, 0)
+Shimmer.Position = UDim2.new(0, -50, 0, 0)
 Shimmer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Shimmer.BackgroundTransparency = 0.85
+Shimmer.BackgroundTransparency = 0.82
 Shimmer.BorderSizePixel = 0
-Shimmer.ZIndex = 2
-Shimmer.Parent = ProgressFill
-Instance.new("UICorner", Shimmer).CornerRadius = UDim.new(1, 0)
-Instance.new("UIGradient", Shimmer).Transparency = NumberSequence.new({
+Shimmer.ZIndex = 3
+Shimmer.ClipsDescendants = true
+Shimmer.Parent = BarContainer
+Instance.new("UICorner", Shimmer).CornerRadius = UDim.new(0, 2)
+local shimmerGrad = Instance.new("UIGradient", Shimmer)
+shimmerGrad.Transparency = NumberSequence.new({
 	NumberSequenceKeypoint.new(0, 1),
-	NumberSequenceKeypoint.new(0.4, 0.5),
+	NumberSequenceKeypoint.new(0.35, 0.4),
 	NumberSequenceKeypoint.new(0.5, 0),
-	NumberSequenceKeypoint.new(0.6, 0.5),
+	NumberSequenceKeypoint.new(0.65, 0.4),
 	NumberSequenceKeypoint.new(1, 1),
 })
+
+-- ==========================================
+-- TEXTOS
+-- ==========================================
+-- Loading text (principal)
+local LoadingText = Instance.new("TextLabel")
+LoadingText.Name = "LoadingText"
+LoadingText.Size = UDim2.new(1, -32, 0, 22)
+LoadingText.Position = UDim2.new(0, 16, 0, 64)
+LoadingText.BackgroundTransparency = 1
+LoadingText.Text = "LOADING..."
+LoadingText.TextColor3 = Theme.Text
+LoadingText.Font = FontBold
+LoadingText.TextSize = 15
+LoadingText.TextXAlignment = Enum.TextXAlignment.Left
+LoadingText.TextTransparency = 1
+LoadingText.Parent = Container
 
 -- Percent label
 local ProgressLabel = Instance.new("TextLabel")
 ProgressLabel.Name = "Percent"
-ProgressLabel.Size = UDim2.new(0, 40, 0, 16)
-ProgressLabel.Position = UDim2.new(1, -40, 0, 0)
+ProgressLabel.Size = UDim2.new(0, 50, 0, 22)
+ProgressLabel.Position = UDim2.new(1, -66, 0, 64)
 ProgressLabel.BackgroundTransparency = 1
 ProgressLabel.Text = "0%"
 ProgressLabel.TextColor3 = Theme.TextDim
 ProgressLabel.Font = FontMono
-ProgressLabel.TextSize = 10
+ProgressLabel.TextSize = 11
 ProgressLabel.TextXAlignment = Enum.TextXAlignment.Right
 ProgressLabel.TextTransparency = 1
-ProgressLabel.Parent = ProgressContainer
+ProgressLabel.Parent = Container
+
+-- Status label
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Name = "Status"
+StatusLabel.Size = UDim2.new(1, -32, 0, 14)
+StatusLabel.Position = UDim2.new(0, 16, 0, 92)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = "Inicializando..."
+StatusLabel.TextColor3 = Theme.TextDim
+StatusLabel.Font = Font
+StatusLabel.TextSize = 11
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+StatusLabel.TextTransparency = 1
+StatusLabel.Parent = Container
 
 -- Detail label
 local DetailLabel = Instance.new("TextLabel")
 DetailLabel.Name = "Detail"
-DetailLabel.Size = UDim2.new(1, 0, 0, 14)
-DetailLabel.Position = UDim2.new(0, 0, 0, 50)
+DetailLabel.Size = UDim2.new(1, -32, 0, 12)
+DetailLabel.Position = UDim2.new(0, 16, 0, 108)
 DetailLabel.BackgroundTransparency = 1
 DetailLabel.Text = ""
 DetailLabel.TextColor3 = Theme.TextMuted
@@ -248,20 +214,10 @@ DetailLabel.Font = FontMono
 DetailLabel.TextSize = 9
 DetailLabel.TextXAlignment = Enum.TextXAlignment.Left
 DetailLabel.TextTransparency = 1
-DetailLabel.Parent = Content
-
--- Linha separadora sutil
-local Separator = Instance.new("Frame")
-Separator.Name = "Separator"
-Separator.Size = UDim2.new(1, 0, 0, 1)
-Separator.Position = UDim2.new(0, 0, 0, 46)
-Separator.BackgroundColor3 = Theme.Border
-Separator.BackgroundTransparency = 0.8
-Separator.BorderSizePixel = 0
-Separator.Parent = Content
+DetailLabel.Parent = Container
 
 -- ==========================================
--- ANIMACAO SHIMMER LOOP
+-- SHIMMER LOOP
 -- ==========================================
 local shimmerActive = false
 
@@ -270,14 +226,14 @@ local function startShimmer()
 	shimmerActive = true
 	task.spawn(function()
 		while shimmerActive do
-			Shimmer.Position = UDim2.new(0, -60, 0, 0)
-			Shimmer.BackgroundTransparency = 0.85
-			local tween = TweenService:Create(Shimmer, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+			Shimmer.Position = UDim2.new(0, -50, 0, 0)
+			Shimmer.BackgroundTransparency = 0.82
+			local tween = TweenService:Create(Shimmer, TweenInfo.new(1.0, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
 				Position = UDim2.new(1, 0, 0, 0),
 			})
 			tween:Play()
 			tween.Completed:Wait()
-			task.wait(0.3)
+			task.wait(0.4)
 		end
 	end)
 end
@@ -287,66 +243,85 @@ local function stopShimmer()
 end
 
 -- ==========================================
--- ANIMACAO DE ENTRADA (staggered)
+-- PULSE NA BORDA (efeito breathing)
+-- ==========================================
+local pulseActive = false
+
+local function startPulse()
+	if pulseActive then return end
+	pulseActive = true
+	task.spawn(function()
+		while pulseActive do
+			local t1 = TweenService:Create(ContainerStroke, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				Color = Theme.AccentDim,
+				Transparency = 0.3,
+			})
+			t1:Play()
+			t1.Completed:Wait()
+			local t2 = TweenService:Create(ContainerStroke, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				Color = Theme.Border,
+				Transparency = 0,
+			})
+			t2:Play()
+			t2.Completed:Wait()
+		end
+	end)
+end
+
+local function stopPulse()
+	pulseActive = false
+end
+
+-- ==========================================
+-- ANIMACAO DE ENTRADA
 -- ==========================================
 local function animateIn()
 	local tFast = TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 	local tSlow = TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
-	-- Backdrop primeiro
 	TweenService:Create(Backdrop, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundTransparency = 0.35}):Play()
-
 	task.wait(0.08)
 
-	-- Container
 	TweenService:Create(Container, tSlow, {BackgroundTransparency = 0}):Play()
 	TweenService:Create(ContainerStroke, tSlow, {Transparency = 0}):Play()
-
-	task.wait(0.06)
-
-	-- Accent bar com efeito de expansao
-	TweenService:Create(AccentBar, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0.6, 0, 0, 2)}):Play()
-	TweenService:Create(AccentGlow, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0.6, 26, 1, 10)}):Play()
-
 	task.wait(0.1)
 
-	-- Topbar elements
-	TweenService:Create(Title, tFast, {TextTransparency = 0}):Play()
-	TweenService:Create(VersionBadge, tFast, {BackgroundTransparency = 0.6}):Play()
-	TweenService:Create(VersionText, tFast, {TextTransparency = 0.1}):Play()
+	TweenService:Create(BarBorder, tFast, {BackgroundTransparency = 0.3}):Play()
+	TweenService:Create(BarBg, tFast, {BackgroundTransparency = 0.3}):Play()
+	TweenService:Create(BarGlow, tFast, {BackgroundTransparency = 0.94}):Play()
+	task.wait(0.08)
 
-	task.wait(0.12)
-
-	-- Content
-	TweenService:Create(StatusLabel, tFast, {TextTransparency = 0}):Play()
-	TweenService:Create(ProgressBg, tFast, {BackgroundTransparency = 0}):Play()
-	TweenService:Create(ProgressFill, tFast, {BackgroundTransparency = 0}):Play()
+	-- Loading text aparece
+	TweenService:Create(LoadingText, tFast, {TextTransparency = 0}):Play()
 	TweenService:Create(ProgressLabel, tFast, {TextTransparency = 0}):Play()
+	task.wait(0.1)
+
+	TweenService:Create(StatusLabel, tFast, {TextTransparency = 0}):Play()
 	TweenService:Create(DetailLabel, tFast, {TextTransparency = 0}):Play()
 
 	task.wait(0.3)
 	startShimmer()
+	startPulse()
 end
 
 local function animateOut()
 	stopShimmer()
+	stopPulse()
 	local t = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
 
 	TweenService:Create(Backdrop, t, {BackgroundTransparency = 1}):Play()
 	TweenService:Create(Container, t, {BackgroundTransparency = 1}):Play()
 	TweenService:Create(ContainerStroke, t, {Transparency = 1}):Play()
-	TweenService:Create(AccentBar, t, {BackgroundTransparency = 1}):Play()
-	TweenService:Create(AccentGlow, t, {BackgroundTransparency = 1}):Play()
-	TweenService:Create(Title, t, {TextTransparency = 1}):Play()
-	TweenService:Create(VersionBadge, t, {BackgroundTransparency = 1}):Play()
-	TweenService:Create(VersionText, t, {TextTransparency = 1}):Play()
-	TweenService:Create(StatusLabel, t, {TextTransparency = 1}):Play()
-	TweenService:Create(ProgressBg, t, {BackgroundTransparency = 1}):Play()
-	TweenService:Create(ProgressFill, t, {BackgroundTransparency = 1}):Play()
-	TweenService:Create(ProgressGlow, t, {BackgroundTransparency = 1}):Play()
+	TweenService:Create(BarBorder, t, {BackgroundTransparency = 1}):Play()
+	TweenService:Create(BarBg, t, {BackgroundTransparency = 1}):Play()
+	TweenService:Create(BarGlow, t, {BackgroundTransparency = 1}):Play()
+	for _, seg in ipairs(Segments) do
+		TweenService:Create(seg, t, {BackgroundTransparency = 1}):Play()
+	end
+	TweenService:Create(LoadingText, t, {TextTransparency = 1}):Play()
 	TweenService:Create(ProgressLabel, t, {TextTransparency = 1}):Play()
+	TweenService:Create(StatusLabel, t, {TextTransparency = 1}):Play()
 	TweenService:Create(DetailLabel, t, {TextTransparency = 1}):Play()
-	TweenService:Create(Separator, t, {BackgroundTransparency = 1}):Play()
 
 	task.wait(0.35)
 	LoadGui:Destroy()
@@ -359,6 +334,7 @@ task.wait(0.45)
 -- HELPERS DE STATUS
 -- ==========================================
 local currentProgress = 0
+local litSegments = 0
 
 local function UpdateStatus(text, detail)
 	StatusLabel.Text = text
@@ -369,11 +345,33 @@ end
 
 local function SetProgress(percent, detail)
 	currentProgress = percent
-	local targetSize = UDim2.new(math.clamp(percent / 100, 0, 1), 0, 1, 0)
-	TweenService:Create(ProgressFill, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-		Size = targetSize
-	}):Play()
 	ProgressLabel.Text = math.floor(percent) .. "%"
+
+	-- Calcular quantos segmentos devem estar acesos
+	local targetLit = math.floor((percent / 100) * BAR_SEGMENTS)
+	targetLit = math.clamp(targetLit, 0, BAR_SEGMENTS)
+
+	-- Acender/apagar segmentos com animacao
+	for i = 1, BAR_SEGMENTS do
+		if i <= targetLit and i > litSegments then
+			-- Acender com delay escalonado
+			task.spawn(function()
+				task.wait((i - litSegments) * 0.02)
+				TweenService:Create(Segments[i], TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+					BackgroundTransparency = 0,
+					BackgroundColor3 = Theme.Accent,
+				}):Play()
+			end)
+		elseif i > targetLit and i <= litSegments then
+			-- Apagar
+			TweenService:Create(Segments[i], TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				BackgroundTransparency = 1,
+			}):Play()
+		end
+	end
+
+	litSegments = targetLit
+
 	if detail then
 		DetailLabel.Text = detail
 	end
@@ -422,9 +420,11 @@ local Core = load_and_run("core/init.lua")
 if not Core then
 	UpdateStatus("Erro Critico no Core!", "Abortando...")
 	SetProgress(0)
-	ProgressFill.BackgroundColor3 = Theme.Red
-	AccentBar.BackgroundColor3 = Theme.Red
-	AccentGlow.BackgroundColor3 = Theme.Red
+	for _, seg in ipairs(Segments) do
+		seg.BackgroundColor3 = Theme.Red
+	end
+	LoadingText.Text = "ERRO"
+	LoadingText.TextColor3 = Theme.Red
 	warn("[SYSTEM] Core falhou. Abortando.")
 	task.wait(1.5)
 	animateOut()
@@ -461,13 +461,11 @@ local categories = {
 	}}
 }
 
--- Contar total
 local totalFiles = 0
 for _, cat in ipairs(categories) do
 	totalFiles = totalFiles + #cat.files
 end
 
--- Download paralelo
 local downloaded = {}
 local completed = 0
 
@@ -491,14 +489,12 @@ for _, cat in ipairs(categories) do
 	end
 end
 
--- Esperar downloads
 while completed < totalFiles do
 	task.wait(0.05)
 end
 
 SetProgress(60, "Downloads concluidos")
 
--- Executar comandos
 local executed = 0
 for _, cat in ipairs(categories) do
 	UpdateStatus("Carregando " .. cat.name .. "...", "")
@@ -526,6 +522,7 @@ end
 
 SetProgress(100, "Pronto!")
 UpdateStatus("Tudo pronto!", "Iniciando painel...")
+LoadingText.Text = "COMPLETE"
 task.wait(0.3)
 
 -- ==========================================
