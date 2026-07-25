@@ -1,7 +1,6 @@
 -- =============================================================================
 -- COMMAND: NOCLIP
 -- Atravessar paredes e objetos solidos
--- Abordagem: Stepped direto (estilo FE Cosmic)
 -- =============================================================================
 return function(GH)
 	local Players = GH.Services.Players
@@ -9,15 +8,10 @@ return function(GH)
 	local LocalPlayer = GH.LocalPlayer
 
 	local Clip = true
-	local Noclipping = nil
 	local NoclipParts = {}
 
 	function Cheats_ToggleNoClip(state, btn)
-		-- Desconectar anterior
-		if Noclipping then
-			pcall(function() Noclipping:Disconnect() end)
-			Noclipping = nil
-		end
+		GH.Disconnect("Noclip_Stepped")
 
 		-- Restaurar CanCollide
 		Clip = true
@@ -30,21 +24,19 @@ return function(GH)
 
 		if state then
 			Clip = false
-			Noclipping = RunService.Stepped:Connect(function()
-				if Clip == false then
-					local char = LocalPlayer.Character
-					if char then
-						for _, child in pairs(char:GetDescendants()) do
-							if child:IsA("BasePart") and child.CanCollide == true then
-								child.CanCollide = false
-								NoclipParts[child] = true
-							end
+			GH.Connections.Noclip_Stepped = RunService.Stepped:Connect(function()
+				if Clip then return end
+				local char = LocalPlayer.Character
+				if char then
+					for _, child in pairs(char:GetDescendants()) do
+						if child:IsA("BasePart") and child.CanCollide == true then
+							child.CanCollide = false
+							NoclipParts[child] = true
 						end
 					end
 				end
 			end)
 		end
-
 	end
 
 	GH.RegisterToggleButton("NoClip", "toggle_noclip", Cheats_ToggleNoClip, "Movement", "desc_noclip")

@@ -37,6 +37,7 @@ return function(GH)
 
 	local espFolder = nil
 	local espData = {}
+	local charAddedConns = {}
 
 	local function removerESP()
 		-- Restaurar nome padrao do Roblox
@@ -50,6 +51,12 @@ return function(GH)
 				end
 			end)
 		end
+
+		-- Desconectar CharacterAdded
+		for _, conn in ipairs(charAddedConns) do
+			pcall(function() conn:Disconnect() end)
+		end
+		table.clear(charAddedConns)
 
 		if espFolder then
 			pcall(function() espFolder:Destroy() end)
@@ -202,8 +209,11 @@ return function(GH)
 				criarESP(jogador)
 			end
 
+			-- Armazenar conexoes CharacterAdded para limpar depois
+			local charAddedConns = {}
+
 			GH.Connections.ESP_Added = Players.PlayerAdded:Connect(function(jogador)
-				jogador.CharacterAdded:Connect(function()
+				local conn = jogador.CharacterAdded:Connect(function()
 					if GH.States.ESP then
 						pcall(function()
 							local hum = jogador.Character and jogador.Character:FindFirstChildOfClass("Humanoid")
@@ -213,6 +223,7 @@ return function(GH)
 						criarESP(jogador)
 					end
 				end)
+				table.insert(charAddedConns, conn)
 			end)
 
 			GH.Connections.ESP_Removing = Players.PlayerRemoving:Connect(function(jogador)
@@ -221,7 +232,7 @@ return function(GH)
 
 			for _, jogador in ipairs(Players:GetPlayers()) do
 				if jogador ~= LocalPlayer then
-					jogador.CharacterAdded:Connect(function()
+					local conn = jogador.CharacterAdded:Connect(function()
 						if GH.States.ESP then
 							pcall(function()
 								local hum = jogador.Character and jogador.Character:FindFirstChildOfClass("Humanoid")
@@ -231,6 +242,7 @@ return function(GH)
 							criarESP(jogador)
 						end
 					end)
+					table.insert(charAddedConns, conn)
 				end
 			end
 

@@ -1,7 +1,6 @@
 -- =============================================================================
 -- COMMAND: FLY
 -- Voar pelo mapa com WASD. Scroll ajusta velocidade
--- Baseado no script fly do usuario
 -- =============================================================================
 return function(GH)
 	local UserInputService = GH.Services.UserInputService
@@ -24,9 +23,10 @@ return function(GH)
 
 	local function stopFly()
 		flying = false
-		GH.Disconnect("Fly")
-		GH.Disconnect("FlyScroll")
-		GH.Disconnect("FlyInput")
+		GH.Disconnect("Fly_Render")
+		GH.Disconnect("Fly_InputBegan")
+		GH.Disconnect("Fly_InputEnded")
+		GH.Disconnect("Fly_Scroll")
 
 		local char = LocalPlayer.Character
 		if not char then return end
@@ -67,7 +67,8 @@ return function(GH)
 
 		local cam = workspace.CurrentCamera
 
-		GH.Connections.Fly = RunService.RenderStepped:Connect(function(deltaTime)
+		-- RenderStepped: mover o player
+		GH.Connections.Fly_Render = RunService.RenderStepped:Connect(function(deltaTime)
 			if not flying or not GH.States.Fly then
 				stopFly()
 				return
@@ -78,7 +79,6 @@ return function(GH)
 				return
 			end
 
-			-- Atualizar camera
 			cam = workspace.CurrentCamera
 			if not cam then return end
 
@@ -89,27 +89,18 @@ return function(GH)
 			local lookVec = cam.CFrame.LookVector
 			local rightVec = cam.CFrame.RightVector
 
-			-- Direcao horizontal plana (sem componente Y)
 			local flatLook = Vector3.new(lookVec.X, 0, lookVec.Z)
-			if flatLook.Magnitude > 0 then
-				flatLook = flatLook.Unit
-			end
+			if flatLook.Magnitude > 0 then flatLook = flatLook.Unit end
 
 			local flatRight = Vector3.new(rightVec.X, 0, rightVec.Z)
-			if flatRight.Magnitude > 0 then
-				flatRight = flatRight.Unit
-			end
+			if flatRight.Magnitude > 0 then flatRight = flatRight.Unit end
 
 			local moveDir = (flatLook * moveV) + (flatRight * moveH) + Vector3.new(0, vert, 0)
-
-			if moveDir.Magnitude > 0 then
-				moveDir = moveDir.Unit
-			end
+			if moveDir.Magnitude > 0 then moveDir = moveDir.Unit end
 
 			local currentSpeed = flySpeed * flySpeedMult * (keys.LeftShift and boostMultiplier or 1)
 			local newPos = hrp.Position + (moveDir * currentSpeed * deltaTime)
 
-			-- Rotacao apenas no eixo Y (sem tremedeira)
 			local lookAt = newPos + flatLook
 			hrp.CFrame = CFrame.lookAt(newPos, lookAt)
 
@@ -117,25 +108,24 @@ return function(GH)
 			hrp.AssemblyAngularVelocity = Vector3.zero
 		end)
 
-		-- Input: teclas de movimento
-		GH.Connections.FlyInput = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		-- InputBegan: pressionar teclas
+		GH.Connections.Fly_InputBegan = UserInputService.InputBegan:Connect(function(input, gameProcessed)
 			if gameProcessed then return end
 			if not GH.States.Fly then return end
-
 			if keys[input.KeyCode.Name] ~= nil then
 				keys[input.KeyCode.Name] = true
 			end
 		end)
 
-		local function onInputEnded(input)
+		-- InputEnded: soltar teclas
+		GH.Connections.Fly_InputEnded = UserInputService.InputEnded:Connect(function(input)
 			if keys[input.KeyCode.Name] ~= nil then
 				keys[input.KeyCode.Name] = false
 			end
-		end
-		UserInputService.InputEnded:Connect(onInputEnded)
+		end)
 
 		-- Scroll: ajustar velocidade
-		GH.Connections.FlyScroll = UserInputService.InputChanged:Connect(function(input)
+		GH.Connections.Fly_Scroll = UserInputService.InputChanged:Connect(function(input)
 			if not GH.States.Fly then return end
 			if input.UserInputType == Enum.UserInputType.MouseWheel then
 				local dir = input.Position.Z > 0 and 1 or -1
@@ -145,14 +135,11 @@ return function(GH)
 	end
 
 	function Cheats_ToggleFly(state, btn)
-		-- Cleanup anterior
 		stopFly()
-
 		if state then
 			flySpeedMult = 1
 			startFly()
 		end
-
 	end
 
 	-- Parar fly ao morrer/respawnar
@@ -160,7 +147,6 @@ return function(GH)
 		if GH.States.Fly then
 			task.wait(0.5)
 			stopFly()
-			-- Reativar se estava ativo
 			if GH.States.Fly then
 				startFly()
 			end
