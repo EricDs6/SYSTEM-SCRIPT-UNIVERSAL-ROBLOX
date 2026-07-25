@@ -37,10 +37,17 @@ GH.Locales = {
 		-- Stats
 		stats_section = "Estatisticas",
 		stats_online = "Usuarios Online",
-	_stats_injections = "Injecoes Totais",
+		_stats_injections = "Injecoes Totais",
 		stats_device = "Meu Device",
 		stats_status = "Status",
 		stats_active = "Ativo",
+		-- Update info
+		update_section = "Atualizacao",
+		update_version = "Versao",
+		update_date = "Data da Atualizacao",
+		update_commit = "Ultimo Commit",
+		update_loading = "Carregando...",
+		update_error = "Erro ao buscar",
 		-- Toasts
 		toast_activated = "Ativado!",
 		toast_deactivated = "Desativado!",
@@ -232,6 +239,13 @@ GH.Locales = {
 		stats_device = "My Device",
 		stats_status = "Status",
 		stats_active = "Active",
+		-- Update info
+		update_section = "Update Info",
+		update_version = "Version",
+		update_date = "Last Update",
+		update_commit = "Latest Commit",
+		update_loading = "Loading...",
+		update_error = "Failed to fetch",
 		-- Toasts
 		toast_activated = "Enabled!",
 		toast_deactivated = "Disabled!",
@@ -423,6 +437,13 @@ GH.Locales = {
 		stats_device = "Mi Dispositivo",
 		stats_status = "Estado",
 		stats_active = "Activo",
+		-- Update info
+		update_section = "Info de Actualizacion",
+		update_version = "Version",
+		update_date = "Ultima Actualizacion",
+		update_commit = "Ultimo Commit",
+		update_loading = "Cargando...",
+		update_error = "Error al obtener",
 		-- Toasts
 		toast_activated = "Activado!",
 		toast_deactivated = "Desactivado!",
@@ -1579,6 +1600,97 @@ function GH.Initialize()
 	InterfaceManager:SetFolder("SystemScript")
 	InterfaceManager:BuildInterfaceSection(SettingsTab)
 	SaveManager:BuildConfigSection(SettingsTab)
+
+	-- ==========================================
+	-- UPDATE INFO (busca automatica do GitHub)
+	-- ==========================================
+	local UpdateSection = SettingsTab:AddSection(GH.T("update_section"))
+
+	local UpdateVersion = UpdateSection:AddParagraph({
+		Title = GH.T("update_version"),
+		Content = GH.T("update_loading"),
+	})
+
+	local UpdateDate = UpdateSection:AddParagraph({
+		Title = GH.T("update_date"),
+		Content = GH.T("update_loading"),
+	})
+
+	local UpdateCommit = UpdateSection:AddParagraph({
+		Title = GH.T("update_commit"),
+		Content = GH.T("update_loading"),
+	})
+
+	-- Buscar info do GitHub automaticamente
+	task.spawn(function()
+		local ok, result = pcall(function()
+			return game:HttpGet("https://api.github.com/repos/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/commits/main", true)
+		end)
+
+		if ok and result then
+			local HttpService = game:GetService("HttpService")
+			local data = HttpService:JSONDecode(result)
+
+			if data and data.commit then
+				-- Versao (curto hash)
+				local sha = data.sha or "N/A"
+				local shortSha = string.sub(sha, 1, 7)
+
+				-- Data do commit
+				local dateRaw = data.commit.author and data.commit.author.date or "N/A"
+				-- Formatar: 2025-01-15T14:30:00Z -> 15/01/2025 14:30
+				local year, month, day, hour, min = dateRaw:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+)")
+				local dateFormatted = "N/A"
+				if year then
+					dateFormatted = day .. "/" .. month .. "/" .. year .. " " .. hour .. ":" .. min
+				end
+
+				-- Mensagem do commit (primeira linha)
+				local msg = data.commit.message or "N/A"
+				local firstLine = msg:match("^[^\n]+") or msg
+				if #firstLine > 50 then
+					firstLine = string.sub(firstLine, 1, 47) .. "..."
+				end
+
+				pcall(function()
+					UpdateVersion:SetDesc(shortSha)
+					UpdateDate:SetDesc(dateFormatted)
+					UpdateCommit:SetDesc(firstLine)
+				end)
+			end
+		else
+			pcall(function()
+				UpdateVersion:SetDesc(GH.T("update_error"))
+				UpdateDate:SetDesc(GH.T("update_error"))
+				UpdateCommit:SetDesc(GH.T("update_error"))
+			end)
+		end
+	end)
+
+	-- Atualizar a cada 5 minutos
+	task.spawn(function()
+		while true do
+			task.wait(300)
+			pcall(function()
+				local ok, result = pcall(function()
+					return game:HttpGet("https://api.github.com/repos/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/commits/main", true)
+				end)
+
+				if ok and result then
+					local HttpService = game:GetService("HttpService")
+					local data = HttpService:JSONDecode(result)
+
+					if data and data.commit then
+						local dateRaw = data.commit.author and data.commit.author.date or "N/A"
+						local year, month, day, hour, min = dateRaw:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+)")
+						if year then
+							UpdateDate:SetDesc(day .. "/" .. month .. "/" .. year .. " " .. hour .. ":" .. min)
+						end
+					end
+				end
+			end)
+		end
+	end)
 
 	-- ==========================================
 	-- INPUT MANAGER GLOBAL CONNECTIONS
