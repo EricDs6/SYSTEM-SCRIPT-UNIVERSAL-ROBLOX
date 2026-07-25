@@ -6,19 +6,19 @@ return function(GH)
 
 	function Cheats_ToggleFullbright(state, btn)
 		if state then
-			GH.Cache.OrigBrightness = Lighting.Brightness
-			GH.Cache.OrigClockTime = Lighting.ClockTime
-			GH.Cache.OrigAmbient = Lighting.Ambient
-			GH.Cache.OrigOutdoorAmbient = Lighting.OutdoorAmbient
+			GH.Cache.OrigFBBrightness = Lighting.Brightness
+			GH.Cache.OrigFBClockTime = Lighting.ClockTime
+			GH.Cache.OrigFBAmbient = Lighting.Ambient
+			GH.Cache.OrigFBOutdoorAmbient = Lighting.OutdoorAmbient
 			Lighting.Brightness = 2
 			Lighting.ClockTime = 14
 			Lighting.Ambient = Color3.fromRGB(200, 200, 200)
 			Lighting.OutdoorAmbient = Color3.fromRGB(200, 200, 200)
 		else
-			Lighting.Brightness = GH.Cache.OrigBrightness or 1
-			Lighting.ClockTime = GH.Cache.OrigClockTime or 14
-			Lighting.Ambient = GH.Cache.OrigAmbient or Color3.fromRGB(128, 128, 128)
-			Lighting.OutdoorAmbient = GH.Cache.OrigOutdoorAmbient or Color3.fromRGB(128, 128, 128)
+			Lighting.Brightness = GH.Cache.OrigFBBrightness or 1
+			Lighting.ClockTime = GH.Cache.OrigFBClockTime or 14
+			Lighting.Ambient = GH.Cache.OrigFBAmbient or Color3.fromRGB(128, 128, 128)
+			Lighting.OutdoorAmbient = GH.Cache.OrigFBOutdoorAmbient or Color3.fromRGB(128, 128, 128)
 		end
 	end
 

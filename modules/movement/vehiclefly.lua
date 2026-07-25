@@ -24,7 +24,16 @@ return function(GH)
 			if h then h.PlatformStand = false end
 		end
 
+		-- Restaurar FlySpeed original
+		if not state and GH.Cache.OrigVehicleFlySpeed then
+			GH.FlySpeed = GH.Cache.OrigVehicleFlySpeed
+			GH.Cache.OrigVehicleFlySpeed = nil
+		end
+
 		if not state then return end
+
+		-- Salvar FlySpeed original antes de modificar
+		GH.Cache.OrigVehicleFlySpeed = GH.FlySpeed
 
 		local char = LocalPlayer.Character
 		local hum = char and char:FindFirstChildOfClass("Humanoid")

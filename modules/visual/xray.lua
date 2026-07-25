@@ -42,6 +42,7 @@ return function(GH)
 				end
 			end)
 		else
+			GH.Disconnect("XRayLoop")
 			for _, part in ipairs(GH.Cache.XRayParts) do
 				if part and part.Parent then
 					part.LocalTransparencyModifier = (GH.Cache.XRayOriginals and GH.Cache.XRayOriginals[part]) or 0

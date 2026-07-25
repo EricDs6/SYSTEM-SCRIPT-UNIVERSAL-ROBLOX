@@ -10,6 +10,7 @@ return function(GH)
 		GH.UnregisterMasterLoop("Float")
 		GH.Disconnect("FloatKeyQ")
 		GH.Disconnect("FloatKeyE")
+		GH.Disconnect("FloatKeyEnded")
 		GH.Disconnect("FloatLoop")
 
 		local char = LocalPlayer.Character
@@ -46,7 +47,7 @@ return function(GH)
 				end
 			end)
 
-			UserInputService.InputEnded:Connect(function(input)
+			GH.Connections.FloatKeyEnded = UserInputService.InputEnded:Connect(function(input)
 				if not GH.States.Float then return end
 				if input.KeyCode == Enum.KeyCode.Q then
 					FloatValue = FloatValue + 0.5

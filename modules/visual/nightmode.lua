@@ -6,10 +6,10 @@ return function(GH)
 
 	function Cheats_ToggleNightMode(state, btn)
 		if state then
-			GH.Cache.OrigBrightness = Lighting.Brightness
-			GH.Cache.OrigClockTime = Lighting.ClockTime
-			GH.Cache.OrigAmbient = Lighting.Ambient
-			GH.Cache.OrigOutdoorAmbient = Lighting.OutdoorAmbient
+			GH.Cache.OrigNightBrightness = Lighting.Brightness
+			GH.Cache.OrigNightClockTime = Lighting.ClockTime
+			GH.Cache.OrigNightAmbient = Lighting.Ambient
+			GH.Cache.OrigNightOutdoorAmbient = Lighting.OutdoorAmbient
 			Lighting.Brightness = 0
 			Lighting.ClockTime = 0
 			Lighting.Ambient = Color3.fromRGB(25, 25, 35)
@@ -23,10 +23,10 @@ return function(GH)
 				bloom.Parent = Lighting
 			end
 		else
-			Lighting.Brightness = GH.Cache.OrigBrightness or 1
-			Lighting.ClockTime = GH.Cache.OrigClockTime or 14
-			Lighting.Ambient = GH.Cache.OrigAmbient or Color3.fromRGB(128, 128, 128)
-			Lighting.OutdoorAmbient = GH.Cache.OrigOutdoorAmbient or Color3.fromRGB(128, 128, 128)
+			Lighting.Brightness = GH.Cache.OrigNightBrightness or 1
+			Lighting.ClockTime = GH.Cache.OrigNightClockTime or 14
+			Lighting.Ambient = GH.Cache.OrigNightAmbient or Color3.fromRGB(128, 128, 128)
+			Lighting.OutdoorAmbient = GH.Cache.OrigNightOutdoorAmbient or Color3.fromRGB(128, 128, 128)
 			local bloom = Lighting:FindFirstChild("GH_NightBloom")
 			if bloom then bloom:Destroy() end
 		end

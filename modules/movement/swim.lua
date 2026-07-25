@@ -25,6 +25,9 @@ return function(GH)
 			GH.Connections.SwimDied = hum.Died:Connect(function()
 				workspace.Gravity = GH.Cache.SwimOldGravity or 196.2
 				GH.States.Swim = false
+				if btn and btn.SetValue then
+					pcall(function() btn:SetValue(false) end)
+				end
 			end)
 
 			GH.RegisterMasterLoop("Swim", "Heartbeat", function()

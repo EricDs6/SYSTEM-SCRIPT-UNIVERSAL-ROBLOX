@@ -21,6 +21,7 @@ return function(GH)
 	local CacheTracers = { Lines = {} }
 
 	function Cheats_ToggleTracers(state, btn)
+		GH.Disconnect("TracersLoop")
 		for player, line in pairs(CacheTracers.Lines) do
 			TracerPool:release(line)
 			CacheTracers.Lines[player] = nil

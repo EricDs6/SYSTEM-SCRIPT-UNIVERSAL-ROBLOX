@@ -1207,10 +1207,10 @@ function GH.FullCleanup()
 
 	-- NightMode/Fullbright: restaurar Lighting
 	pcall(function()
-		Lighting.Brightness = GH.Cache.OrigBrightness or 1
-		Lighting.ClockTime = GH.Cache.OrigClockTime or 14
-		Lighting.Ambient = GH.Cache.OrigAmbient or Color3.fromRGB(128, 128, 128)
-		Lighting.OutdoorAmbient = GH.Cache.OrigOutdoorAmbient or Color3.fromRGB(128, 128, 128)
+		Lighting.Brightness = GH.Cache.OrigNightBrightness or GH.Cache.OrigFBBrightness or 1
+		Lighting.ClockTime = GH.Cache.OrigNightClockTime or GH.Cache.OrigFBClockTime or 14
+		Lighting.Ambient = GH.Cache.OrigNightAmbient or GH.Cache.OrigFBAmbient or Color3.fromRGB(128, 128, 128)
+		Lighting.OutdoorAmbient = GH.Cache.OrigNightOutdoorAmbient or GH.Cache.OrigFBOutdoorAmbient or Color3.fromRGB(128, 128, 128)
 		local bloom = Lighting:FindFirstChild("GH_NightBloom")
 		if bloom then bloom:Destroy() end
 	end)
@@ -1327,6 +1327,22 @@ function GH.FullCleanup()
 		end)
 	end
 	table.clear(GH.Cache.OrigHRPSizes)
+
+	-- Restaurar Head Sizes
+	if GH.Cache.OrigHeadSizes then
+		for player, origSize in pairs(GH.Cache.OrigHeadSizes) do
+			pcall(function()
+				if player.Character then
+					local head = player.Character:FindFirstChild("Head")
+					if head and head:IsA("BasePart") then
+						head.Size = origSize
+						head.CanCollide = true
+					end
+				end
+			end)
+		end
+		table.clear(GH.Cache.OrigHeadSizes)
+	end
 
 	-- Limpar SelectionBoxes
 	pcall(function()

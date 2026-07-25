@@ -10,12 +10,14 @@ return function(GH)
 
 	function Cheats_ToggleBreakVelocity(state, btn)
 		if state then
-			local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+			local char = LocalPlayer.Character
+			if not char then return end
+			local hrp = char:FindFirstChild("HumanoidRootPart")
 			if hrp then
 				hrp.AssemblyLinearVelocity = Vector3.zero
 				hrp.AssemblyAngularVelocity = Vector3.zero
 			end
-			for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+			for _, part in ipairs(char:GetDescendants()) do
 				if part:IsA("BasePart") then
 					part.AssemblyLinearVelocity = Vector3.zero
 					part.AssemblyAngularVelocity = Vector3.zero

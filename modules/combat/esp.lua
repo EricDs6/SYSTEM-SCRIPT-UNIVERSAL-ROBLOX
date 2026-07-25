@@ -39,13 +39,20 @@ return function(GH)
 	end
 
 	function Cheats_ToggleESP(state, btn)
-		GH.Disconnect("ESP_GlobalLoop")
+		GH.UnregisterMasterLoop("ESP")
 		GH.Disconnect("ESP_Added")
 		GH.Disconnect("ESP_Removing")
 		GH.Disconnect("ESP_TeamChanged")
 		for name, _ in pairs(GH.Connections) do
 			if name:sub(1, 10) == "ESP_Team_" then
 				GH.Disconnect(name)
+			end
+		end
+
+		-- Desconectar CharacterAdded connections antes de limpar
+		for player, conn in pairs(GH.Cache.ESPPlayers) do
+			if typeof(conn) == "RBXScriptConnection" then
+				pcall(function() conn:Disconnect() end)
 			end
 		end
 
@@ -170,7 +177,7 @@ return function(GH)
 			end)
 
 			GH.Connections.ESP_TeamChanged = Players.PlayerAdded:Connect(function(player)
-				player:GetPropertyChangedSignal("Team"):Connect(function()
+				local conn = player:GetPropertyChangedSignal("Team"):Connect(function()
 					if GH.States.ESP and player.Character then
 						for _, obj in ipairs(player.Character:GetChildren()) do
 							if obj.Name:sub(1, 6) == "GH_ESP" then obj:Destroy() end
@@ -178,10 +185,11 @@ return function(GH)
 						if player.Character then setupPlayer(player) end
 					end
 				end)
+				GH.Connections["ESP_Team_" .. player.Name] = conn
 			end)
 			for _, p in ipairs(Players:GetPlayers()) do
 				if p ~= LocalPlayer then
-					p:GetPropertyChangedSignal("Team"):Connect(function()
+					local conn = p:GetPropertyChangedSignal("Team"):Connect(function()
 						if GH.States.ESP and p.Character then
 							for _, obj in ipairs(p.Character:GetChildren()) do
 								if obj.Name:sub(1, 6) == "GH_ESP" then obj:Destroy() end
@@ -189,6 +197,7 @@ return function(GH)
 							if p.Character then setupPlayer(p) end
 						end
 					end)
+					GH.Connections["ESP_Team_" .. p.Name] = conn
 				end
 			end
 

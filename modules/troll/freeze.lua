@@ -3,6 +3,7 @@
 -- =============================================================================
 return function(GH)
 	local Players = GH.Services.Players
+	local LocalPlayer = GH.LocalPlayer
 
 	function Cheats_ToggleFreeze(state, btn)
 		if state then

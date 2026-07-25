@@ -13,6 +13,23 @@ return function(GH)
 			GH.Objects.HeadSizeDropdown:Destroy()
 			GH.Objects.HeadSizeDropdown = nil
 		end
+
+		-- Restaurar tamanhos originais das cabecas
+		if GH.Cache.OrigHeadSizes then
+			for player, origSize in pairs(GH.Cache.OrigHeadSizes) do
+				pcall(function()
+					if player.Character then
+						local head = player.Character:FindFirstChild("Head")
+						if head and head:IsA("BasePart") then
+							head.Size = origSize
+							head.CanCollide = true
+						end
+					end
+				end)
+			end
+			table.clear(GH.Cache.OrigHeadSizes)
+		end
+
 		if not state then return end
 
 		local function refreshList()
@@ -46,6 +63,10 @@ return function(GH)
 				local player = Players:FindFirstChild(name)
 				local head = player and player.Character and player.Character:FindFirstChild("Head")
 				if head and head:IsA("BasePart") then
+					if not GH.Cache.OrigHeadSizes then GH.Cache.OrigHeadSizes = {} end
+					if not GH.Cache.OrigHeadSizes[player] then
+						GH.Cache.OrigHeadSizes[player] = head.Size
+					end
 					head.Size = Vector3.new(5, 5, 5)
 					head.CanCollide = false
 					GH.ShowToast(string.format(GH.T("toast_head_amplified"), name), GH.Theme.Red, 2)
