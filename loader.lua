@@ -196,11 +196,18 @@ for _, cat in ipairs(categories) do
     UpdateStatus("Carregando " .. cat.name .. "...")
     for _, fileName in ipairs(cat.files) do
         local key = cat.name .. "/" .. fileName
-        local fn = downloaded[key]
-        if fn then
-            local ok, result = pcall(fn, Core)
-            if not ok then
-                warn("[SYSTEM] Erro em " .. key .. ": " .. tostring(result))
+        local loadFn = downloaded[key]
+        if loadFn then
+            -- Primeiro executa o loadstring para obter a funcao do comando
+            local ok1, cmdFn = pcall(loadFn)
+            if ok1 and type(cmdFn) == "function" then
+                -- Depois chama a funcao do comando passando o Core (GH)
+                local ok2, err2 = pcall(cmdFn, Core)
+                if not ok2 then
+                    warn("[SYSTEM] Erro ao executar " .. key .. ": " .. tostring(err2))
+                end
+            else
+                warn("[SYSTEM] Erro de sintaxe em " .. key .. ": " .. tostring(cmdFn))
             end
         else
             warn("[SYSTEM] Falha ao baixar: " .. key)
