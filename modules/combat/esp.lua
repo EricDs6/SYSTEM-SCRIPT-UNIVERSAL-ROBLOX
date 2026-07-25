@@ -70,7 +70,7 @@ return function(GH)
 		local head = char:FindFirstChild("Head")
 		if not head then return end
 
-		-- Esconder nome padrao do Roblox (remover BillboardGuis que nao sao do ESP)
+		-- Esconder nome padrao do Roblox
 		local hum = char:FindFirstChildOfClass("Humanoid")
 		if hum then
 			hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
@@ -78,17 +78,6 @@ return function(GH)
 		for _, obj in ipairs(char:GetDescendants()) do
 			if obj:IsA("BillboardGui") and not obj.Name:find("GH_ESP") then
 				pcall(function() obj.Enabled = false end)
-			end
-			if obj:IsA("TextLabel") and not obj.Name:find("GH_ESP") then
-				if obj.Text == jogador.Name or obj.Text == jogador.DisplayName then
-					pcall(function() obj.Visible = false end)
-				end
-			end
-		end
-		-- Also check for SurfaceGui name tags
-		for _, obj in ipairs(head:GetChildren()) do
-			if obj:IsA("BillboardGui") and not obj.Name:find("GH_ESP") then
-				pcall(function() obj:Destroy() end)
 			end
 		end
 
@@ -115,7 +104,7 @@ return function(GH)
 		bg.AlwaysOnTop = true
 		bg.Parent = espFolder
 
-		-- Tag (TEAM / ENEMY / PLAYER)
+		-- Tag
 		local tagLabel = Instance.new("TextLabel")
 		tagLabel.Name = "GH_ESP_Tag"
 		tagLabel.Size = UDim2.new(1, 0, 0, 16)
@@ -160,11 +149,11 @@ return function(GH)
 		distLabel.TextXAlignment = Enum.TextXAlignment.Center
 		distLabel.Parent = bg
 
-		-- === BARRA DE VIDA HORIZONTAL (fundo escuro) ===
+		-- Barra de vida
 		local hpBarBg = Instance.new("Frame")
 		hpBarBg.Name = "GH_ESP_HpBarBg"
 		hpBarBg.Size = UDim2.new(0.5, 0, 0, 5)
-		hpBarBg.Position = UDim2.new(0.25, 0, 0, 46)
+		hpBarBg.Position = UDim2.new(0.25, 0, 0, 44)
 		hpBarBg.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 		hpBarBg.BackgroundTransparency = 0.2
 		hpBarBg.BorderSizePixel = 1
@@ -172,21 +161,19 @@ return function(GH)
 		hpBarBg.Parent = bg
 		Instance.new("UICorner", hpBarBg).CornerRadius = UDim.new(1, 0)
 
-		-- === PREENCHIMENTO ===
 		local hpBarFill = Instance.new("Frame")
 		hpBarFill.Name = "GH_ESP_HpBarFill"
 		hpBarFill.Size = UDim2.new(1, 0, 1, 0)
-		hpBarFill.Position = UDim2.new(0, 0, 0, 0)
 		hpBarFill.BackgroundColor3 = colors.Main
 		hpBarFill.BorderSizePixel = 0
 		hpBarFill.Parent = hpBarBg
 		Instance.new("UICorner", hpBarFill).CornerRadius = UDim.new(1, 0)
 
-		-- Texto da vida (abaixo da barra)
+		-- Texto HP
 		local hpText = Instance.new("TextLabel")
 		hpText.Name = "GH_ESP_HpText"
 		hpText.Size = UDim2.new(1, 0, 0, 10)
-		hpText.Position = UDim2.new(0, 0, 0, 51)
+		hpText.Position = UDim2.new(0, 0, 0, 49)
 		hpText.BackgroundTransparency = 1
 		hpText.Text = "100/100"
 		hpText.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -218,7 +205,6 @@ return function(GH)
 			GH.Connections.ESP_Added = Players.PlayerAdded:Connect(function(jogador)
 				jogador.CharacterAdded:Connect(function()
 					if GH.States.ESP then
-						-- Esconder nome padrao no respawn
 						pcall(function()
 							local hum = jogador.Character and jogador.Character:FindFirstChildOfClass("Humanoid")
 							if hum then hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None end
@@ -237,7 +223,6 @@ return function(GH)
 				if jogador ~= LocalPlayer then
 					jogador.CharacterAdded:Connect(function()
 						if GH.States.ESP then
-							-- Esconder nome padrao no respawn
 							pcall(function()
 								local hum = jogador.Character and jogador.Character:FindFirstChildOfClass("Humanoid")
 								if hum then hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None end
@@ -260,29 +245,11 @@ return function(GH)
 
 				for jogador, data in pairs(espData) do
 					pcall(function()
-						if not (jogador and jogador.Parent and jogador.Character) then return end
-
-						local char = jogador.Character
-						local head = char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart")
-						local hum = char:FindFirstChildOfClass("Humanoid")
 						local bg = data.gui
 						local hl = data.hl
-						if not (head and hum and bg and bg.Parent) then return end
+						if not (bg and bg.Parent) then return end
 
-						-- Distancia
-						local dist = (myPos - head.Position).Magnitude
-						local isFar = dist > GH.Settings.ESPMaxDistance
-
-						if isFar then
-							bg.Enabled = false
-							if hl then hl.Enabled = false end
-							return
-						end
-
-						bg.Enabled = true
-						if hl then hl.Enabled = true end
-
-						-- Aplicar configs PRIMEIRO (antes de qualquer continue)
+						-- === PASSO 1: Aplicar configs em TODOS (sempre) ===
 						local tagLabel = bg:FindFirstChild("GH_ESP_Tag")
 						local nameLabel = bg:FindFirstChild("GH_ESP_Name")
 						local hpBarBg = bg:FindFirstChild("GH_ESP_HpBarBg")
@@ -293,32 +260,57 @@ return function(GH)
 						if hpBarBg then hpBarBg.Visible = GH.Settings.ESPShowHealth end
 						if distLabel then distLabel.Visible = GH.Settings.ESPShowDistance end
 
-						-- Relation
+						-- === PASSO 2: Verificar se player existe ===
+						if not (jogador and jogador.Parent and jogador.Character) then
+							bg.Enabled = false
+							if hl then hl.Enabled = false end
+							return
+						end
+
+						local char = jogador.Character
+						local head = char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart")
+						local hum = char:FindFirstChildOfClass("Humanoid")
+						if not (head and hum) then
+							bg.Enabled = false
+							if hl then hl.Enabled = false end
+							return
+						end
+
+						-- === PASSO 3: Distancia ===
+						local dist = (myPos - head.Position).Magnitude
+
+						if dist > GH.Settings.ESPMaxDistance then
+							bg.Enabled = false
+							if hl then hl.Enabled = false end
+							return
+						end
+
+						bg.Enabled = true
+						if hl then hl.Enabled = true end
+
+						-- === PASSO 4: Cores e dados ===
 						local relation = GetPlayerRelation(jogador)
 						if not relation then return end
 						local colors = ESPColors[relation]
 
-						-- Tag
 						if tagLabel then
 							tagLabel.Text = colors.Tag
 							tagLabel.TextColor3 = colors.Main
 						end
 
-						-- Highlight cor
 						if hl then
 							hl.OutlineColor = colors.Main
 						end
 
-						-- Nome
-						if nameLabel then nameLabel.Text = jogador.Name end
+						if nameLabel then
+							nameLabel.Text = jogador.Name
+						end
 
-						-- Vida
 						dist = math.floor(dist)
 						local hp = math.floor(hum.Health)
 						local maxHp = math.floor(hum.MaxHealth)
 						local ratio = maxHp > 0 and math.clamp(hp / maxHp, 0, 1) or 0
 
-						-- Barra de vida
 						if hpBarBg then
 							local hpBarFill = hpBarBg:FindFirstChild("GH_ESP_HpBarFill")
 							if hpBarFill then
@@ -337,7 +329,6 @@ return function(GH)
 							end
 						end
 
-						-- Distancia
 						if distLabel then
 							distLabel.Text = dist .. "M"
 						end
@@ -345,7 +336,6 @@ return function(GH)
 				end
 			end)
 		end
-
 	end
 
 	GH.RegisterToggleButton("ESP", "toggle_esp", Cheats_ToggleESP, "Combat", "desc_esp")
