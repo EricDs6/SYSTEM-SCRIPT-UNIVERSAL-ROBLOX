@@ -885,8 +885,8 @@ end
 function GH.RefreshUI()
 	for _, pending in ipairs(GH.PendingButtons) do
 		local btn = GH.Buttons[pending.name]
-		if btn and btn:IsA("TextButton") then
-			local lbl = btn:FindFirstChild("GH_ToggleLabel")
+		if btn and btn.Instance then
+			local lbl = btn.Instance:FindFirstChild("GH_ToggleLabel")
 			if lbl then
 				pcall(function() lbl.Text = "  " .. GH.T(pending.localeKey) end)
 			end
@@ -1684,10 +1684,10 @@ function GH.Initialize()
 	for _, cat in ipairs(Categories) do
 		local btn = Instance.new("TextButton")
 		btn.Name = cat.Name
-		btn.Size = UDim2.new(1, -4, 0, 26)
-		btn.BackgroundColor3 = (cat.Name == ActiveTab) and Color3.fromRGB(10, 35, 60) or Color3.fromRGB(25, 25, 30)
+		btn.Size = UDim2.new(1, -4, 0, 30)
+		btn.BackgroundColor3 = (cat.Name == ActiveTab) and Color3.fromRGB(10, 35, 60) or Color3.fromRGB(30, 30, 36)
 		btn.Text = "  " .. cat.Name
-		btn.TextColor3 = (cat.Name == ActiveTab) and W11.Accent or Color3.fromRGB(170, 170, 180)
+		btn.TextColor3 = (cat.Name == ActiveTab) and W11.Accent or Color3.fromRGB(200, 200, 210)
 		btn.Font = FontBold
 		btn.TextSize = 11
 		btn.TextXAlignment = Enum.TextXAlignment.Left
@@ -1697,16 +1697,27 @@ function GH.Initialize()
 		btn.Parent = Sidebar
 		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
 
+		-- Active indicator bar on left
+		local indicator = Instance.new("Frame")
+		indicator.Name = "Indicator"
+		indicator.Size = UDim2.new(0, 2, 0, 16)
+		indicator.Position = UDim2.new(0, 0, 0.5, -8)
+		indicator.BackgroundColor3 = W11.Accent
+		indicator.BorderSizePixel = 0
+		indicator.ZIndex = 6
+		indicator.Visible = (cat.Name == ActiveTab)
+		indicator.Parent = btn
+
 		btn.MouseEnter:Connect(function()
 			if ActiveTab ~= cat.Name then
-				TweenService:Create(btn, GH.TI, { BackgroundColor3 = Color3.fromRGB(35, 35, 42) }):Play()
-				TweenService:Create(btn, GH.TI, { TextColor3 = Color3.fromRGB(220, 220, 225) }):Play()
+				TweenService:Create(btn, GH.TI, { BackgroundColor3 = Color3.fromRGB(40, 40, 48) }):Play()
+				TweenService:Create(btn, GH.TI, { TextColor3 = Color3.fromRGB(235, 235, 240) }):Play()
 			end
 		end)
 		btn.MouseLeave:Connect(function()
 			if ActiveTab ~= cat.Name then
-				TweenService:Create(btn, GH.TI, { BackgroundColor3 = Color3.fromRGB(25, 25, 30) }):Play()
-				TweenService:Create(btn, GH.TI, { TextColor3 = Color3.fromRGB(170, 170, 180) }):Play()
+				TweenService:Create(btn, GH.TI, { BackgroundColor3 = Color3.fromRGB(30, 30, 36) }):Play()
+				TweenService:Create(btn, GH.TI, { TextColor3 = Color3.fromRGB(200, 200, 210) }):Play()
 			end
 		end)
 
@@ -1732,11 +1743,14 @@ function GH.Initialize()
 			if ActiveTab == cat.Name then return end
 			if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = false end
 			if TabButtons[ActiveTab] then
-				TweenService:Create(TabButtons[ActiveTab], GH.TI, { BackgroundColor3 = Color3.fromRGB(25, 25, 30), TextColor3 = Color3.fromRGB(170, 170, 180) }):Play()
+				TweenService:Create(TabButtons[ActiveTab], GH.TI, { BackgroundColor3 = Color3.fromRGB(30, 30, 36), TextColor3 = Color3.fromRGB(200, 200, 210) }):Play()
+				local oldIndicator = TabButtons[ActiveTab]:FindFirstChild("Indicator")
+				if oldIndicator then oldIndicator.Visible = false end
 			end
 			ActiveTab = cat.Name
 			if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = true end
 			TweenService:Create(btn, GH.TI, { BackgroundColor3 = Color3.fromRGB(10, 35, 60), TextColor3 = W11.Accent }):Play()
+			indicator.Visible = true
 		end)
 
 		TabButtons[cat.Name] = btn
@@ -1837,6 +1851,16 @@ function GH.Initialize()
 			end
 		end)
 
+		-- Proxy table (Roblox Instances are sealed, can't add custom methods)
+		local proxy = {
+			Instance = frame,
+			Value = false,
+			SetValue = function(self, state) self.Value = state; setToggle(state) end,
+			SetTitle = function(_, text) label.Text = "  " .. text end,
+			SetDesc = function(_, d) local dl = frame:FindFirstChild("GH_DescLabel"); if dl then dl.Text = "  " .. d end end,
+			IsA = function(_, className) return frame:IsA(className) end,
+		}
+
 		frame.MouseButton1Click:Connect(function()
 			local newState = not GH.States[name]
 			setToggle(newState)
@@ -1844,16 +1868,10 @@ function GH.Initialize()
 				local toastMsg = displayName .. (newState and (" " .. GH.T("toast_activated")) or (" " .. GH.T("toast_deactivated")))
 				GH.ShowToast(toastMsg, newState and W11.On or W11.TextSecondary, 2)
 			end
-			pcall(callback, newState, frame)
+			pcall(callback, newState, proxy)
 		end)
 
-		-- Compatibilidade com modulos que chamam btn:SetValue/SetTitle/SetDesc
-		frame.SetValue = function(_, state) setToggle(state) end
-		frame.SetTitle = function(_, text) label.Text = "  " .. text end
-		frame.SetDesc = function(_, d) local dl = frame:FindFirstChild("GH_DescLabel"); if dl then dl.Text = "  " .. d end end
-		frame.Value = false
-
-		GH.Buttons[name] = frame
+		GH.Buttons[name] = proxy
 		GH.Callbacks[name] = callback
 	end
 
