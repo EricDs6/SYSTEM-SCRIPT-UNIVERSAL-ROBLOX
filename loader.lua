@@ -133,33 +133,47 @@ if not Core then
 end
 
 -- ==========================================
--- 2. MÓDULOS POR CATEGORIA
+-- 2. MÓDULOS MODULARES (arquivos individuais)
 -- ==========================================
-local modules = {
-    { path = "modules/combat.lua",   name = "Combat" },
-    { path = "modules/movement.lua", name = "Movement" },
-    { path = "modules/visual.lua",   name = "Visual" },
-    { path = "modules/utility.lua",  name = "Utility" },
-    { path = "modules/troll.lua",    name = "Troll" }
+local categories = {
+    { name = "Combat", files = {
+        "esp", "hitbox", "triggerbot", "silentaim", "nofling",
+        "wallbang", "infinitehealth", "killaura", "nofalldamage", "headsize"
+    }},
+    { name = "Movement", files = {
+        "fly", "noclip", "sprint", "speed", "infinitejump", "bunnyhop",
+        "teleportplayer", "blink", "vehiclespeed", "nojumpcooldown",
+        "float", "swim", "vehiclegoto", "walkto", "orbit", "headsit",
+        "vehiclefly", "spectate", "gotopart"
+    }},
+    { name = "Visual", files = {
+        "xray", "nightmode", "fullbright", "tracers", "crosshair", "fovchanger"
+    }},
+    { name = "Utility", files = {
+        "clicktp", "gravity", "customspawn", "freecam", "flashback", "coords",
+        "serverrejoin", "autoclicker", "proximityinstant", "antiafk", "antikick",
+        "autocollect", "fireclickdetectors", "fireproximityprompts", "btools",
+        "breakvelocity", "invisibleparts"
+    }},
+    { name = "Troll", files = {
+        "trollfling", "targetfling", "spasms", "naked", "freeze"
+    }}
 }
 
-for _, mod in ipairs(modules) do
-    UpdateStatus("Carregando " .. mod.name .. "...")
-    
-    local fn = fetch_module(mod.path)
-    
-    if fn then
-        local ok, result = pcall(fn, Core)
-        if not ok then
-            warn("[SYSTEM] Erro no módulo " .. mod.name .. ": " .. tostring(result))
-        elseif type(result) == "function" then
-            local ok2, err2 = pcall(result, Core)
-            if not ok2 then
-                warn("[SYSTEM] Erro ao executar módulo " .. mod.name .. ": " .. tostring(err2))
+for _, cat in ipairs(categories) do
+    for _, fileName in ipairs(cat.files) do
+        local path = "modules/" .. cat.name:lower() .. "/" .. fileName .. ".lua"
+        UpdateStatus(cat.name .. ": " .. fileName)
+
+        local fn = fetch_module(path)
+        if fn then
+            local ok, result = pcall(fn, Core)
+            if not ok then
+                warn("[SYSTEM] Erro em " .. path .. ": " .. tostring(result))
             end
+        else
+            warn("[SYSTEM] Falha ao baixar: " .. path)
         end
-    else
-        warn("[SYSTEM] Módulo não encontrado: " .. mod.path)
     end
 end
 
