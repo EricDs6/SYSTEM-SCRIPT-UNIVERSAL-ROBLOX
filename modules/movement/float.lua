@@ -72,5 +72,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("Float", GH.T("toggle_float"), Cheats_ToggleFloat, "Movement", GH.T("desc_float"))
+	GH.RegisterToggleButton("Float", "toggle_float", Cheats_ToggleFloat, "Movement", "desc_float")
 end

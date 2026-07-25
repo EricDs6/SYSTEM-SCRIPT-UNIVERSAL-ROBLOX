@@ -66,5 +66,5 @@ return function(GH)
 		end)
 	end
 
-	GH.RegisterToggleButton("Spectate", GH.T("toggle_spectate"), Cheats_ToggleSpectate, "Movement", GH.T("desc_spectate"))
+	GH.RegisterToggleButton("Spectate", "toggle_spectate", Cheats_ToggleSpectate, "Movement", "desc_spectate")
 end

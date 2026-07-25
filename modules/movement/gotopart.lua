@@ -37,5 +37,5 @@ return function(GH)
 		GH.Objects.GotoPartInput = input
 	end
 
-	GH.RegisterToggleButton("GotoPart", GH.T("toggle_gotopart"), Cheats_ToggleGotoPart, "Movement", GH.T("desc_gotopart"))
+	GH.RegisterToggleButton("GotoPart", "toggle_gotopart", Cheats_ToggleGotoPart, "Movement", "desc_gotopart")
 end

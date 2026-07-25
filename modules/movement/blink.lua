@@ -22,5 +22,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("Blink", GH.T("toggle_blink"), Cheats_ToggleBlink, "Movement", GH.T("desc_blink"))
+	GH.RegisterToggleButton("Blink", "toggle_blink", Cheats_ToggleBlink, "Movement", "desc_blink")
 end

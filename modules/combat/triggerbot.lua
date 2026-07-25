@@ -43,5 +43,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("TriggerBot", GH.T("toggle_triggerbot"), Cheats_ToggleTriggerBot, "Combat", GH.T("desc_triggerbot"))
+	GH.RegisterToggleButton("TriggerBot", "toggle_triggerbot", Cheats_ToggleTriggerBot, "Combat", "desc_triggerbot")
 end

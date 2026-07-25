@@ -141,5 +141,5 @@ return function(GH)
 		end)
 	end
 
-	GH.RegisterToggleButton("Fly", GH.T("toggle_fly"), Cheats_ToggleFly, "Movement", GH.T("desc_fly"))
+	GH.RegisterToggleButton("Fly", "toggle_fly", Cheats_ToggleFly, "Movement", "desc_fly")
 end

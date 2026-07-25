@@ -132,5 +132,5 @@ return function(GH)
 		end)
 	end
 
-	GH.RegisterToggleButton("Hitbox", GH.T("toggle_hitbox"), Cheats_ToggleHitbox, "Combat", GH.T("desc_hitbox"))
+	GH.RegisterToggleButton("Hitbox", "toggle_hitbox", Cheats_ToggleHitbox, "Combat", "desc_hitbox")
 end

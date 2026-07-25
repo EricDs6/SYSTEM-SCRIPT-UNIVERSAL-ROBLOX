@@ -42,5 +42,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("Crosshair", GH.T("toggle_crosshair"), Cheats_ToggleCrosshair, "Visual", GH.T("desc_crosshair"))
+	GH.RegisterToggleButton("Crosshair", "toggle_crosshair", Cheats_ToggleCrosshair, "Visual", "desc_crosshair")
 end

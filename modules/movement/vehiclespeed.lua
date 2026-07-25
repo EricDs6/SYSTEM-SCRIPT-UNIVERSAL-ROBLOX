@@ -21,5 +21,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("VehicleSpeed", GH.T("toggle_vehiclespeed"), Cheats_ToggleVehicleSpeed, "Movement", GH.T("desc_vehiclespeed"))
+	GH.RegisterToggleButton("VehicleSpeed", "toggle_vehiclespeed", Cheats_ToggleVehicleSpeed, "Movement", "desc_vehiclespeed")
 end

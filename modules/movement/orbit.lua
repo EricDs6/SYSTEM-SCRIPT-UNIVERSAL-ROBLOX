@@ -84,5 +84,5 @@ return function(GH)
 		end)
 	end
 
-	GH.RegisterToggleButton("Orbit", GH.T("toggle_orbit"), Cheats_ToggleOrbit, "Movement", GH.T("desc_orbit"))
+	GH.RegisterToggleButton("Orbit", "toggle_orbit", Cheats_ToggleOrbit, "Movement", "desc_orbit")
 end

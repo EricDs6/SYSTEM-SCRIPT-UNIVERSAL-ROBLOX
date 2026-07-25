@@ -22,5 +22,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("Fullbright", GH.T("toggle_fullbright"), Cheats_ToggleFullbright, "Visual", GH.T("desc_fullbright"))
+	GH.RegisterToggleButton("Fullbright", "toggle_fullbright", Cheats_ToggleFullbright, "Visual", "desc_fullbright")
 end

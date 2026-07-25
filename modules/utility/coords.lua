@@ -106,5 +106,5 @@ return function(GH)
 		end)
 	end
 
-	GH.RegisterToggleButton("Coords", GH.T("toggle_coords"), Cheats_ToggleCoords, "Utility", GH.T("desc_coords"))
+	GH.RegisterToggleButton("Coords", "toggle_coords", Cheats_ToggleCoords, "Utility", "desc_coords")
 end

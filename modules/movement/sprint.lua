@@ -26,5 +26,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("Sprint", GH.T("toggle_sprint"), Cheats_ToggleSprint, "Movement", GH.T("desc_sprint"))
+	GH.RegisterToggleButton("Sprint", "toggle_sprint", Cheats_ToggleSprint, "Movement", "desc_sprint")
 end

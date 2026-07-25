@@ -61,5 +61,5 @@ return function(GH)
 		end)
 	end
 
-	GH.RegisterToggleButton("TeleportPlayer", GH.T("toggle_teleportplayer"), Cheats_ToggleTeleportPlayer, "Movement", GH.T("desc_teleportplayer"))
+	GH.RegisterToggleButton("TeleportPlayer", "toggle_teleportplayer", Cheats_ToggleTeleportPlayer, "Movement", "desc_teleportplayer")
 end

@@ -31,5 +31,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("ClickTP", GH.T("toggle_clicktp"), Cheats_ToggleTPTool, "Utility", GH.T("desc_clicktp"))
+	GH.RegisterToggleButton("ClickTP", "toggle_clicktp", Cheats_ToggleTPTool, "Utility", "desc_clicktp")
 end

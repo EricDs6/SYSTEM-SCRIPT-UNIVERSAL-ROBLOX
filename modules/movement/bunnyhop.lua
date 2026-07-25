@@ -19,5 +19,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("BunnyHop", GH.T("toggle_bunnyhop"), Cheats_ToggleBunnyHop, "Movement", GH.T("desc_bunnyhop"))
+	GH.RegisterToggleButton("BunnyHop", "toggle_bunnyhop", Cheats_ToggleBunnyHop, "Movement", "desc_bunnyhop")
 end

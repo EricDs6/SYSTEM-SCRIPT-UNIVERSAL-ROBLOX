@@ -21,5 +21,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("FireProximityPrompts", GH.T("toggle_fireproximityprompts"), Cheats_ToggleFireProximityPrompts, "Utility", GH.T("desc_fireproximityprompts"))
+	GH.RegisterToggleButton("FireProximityPrompts", "toggle_fireproximityprompts", Cheats_ToggleFireProximityPrompts, "Utility", "desc_fireproximityprompts")
 end

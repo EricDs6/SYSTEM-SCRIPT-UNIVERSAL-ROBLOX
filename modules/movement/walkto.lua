@@ -74,5 +74,5 @@ return function(GH)
 		end)
 	end
 
-	GH.RegisterToggleButton("WalkTo", GH.T("toggle_walkto"), Cheats_ToggleWalkTo, "Movement", GH.T("desc_walkto"))
+	GH.RegisterToggleButton("WalkTo", "toggle_walkto", Cheats_ToggleWalkTo, "Movement", "desc_walkto")
 end

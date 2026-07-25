@@ -50,5 +50,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("Flashback", GH.T("toggle_flashback"), Cheats_ToggleFlashback, "Utility", GH.T("desc_flashback"))
+	GH.RegisterToggleButton("Flashback", "toggle_flashback", Cheats_ToggleFlashback, "Utility", "desc_flashback")
 end

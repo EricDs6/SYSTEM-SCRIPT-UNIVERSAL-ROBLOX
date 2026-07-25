@@ -42,5 +42,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("Spasms", GH.T("toggle_spasms"), Cheats_ToggleSpasmos, "Troll", GH.T("desc_spasms"))
+	GH.RegisterToggleButton("Spasms", "toggle_spasms", Cheats_ToggleSpasmos, "Troll", "desc_spasms")
 end

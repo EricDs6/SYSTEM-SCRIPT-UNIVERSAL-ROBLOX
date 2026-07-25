@@ -72,5 +72,5 @@ return function(GH)
 		end)
 	end
 
-	GH.RegisterToggleButton("Tracers", GH.T("toggle_tracers"), Cheats_ToggleTracers, "Visual", GH.T("desc_tracers"))
+	GH.RegisterToggleButton("Tracers", "toggle_tracers", Cheats_ToggleTracers, "Visual", "desc_tracers")
 end

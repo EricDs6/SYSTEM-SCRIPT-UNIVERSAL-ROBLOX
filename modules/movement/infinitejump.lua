@@ -16,5 +16,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("InfiniteJump", GH.T("toggle_infinitejump"), Cheats_ToggleInfiniteJump, "Movement", GH.T("desc_infinitejump"))
+	GH.RegisterToggleButton("InfiniteJump", "toggle_infinitejump", Cheats_ToggleInfiniteJump, "Movement", "desc_infinitejump")
 end

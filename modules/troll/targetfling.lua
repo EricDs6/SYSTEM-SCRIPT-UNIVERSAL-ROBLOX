@@ -122,5 +122,5 @@ return function(GH)
 		end)
 	end
 
-	GH.RegisterToggleButton("TargetFling", GH.T("toggle_targetfling"), Cheats_ToggleTargetFling, "Troll", GH.T("desc_targetfling"))
+	GH.RegisterToggleButton("TargetFling", "toggle_targetfling", Cheats_ToggleTargetFling, "Troll", "desc_targetfling")
 end

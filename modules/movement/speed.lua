@@ -14,5 +14,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("Speed", GH.T("toggle_speed"), Cheats_ToggleSpeed, "Movement", GH.T("desc_speed"))
+	GH.RegisterToggleButton("Speed", "toggle_speed", Cheats_ToggleSpeed, "Movement", "desc_speed")
 end

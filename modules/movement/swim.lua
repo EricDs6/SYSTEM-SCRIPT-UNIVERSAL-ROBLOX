@@ -65,5 +65,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("Swim", GH.T("toggle_swim"), Cheats_ToggleSwim, "Movement", GH.T("desc_swim"))
+	GH.RegisterToggleButton("Swim", "toggle_swim", Cheats_ToggleSwim, "Movement", "desc_swim")
 end

@@ -52,5 +52,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("XRay", GH.T("toggle_xray"), Cheats_ToggleXRay, "Visual", GH.T("desc_xray"))
+	GH.RegisterToggleButton("XRay", "toggle_xray", Cheats_ToggleXRay, "Visual", "desc_xray")
 end

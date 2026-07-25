@@ -68,5 +68,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("TrollFling", GH.T("toggle_trollfling"), Cheats_ToggleTrollFling, "Troll", GH.T("desc_trollfling"))
+	GH.RegisterToggleButton("TrollFling", "toggle_trollfling", Cheats_ToggleTrollFling, "Troll", "desc_trollfling")
 end

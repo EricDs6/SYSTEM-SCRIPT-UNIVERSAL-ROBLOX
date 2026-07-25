@@ -38,5 +38,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("AutoCollect", GH.T("toggle_autocollect"), Cheats_ToggleAutoCollect, "Utility", GH.T("desc_autocollect"))
+	GH.RegisterToggleButton("AutoCollect", "toggle_autocollect", Cheats_ToggleAutoCollect, "Utility", "desc_autocollect")
 end

@@ -17,5 +17,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("Gravity", GH.T("toggle_gravity"), Cheats_ToggleGravity, "Utility", GH.T("desc_gravity"))
+	GH.RegisterToggleButton("Gravity", "toggle_gravity", Cheats_ToggleGravity, "Utility", "desc_gravity")
 end

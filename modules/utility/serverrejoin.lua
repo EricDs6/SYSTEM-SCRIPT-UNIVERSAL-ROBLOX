@@ -18,5 +18,5 @@ return function(GH)
 		task.delay(2, function() GH.States.ServerRejoin = false end)
 	end
 
-	GH.RegisterToggleButton("ServerRejoin", GH.T("toggle_serverrejoin"), Cheats_ToggleServerRejoin, "Utility", GH.T("desc_serverrejoin"))
+	GH.RegisterToggleButton("ServerRejoin", "toggle_serverrejoin", Cheats_ToggleServerRejoin, "Utility", "desc_serverrejoin")
 end

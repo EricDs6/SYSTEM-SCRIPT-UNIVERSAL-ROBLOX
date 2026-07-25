@@ -26,5 +26,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("AntiKick", GH.T("toggle_antikick"), Cheats_ToggleAntiKick, "Utility", GH.T("desc_antikick"))
+	GH.RegisterToggleButton("AntiKick", "toggle_antikick", Cheats_ToggleAntiKick, "Utility", "desc_antikick")
 end

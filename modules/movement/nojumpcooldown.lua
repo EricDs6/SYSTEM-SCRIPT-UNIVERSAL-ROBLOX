@@ -30,5 +30,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("NoJumpCooldown", GH.T("toggle_nojumpcooldown"), Cheats_ToggleNoJumpCooldown, "Movement", GH.T("desc_nojumpcooldown"))
+	GH.RegisterToggleButton("NoJumpCooldown", "toggle_nojumpcooldown", Cheats_ToggleNoJumpCooldown, "Movement", "desc_nojumpcooldown")
 end

@@ -30,5 +30,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("InvisibleParts", GH.T("toggle_invisibleparts"), Cheats_ToggleInvisibleParts, "Utility", GH.T("desc_invisible_parts"))
+	GH.RegisterToggleButton("InvisibleParts", "toggle_invisibleparts", Cheats_ToggleInvisibleParts, "Utility", "desc_invisible_parts")
 end

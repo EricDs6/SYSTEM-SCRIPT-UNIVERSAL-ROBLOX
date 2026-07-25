@@ -46,5 +46,5 @@ return function(GH)
 		GH.ShowToast(state and ("No Fling " .. GH.T("toast_activated")) or ("No Fling " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
-	GH.RegisterToggleButton("NoFling", GH.T("toggle_nofling"), Cheats_ToggleNoFling, "Combat", GH.T("desc_nofling"))
+	GH.RegisterToggleButton("NoFling", "toggle_nofling", Cheats_ToggleNoFling, "Combat", "desc_nofling")
 end

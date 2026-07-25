@@ -30,5 +30,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("Freeze", GH.T("toggle_freeze"), Cheats_ToggleFreeze, "Troll", GH.T("desc_freeze"))
+	GH.RegisterToggleButton("Freeze", "toggle_freeze", Cheats_ToggleFreeze, "Troll", "desc_freeze")
 end

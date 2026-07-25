@@ -276,5 +276,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("ESP", GH.T("toggle_esp"), Cheats_ToggleESP, "Combat", GH.T("desc_esp"))
+	GH.RegisterToggleButton("ESP", "toggle_esp", Cheats_ToggleESP, "Combat", "desc_esp")
 end

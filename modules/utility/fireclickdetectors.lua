@@ -21,5 +21,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("FireClickDetectors", GH.T("toggle_fireclickdetectors"), Cheats_ToggleFireClickDetectors, "Utility", GH.T("desc_fireclickdetectors"))
+	GH.RegisterToggleButton("FireClickDetectors", "toggle_fireclickdetectors", Cheats_ToggleFireClickDetectors, "Utility", "desc_fireclickdetectors")
 end

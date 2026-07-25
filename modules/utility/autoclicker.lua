@@ -29,5 +29,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("AutoClicker", GH.T("toggle_autoclicker"), Cheats_ToggleAutoClicker, "Utility", GH.T("desc_autoclicker"))
+	GH.RegisterToggleButton("AutoClicker", "toggle_autoclicker", Cheats_ToggleAutoClicker, "Utility", "desc_autoclicker")
 end

@@ -179,5 +179,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("Freecam", GH.T("toggle_freecam"), Cheats_ToggleFreecam, "Utility", GH.T("desc_freecam"))
+	GH.RegisterToggleButton("Freecam", "toggle_freecam", Cheats_ToggleFreecam, "Utility", "desc_freecam")
 end

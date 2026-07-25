@@ -76,5 +76,5 @@ return function(GH)
 		end)
 	end
 
-	GH.RegisterToggleButton("HeadSit", GH.T("toggle_headsit"), Cheats_ToggleHeadSit, "Movement", GH.T("desc_headsit"))
+	GH.RegisterToggleButton("HeadSit", "toggle_headsit", Cheats_ToggleHeadSit, "Movement", "desc_headsit")
 end

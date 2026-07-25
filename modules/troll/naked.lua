@@ -18,5 +18,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("Naked", GH.T("toggle_naked"), Cheats_ToggleNaked, "Troll", GH.T("desc_naked"))
+	GH.RegisterToggleButton("Naked", "toggle_naked", Cheats_ToggleNaked, "Troll", "desc_naked")
 end

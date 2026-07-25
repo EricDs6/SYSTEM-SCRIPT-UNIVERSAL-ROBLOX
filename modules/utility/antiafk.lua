@@ -30,5 +30,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("AntiAFK", GH.T("toggle_antiafk"), Cheats_ToggleAntiAFK, "Utility", GH.T("desc_antiafk"))
+	GH.RegisterToggleButton("AntiAFK", "toggle_antiafk", Cheats_ToggleAntiAFK, "Utility", "desc_antiafk")
 end

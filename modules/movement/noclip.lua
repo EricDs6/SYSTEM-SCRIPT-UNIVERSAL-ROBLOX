@@ -65,5 +65,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("NoClip", GH.T("toggle_noclip"), Cheats_ToggleNoClip, "Movement", GH.T("desc_noclip"))
+	GH.RegisterToggleButton("NoClip", "toggle_noclip", Cheats_ToggleNoClip, "Movement", "desc_noclip")
 end

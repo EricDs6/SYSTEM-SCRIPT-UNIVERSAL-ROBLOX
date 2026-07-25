@@ -19,5 +19,5 @@ return function(GH)
 		GH.ShowToast(state and ("Infinite Health " .. GH.T("toast_activated")) or ("Infinite Health " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
-	GH.RegisterToggleButton("InfiniteHealth", GH.T("toggle_infinitehealth"), Cheats_ToggleInfiniteHealth, "Combat", GH.T("desc_infinitehealth"))
+	GH.RegisterToggleButton("InfiniteHealth", "toggle_infinitehealth", Cheats_ToggleInfiniteHealth, "Combat", "desc_infinitehealth")
 end

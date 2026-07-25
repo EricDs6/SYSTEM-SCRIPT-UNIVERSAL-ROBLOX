@@ -62,5 +62,5 @@ return function(GH)
 		end)
 	end
 
-	GH.RegisterToggleButton("CustomSpawn", GH.T("toggle_customspawn"), Cheats_ToggleCustomSpawn, "Utility", GH.T("desc_customspawn"))
+	GH.RegisterToggleButton("CustomSpawn", "toggle_customspawn", Cheats_ToggleCustomSpawn, "Utility", "desc_customspawn")
 end

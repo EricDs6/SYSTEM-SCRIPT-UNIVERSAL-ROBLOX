@@ -1474,39 +1474,50 @@ function GH.Initialize()
 	GH.Tabs = Tabs
 
 	-- Processar toggles pendentes dos módulos
-	table.sort(GH.PendingButtons, function(a, b)
-		if a.category == b.category then
-			return a.localeKey:lower() < b.localeKey:lower()
-		end
-		return a.category < b.category
+	if #GH.PendingButtons == 0 then
+		warn("[SYSTEM] AVISO: Nenhum modulo registrou toggle! Verifique se os modulos foram carregados.")
+	end
+
+	pcall(function()
+		table.sort(GH.PendingButtons, function(a, b)
+			if a.category == b.category then
+				return (a.localeKey or ""):lower() < (b.localeKey or ""):lower()
+			end
+			return (a.category or "") < (b.category or "")
+		end)
 	end)
 
 	-- Silenciar notificacoes durante a criacao dos toggles
 	GH.SilentRestore = true
 
 	for _, pending in ipairs(GH.PendingButtons) do
-		GH.States[pending.name] = false
-		local tab = Tabs[pending.category] or Tabs["Combat"]
+		local ok, err = pcall(function()
+			GH.States[pending.name] = false
+			local tab = Tabs[pending.category] or Tabs["Combat"]
 
-		local toggle = tab:AddToggle(pending.name, {
-			Title = GH.T(pending.localeKey),
-			Description = pending.descKey and GH.T(pending.descKey) or "",
-			Default = false,
-		})
+			local toggle = tab:AddToggle(pending.name, {
+				Title = GH.T(pending.localeKey or pending.name),
+				Description = pending.descKey and GH.T(pending.descKey) or "",
+				Default = false,
+			})
 
-		toggle:OnChanged(function()
-			local state = toggle.Value
-			GH.States[pending.name] = state
-			if state then
-				GH.ShowToast(pending.name .. " " .. GH.T("toast_activated"), GH.Theme.On, 2)
-			else
-				GH.ShowToast(pending.name .. " " .. GH.T("toast_deactivated"), GH.Theme.Off, 2)
-			end
-			pcall(pending.callback, state, toggle)
+			toggle:OnChanged(function()
+				local state = toggle.Value
+				GH.States[pending.name] = state
+				if state then
+					GH.ShowToast(pending.name .. " " .. GH.T("toast_activated"), GH.Theme.On, 2)
+				else
+					GH.ShowToast(pending.name .. " " .. GH.T("toast_deactivated"), GH.Theme.Off, 2)
+				end
+				pcall(pending.callback, state, toggle)
+			end)
+
+			GH.Buttons[pending.name] = toggle
+			GH.Callbacks[pending.name] = pending.callback
 		end)
-
-		GH.Buttons[pending.name] = toggle
-		GH.Callbacks[pending.name] = pending.callback
+		if not ok then
+			warn("[SYSTEM] Erro ao criar toggle '" .. tostring(pending.name) .. "': " .. tostring(err))
+		end
 	end
 
 	-- Restaurar notificacoes apos criacao dos toggles

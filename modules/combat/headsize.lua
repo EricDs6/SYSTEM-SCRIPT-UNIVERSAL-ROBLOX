@@ -62,5 +62,5 @@ return function(GH)
 		end)
 	end
 
-	GH.RegisterToggleButton("HeadSize", GH.T("toggle_headsize"), Cheats_ToggleHeadSize, "Combat", GH.T("desc_headsize"))
+	GH.RegisterToggleButton("HeadSize", "toggle_headsize", Cheats_ToggleHeadSize, "Combat", "desc_headsize")
 end

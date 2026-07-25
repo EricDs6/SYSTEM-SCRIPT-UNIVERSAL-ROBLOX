@@ -32,5 +32,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("BTools", GH.T("toggle_btools"), Cheats_ToggleBTools, "Utility", GH.T("desc_btools"))
+	GH.RegisterToggleButton("BTools", "toggle_btools", Cheats_ToggleBTools, "Utility", "desc_btools")
 end

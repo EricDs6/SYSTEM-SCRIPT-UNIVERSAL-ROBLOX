@@ -65,5 +65,5 @@ return function(GH)
 		end)
 	end
 
-	GH.RegisterToggleButton("VehicleGoto", GH.T("toggle_vehiclegoto"), Cheats_ToggleVehicleGoto, "Movement", GH.T("desc_vehiclegoto"))
+	GH.RegisterToggleButton("VehicleGoto", "toggle_vehiclegoto", Cheats_ToggleVehicleGoto, "Movement", "desc_vehiclegoto")
 end

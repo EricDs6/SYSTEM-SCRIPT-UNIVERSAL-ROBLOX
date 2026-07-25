@@ -33,5 +33,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("ProximityInstant", GH.T("toggle_proximityinstant"), Cheats_ToggleProximityInstant, "Utility", GH.T("desc_proximityinstant"))
+	GH.RegisterToggleButton("ProximityInstant", "toggle_proximityinstant", Cheats_ToggleProximityInstant, "Utility", "desc_proximityinstant")
 end

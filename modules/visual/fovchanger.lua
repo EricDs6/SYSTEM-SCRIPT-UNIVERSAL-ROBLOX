@@ -11,5 +11,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("FOVChanger", GH.T("toggle_fovchanger"), Cheats_ToggleFOVChanger, "Visual", GH.T("desc_fovchanger"))
+	GH.RegisterToggleButton("FOVChanger", "toggle_fovchanger", Cheats_ToggleFOVChanger, "Visual", "desc_fovchanger")
 end

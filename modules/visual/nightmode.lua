@@ -32,5 +32,5 @@ return function(GH)
 		end
 	end
 
-	GH.RegisterToggleButton("NightMode", GH.T("toggle_nightmode"), Cheats_ToggleNightMode, "Visual", GH.T("desc_nightmode"))
+	GH.RegisterToggleButton("NightMode", "toggle_nightmode", Cheats_ToggleNightMode, "Visual", "desc_nightmode")
 end

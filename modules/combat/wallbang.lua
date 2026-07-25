@@ -25,5 +25,5 @@ return function(GH)
 		GH.ShowToast(state and ("Wall Bang " .. GH.T("toast_activated")) or ("Wall Bang " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
-	GH.RegisterToggleButton("WallBang", GH.T("toggle_wallbang"), Cheats_ToggleWallBang, "Combat", GH.T("desc_wallbang"))
+	GH.RegisterToggleButton("WallBang", "toggle_wallbang", Cheats_ToggleWallBang, "Combat", "desc_wallbang")
 end
