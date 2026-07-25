@@ -1685,7 +1685,8 @@ function GH.Initialize()
 	-- SIDEBAR TABS + CONTENT TABS
 	-- ==========================================
 	local Categories = GH.Categories
-	local TabContainers = {}
+	local TabContainers = {} -- ScrollingFrame instances (for CreateToggle + .Visible)
+	local TabAPIs = {} -- Wrapper tables with AddDropdown/AddSection/AddInput methods (for GH.Tabs)
 	local TabButtons = {}
 	local ActiveTab = "Combat"
 
@@ -1764,15 +1765,16 @@ function GH.Initialize()
 		TabButtons[cat.Name] = btn
 	end
 
-	GH.Tabs = TabContainers
+	GH.Tabs = TabAPIs
 
 	-- ==========================================
 	-- FLUENT-LIKE API for TabContainers
 	-- ==========================================
-	local function WireTabAPI(container)
+	local function WireTabAPI(api)
+		local container = api._frame
 		local orderCounter = 0
 
-		function container:AddDropdown(id, config)
+		function api:AddDropdown(id, config)
 			orderCounter += 1
 			local frame = Instance.new("Frame")
 			frame.Name = id
@@ -1940,7 +1942,7 @@ function GH.Initialize()
 			return dropdownObj
 		end
 
-		function container:AddSection(title)
+		function api:AddSection(title)
 			orderCounter += 1
 			local sectionLabel = Instance.new("TextLabel")
 			sectionLabel.Size = UDim2.new(1, 0, 0, 18)
@@ -2039,13 +2041,13 @@ function GH.Initialize()
 			end
 
 			function sectionObj:AddDropdown(id, config)
-				return container:AddDropdown(id, config)
+				return api:AddDropdown(id, config)
 			end
 
 			return sectionObj
 		end
 
-		function container:AddInput(id, config)
+		function api:AddInput(id, config)
 			orderCounter += 1
 			local frame = Instance.new("Frame")
 			frame.Name = id
@@ -2107,10 +2109,12 @@ function GH.Initialize()
 		end
 	end
 
-	-- Wire API to all tab containers
+	-- Wire API to all tab containers (via wrapper tables, not Instances)
 	for _, cat in ipairs(Categories) do
 		if TabContainers[cat.Name] then
-			WireTabAPI(TabContainers[cat.Name])
+			local api = { _frame = TabContainers[cat.Name] }
+			WireTabAPI(api)
+			TabAPIs[cat.Name] = api
 		end
 	end
 
