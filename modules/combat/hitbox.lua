@@ -1,14 +1,17 @@
 -- =============================================================================
 -- COMMAND: HITBOX
 -- Expande a hitbox (HumanoidRootPart) dos inimigos para acertar mais facil
--- Modelo: FE Cosmic - direto no Root.Size com transparencia visivel
+-- Abordagem: RenderStepped direto (sem master loop)
 -- =============================================================================
 return function(GH)
 	local Players = GH.Services.Players
+	local RunService = GH.Services.RunService
 	local LocalPlayer = GH.LocalPlayer
 
 	function Cheats_ToggleHitbox(state, btn)
+		-- Desconectar loop anterior
 		GH.UnregisterMasterLoop("Hitbox")
+		GH.Disconnect("Hitbox_Render")
 		GH.Disconnect("Hitbox_PlayerRemoving")
 
 		-- Restaurar hitboxes originais
@@ -26,26 +29,17 @@ return function(GH)
 		end
 		table.clear(GH.Cache.OrigHRPSizes)
 
-		-- Limpar SelectionBoxes residuais
-		pcall(function()
-			for _, obj in ipairs(GH.TargetGui:GetChildren()) do
-				if obj:IsA("SelectionBox") and obj.Name:sub(1, 12) == "GH_Hitbox_SB" then
-					obj:Destroy()
-				end
-			end
-		end)
-
 		if not state then return end
 
-		-- PlayerRemoving
+		-- PlayerRemoving: limpar cache
 		GH.Connections.Hitbox_PlayerRemoving = Players.PlayerRemoving:Connect(function(player)
 			GH.Cache.OrigHRPSizes[player] = nil
 		end)
 
-		-- Master loop: manter hitbox todo frame
-		GH.RegisterMasterLoop("Hitbox", "Render", function()
+		-- RenderStepped direto (sem master loop)
+		GH.Connections.Hitbox_Render = RunService.RenderStepped:Connect(function()
 			if GH.isClosing or not GH.States.Hitbox then
-				GH.UnregisterMasterLoop("Hitbox")
+				GH.Disconnect("Hitbox_Render")
 				GH.Disconnect("Hitbox_PlayerRemoving")
 				return
 			end
@@ -53,7 +47,6 @@ return function(GH)
 			for _, player in ipairs(Players:GetPlayers()) do
 				if player == LocalPlayer then continue end
 
-				-- Sem character: limpar cache
 				if not player.Character then
 					GH.Cache.OrigHRPSizes[player] = nil
 					continue
