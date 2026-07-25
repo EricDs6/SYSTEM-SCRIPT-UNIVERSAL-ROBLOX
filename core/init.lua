@@ -1515,9 +1515,9 @@ function GH.Initialize()
 	MainFrame.Parent = ScreenGui
 	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 	local mainStroke = Instance.new("UIStroke")
-	mainStroke.Color = W11.Border
+	mainStroke.Color = Color3.fromRGB(60, 60, 70)
 	mainStroke.Thickness = 1
-	mainStroke.Transparency = 0.4
+	mainStroke.Transparency = 0.2
 	mainStroke.Parent = MainFrame
 
 	-- ==========================================
@@ -1526,7 +1526,7 @@ function GH.Initialize()
 	local Topbar = Instance.new("Frame")
 	Topbar.Name = "Topbar"
 	Topbar.Size = UDim2.new(1, 0, 0, TopbarH)
-	Topbar.BackgroundColor3 = W11.BGAlt
+	Topbar.BackgroundColor3 = Color3.fromRGB(16, 16, 20)
 	Topbar.BorderSizePixel = 0
 	Topbar.ZIndex = 2
 	Topbar.Parent = MainFrame
@@ -1584,7 +1584,7 @@ function GH.Initialize()
 	Sidebar.Name = "Sidebar"
 	Sidebar.Size = UDim2.new(0, SidebarW, 1, -TopbarH)
 	Sidebar.Position = UDim2.new(0, 0, 0, TopbarH)
-	Sidebar.BackgroundColor3 = W11.BGAlt
+	Sidebar.BackgroundColor3 = Color3.fromRGB(14, 14, 17)
 	Sidebar.BorderSizePixel = 0
 	Sidebar.ZIndex = 2
 	Sidebar.Parent = MainFrame
@@ -1594,10 +1594,21 @@ function GH.Initialize()
 	AccentBar.Name = "AccentBar"
 	AccentBar.Size = UDim2.new(0, 2, 1, 0)
 	AccentBar.BackgroundColor3 = W11.Accent
-	AccentBar.BackgroundTransparency = 0.7
+	AccentBar.BackgroundTransparency = 0.6
 	AccentBar.BorderSizePixel = 0
 	AccentBar.ZIndex = 3
 	AccentBar.Parent = Sidebar
+
+	-- Sidebar right border
+	local SidebarBorder = Instance.new("Frame")
+	SidebarBorder.Name = "SidebarBorder"
+	SidebarBorder.Size = UDim2.new(0, 1, 1, 0)
+	SidebarBorder.Position = UDim2.new(1, -1, 0, 0)
+	SidebarBorder.BackgroundColor3 = W11.Border
+	SidebarBorder.BackgroundTransparency = 0.5
+	SidebarBorder.BorderSizePixel = 0
+	SidebarBorder.ZIndex = 3
+	SidebarBorder.Parent = Sidebar
 
 	local SidebarLayout = Instance.new("UIListLayout")
 	SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -1672,7 +1683,7 @@ function GH.Initialize()
 		btn.Name = cat.Name
 		btn.Size = UDim2.new(1, -8, 0, 26)
 		btn.Position = UDim2.new(0, 4, 0, 0)
-		btn.BackgroundColor3 = (cat.Name == ActiveTab) and Color3.fromRGB(10, 35, 60) or W11.BGAlt
+		btn.BackgroundColor3 = (cat.Name == ActiveTab) and Color3.fromRGB(10, 35, 60) or Color3.fromRGB(20, 20, 24)
 		btn.Text = "  " .. cat.Name
 		btn.TextColor3 = (cat.Name == ActiveTab) and W11.Accent or W11.TextSecondary
 		btn.Font = FontBold
@@ -1692,7 +1703,7 @@ function GH.Initialize()
 		end)
 		btn.MouseLeave:Connect(function()
 			if ActiveTab ~= cat.Name then
-				TweenService:Create(btn, GH.TI, { BackgroundColor3 = W11.BGAlt }):Play()
+				TweenService:Create(btn, GH.TI, { BackgroundColor3 = Color3.fromRGB(20, 20, 24) }):Play()
 				TweenService:Create(btn, GH.TI, { TextColor3 = W11.TextSecondary }):Play()
 			end
 		end)
@@ -1719,7 +1730,7 @@ function GH.Initialize()
 			if ActiveTab == cat.Name then return end
 			if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = false end
 			if TabButtons[ActiveTab] then
-				TweenService:Create(TabButtons[ActiveTab], GH.TI, { BackgroundColor3 = W11.BGAlt, TextColor3 = W11.TextSecondary }):Play()
+				TweenService:Create(TabButtons[ActiveTab], GH.TI, { BackgroundColor3 = Color3.fromRGB(20, 20, 24), TextColor3 = W11.TextSecondary }):Play()
 			end
 			ActiveTab = cat.Name
 			if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = true end
