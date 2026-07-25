@@ -3,21 +3,33 @@
 -- Forca visao em terceira pessoa
 -- =============================================================================
 return function(GH)
+	local UserInputService = GH.Services.UserInputService
 	local RunService = GH.Services.RunService
+	local Players = GH.Services.Players
 	local LocalPlayer = GH.LocalPlayer
+
+	local origCameraType = nil
+	local origCameraOffset = nil
 
 	function Cheats_ToggleThirdPerson(state, btn)
 		GH.UnregisterMasterLoop("ThirdPerson")
 
 		if not state then
-			-- Restaurar camera
+			-- Restaurar camera original
 			local cam = workspace.CurrentCamera
+			local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 			if cam then
-				cam.CameraType = Enum.CameraType.Custom
-				cam.CameraSubject = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+				if origCameraType then cam.CameraType = origCameraType end
+				if hum and origCameraOffset then hum.CameraOffset = origCameraOffset end
 			end
 			return
 		end
+
+		-- Salvar estado original
+		local cam = workspace.CurrentCamera
+		local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+		if cam then origCameraType = cam.CameraType end
+		if hum then origCameraOffset = hum.CameraOffset end
 
 		-- Forcar terceira pessoa
 		GH.RegisterMasterLoop("ThirdPerson", "Render", function()
@@ -26,16 +38,23 @@ return function(GH)
 				return
 			end
 
-			local cam = workspace.CurrentCamera
-			local char = LocalPlayer.Character
-			local hum = char and char:FindFirstChildOfClass("Humanoid")
+			local c = workspace.CurrentCamera
+			local ch = LocalPlayer.Character
+			local h = ch and ch:FindFirstChildOfClass("Humanoid")
+			local root = ch and ch:FindFirstChild("HumanoidRootPart")
 
-			if cam and hum then
-				cam.CameraType = Enum.CameraType.Custom
-				cam.CameraSubject = hum
+			if c and h and root then
+				-- Forcar CameraType Custom
+				c.CameraType = Enum.CameraType.Custom
+				c.CameraSubject = h
 
-				-- Distancia da camera (terceira pessoa)
-				hum.CameraOffset = Vector3.new(0, 2, 12)
+				-- Offset pra tras e cima (terceira pessoa)
+				h.CameraOffset = Vector3.new(0, 1.5, 8)
+
+				-- Usar UserInputService pra forcar distance se disponivel
+				pcall(function()
+					UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+				end)
 			end
 		end)
 
