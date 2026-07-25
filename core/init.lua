@@ -1621,6 +1621,36 @@ function GH.Initialize()
 		Content = GH.T("update_loading"),
 	})
 
+	-- Converter UTC para Horario de Brasilia (UTC-3)
+	local function utcToBrasilia(dateRaw)
+		local year, month, day, hour, min, sec = dateRaw:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+):(%d+)")
+		if not year then return "N/A" end
+
+		year, month, day, hour, min, sec = tonumber(year), tonumber(month), tonumber(day), tonumber(hour), tonumber(min), tonumber(sec or 0)
+
+		-- Subtrair 3 horas (UTC-3)
+		hour = hour - 3
+		if hour < 0 then
+			hour = hour + 24
+			day = day - 1
+			if day < 1 then
+				month = month - 1
+				if month < 1 then
+					month = 12
+					year = year - 1
+				end
+				-- Dias no mes (simplificado)
+				local daysInMonth = {31,28,31,30,31,30,31,31,30,31,30,31}
+				if month == 2 and (year % 4 == 0 and (year % 100 ~= 0 or year % 400 == 0)) then
+					daysInMonth[2] = 29
+				end
+				day = daysInMonth[month]
+			end
+		end
+
+		return string.format("%02d/%02d/%04d %02d:%02d", day, month, year, hour, min)
+	end
+
 	-- Buscar info do GitHub automaticamente
 	task.spawn(function()
 		local ok, result = pcall(function()
@@ -1636,14 +1666,9 @@ function GH.Initialize()
 				local sha = data.sha or "N/A"
 				local shortSha = string.sub(sha, 1, 7)
 
-				-- Data do commit
-				local dateRaw = data.commit.author and data.commit.author.date or "N/A"
-				-- Formatar: 2025-01-15T14:30:00Z -> 15/01/2025 14:30
-				local year, month, day, hour, min = dateRaw:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+)")
-				local dateFormatted = "N/A"
-				if year then
-					dateFormatted = day .. "/" .. month .. "/" .. year .. " " .. hour .. ":" .. min
-				end
+				-- Data do commit (horario de Brasilia)
+				local dateRaw = data.commit.author and data.commit.author.date or ""
+				local dateFormatted = utcToBrasilia(dateRaw)
 
 				-- Mensagem do commit (primeira linha)
 				local msg = data.commit.message or "N/A"
@@ -1681,12 +1706,10 @@ function GH.Initialize()
 					local data = HttpService:JSONDecode(result)
 
 					if data and data.commit then
-						local dateRaw = data.commit.author and data.commit.author.date or "N/A"
-						local year, month, day, hour, min = dateRaw:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+)")
-						if year then
-							UpdateDate:SetDesc(day .. "/" .. month .. "/" .. year .. " " .. hour .. ":" .. min)
-						end
+						local dateRaw = data.commit.author and data.commit.author.date or ""
+						UpdateDate:SetDesc(utcToBrasilia(dateRaw))
 					end
+				end
 				end
 			end)
 		end
