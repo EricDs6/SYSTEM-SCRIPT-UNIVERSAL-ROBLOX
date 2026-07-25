@@ -289,7 +289,7 @@ local categories = {
 		"xray", "nightmode", "fullbright", "tracers", "crosshair", "fovchanger"
 	}},
 	{ name = "Utility", files = {
-		"clicktp", "gravity", "customspawn", "freecam", "flashback", "coords",
+		"clicktp", "gravity", "customspawn", "freecam", "flashback", "coords", "thirdperson",
 		"serverrejoin", "autoclicker", "proximityinstant", "antiafk", "antikick",
 		"autocollect", "fireclickdetectors", "fireproximityprompts", "btools",
 		"breakvelocity", "invisibleparts"
