@@ -39,6 +39,18 @@ return function(GH)
 	local espData = {}
 
 	local function removerESP()
+		-- Restaurar nome padrao do Roblox
+		for jogador, _ in pairs(espData) do
+			pcall(function()
+				if jogador and jogador.Character then
+					local hum = jogador.Character:FindFirstChildOfClass("Humanoid")
+					if hum then
+						hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer
+					end
+				end
+			end)
+		end
+
 		if espFolder then
 			pcall(function() espFolder:Destroy() end)
 			espFolder = nil
@@ -57,6 +69,12 @@ return function(GH)
 		if not char then return end
 		local head = char:FindFirstChild("Head")
 		if not head then return end
+
+		-- Esconder nome padrao do Roblox
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if hum then
+			hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+		end
 
 		local relation = GetPlayerRelation(jogador)
 		if not relation then return end
@@ -184,6 +202,11 @@ return function(GH)
 			GH.Connections.ESP_Added = Players.PlayerAdded:Connect(function(jogador)
 				jogador.CharacterAdded:Connect(function()
 					if GH.States.ESP then
+						-- Esconder nome padrao no respawn
+						pcall(function()
+							local hum = jogador.Character and jogador.Character:FindFirstChildOfClass("Humanoid")
+							if hum then hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None end
+						end)
 						task.wait(0.5)
 						criarESP(jogador)
 					end
@@ -198,6 +221,11 @@ return function(GH)
 				if jogador ~= LocalPlayer then
 					jogador.CharacterAdded:Connect(function()
 						if GH.States.ESP then
+							-- Esconder nome padrao no respawn
+							pcall(function()
+								local hum = jogador.Character and jogador.Character:FindFirstChildOfClass("Humanoid")
+								if hum then hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None end
+							end)
 							task.wait(0.5)
 							criarESP(jogador)
 						end
