@@ -1662,13 +1662,6 @@ function GH.Initialize()
 				local dateRaw = data.commit.author and data.commit.author.date or ""
 				local dateFormatted = utcToBrasilia(dateRaw)
 
-				-- Mensagem do commit (primeira linha)
-				local msg = data.commit.message or "N/A"
-				local firstLine = msg:match("^[^\n]+") or msg
-				if #firstLine > 50 then
-					firstLine = string.sub(firstLine, 1, 47) .. "..."
-				end
-
 				pcall(function()
 					UpdateVersion:SetDesc(shortSha)
 					UpdateDate:SetDesc(dateFormatted)
@@ -1699,7 +1692,6 @@ function GH.Initialize()
 						local dateRaw = data.commit.author and data.commit.author.date or ""
 						UpdateDate:SetDesc(utcToBrasilia(dateRaw))
 					end
-				end
 				end
 			end)
 		end
