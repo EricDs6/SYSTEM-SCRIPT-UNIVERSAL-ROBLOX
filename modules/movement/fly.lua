@@ -1,145 +1,172 @@
 -- =============================================================================
 -- COMMAND: FLY
+-- Voar pelo mapa com WASD. Scroll ajusta velocidade
+-- Baseado no script fly do usuario
 -- =============================================================================
 return function(GH)
 	local UserInputService = GH.Services.UserInputService
 	local RunService = GH.Services.RunService
 	local LocalPlayer = GH.LocalPlayer
 
-	local FlyNoclipParts = {}
-	local FlySpeedMult = 1
+	local flying = false
+	local flySpeed = 50
+	local boostMultiplier = 2
+	local flySpeedMult = 1
+	local keys = {
+		W = false,
+		A = false,
+		S = false,
+		D = false,
+		Space = false,
+		LeftControl = false,
+		LeftShift = false,
+	}
 
-	local function FlySetNoclip(char, enable)
-		for _, part in ipairs(char:GetDescendants()) do
-			if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-				if enable then
-					FlyNoclipParts[part] = part.CanCollide
-					part.CanCollide = false
-				elseif FlyNoclipParts[part] ~= nil then
-					part.CanCollide = FlyNoclipParts[part]
-					FlyNoclipParts[part] = nil
-				end
-			end
-		end
-		if not enable then table.clear(FlyNoclipParts) end
-	end
+	local function stopFly()
+		flying = false
+		GH.Disconnect("Fly")
+		GH.Disconnect("FlyScroll")
+		GH.Disconnect("FlyInput")
 
-	local function FlySetFrozen(char, frozen)
+		local char = LocalPlayer.Character
 		if not char then return end
-		for _, desc in ipairs(char:GetDescendants()) do
-			if desc:IsA("Motor6D") then
-				pcall(function() desc:SetJointFrozen(Enum.JointType.Motor6D, frozen) end)
-			end
-		end
-	end
 
-	local function FlyCleanup(char, hum, hrp)
+		local hrp = char:FindFirstChild("HumanoidRootPart")
+		local hum = char:FindFirstChildOfClass("Humanoid")
+
 		if hrp then
-			local bv = hrp:FindFirstChild("GH_FlyBV")
-			if bv then bv:Destroy() end
-			local bg = hrp:FindFirstChild("GH_FlyBG")
-			if bg then bg:Destroy() end
+			hrp.Anchored = false
 			hrp.AssemblyLinearVelocity = Vector3.zero
 			hrp.AssemblyAngularVelocity = Vector3.zero
 		end
+
 		if hum then
 			hum.PlatformStand = false
 			hum.AutoRotate = true
-			hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
-			hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+			hum.WalkSpeed = 16
+			hum.JumpPower = 50
 		end
-		if char then FlySetNoclip(char, false); FlySetFrozen(char, false) end
-		FlySpeedMult = 1
+
+		for k in pairs(keys) do keys[k] = false end
 	end
 
-	function Cheats_ToggleFly(state, btn)
-		GH.Disconnect("Fly")
-		GH.Disconnect("FlyScroll")
-
-		local oldChar = LocalPlayer.Character
-		local oldHum = oldChar and oldChar:FindFirstChildOfClass("Humanoid")
-		local oldHrp = oldChar and oldChar:FindFirstChild("HumanoidRootPart")
-		FlyCleanup(oldChar, oldHum, oldHrp)
-
-		if not state then return end
-
+	local function startFly()
 		local char = LocalPlayer.Character
-		local hum = char and char:FindFirstChildOfClass("Humanoid")
-		local hrp = char and char:FindFirstChild("HumanoidRootPart")
-		if not hum or not hrp or hum.Health <= 0 then return end
+		if not char then return end
 
+		local hrp = char:FindFirstChild("HumanoidRootPart")
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if not hrp or not hum then return end
+
+		flying = true
+		hum.PlatformStand = true
 		hum.AutoRotate = false
-		hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, false)
-		hum:ChangeState(Enum.HumanoidStateType.Running)
-		FlySetFrozen(char, true)
+		hum.WalkSpeed = 0
+		hum.JumpPower = 0
+		hrp.Anchored = true
 
+		local cam = workspace.CurrentCamera
+
+		GH.Connections.Fly = RunService.RenderStepped:Connect(function(deltaTime)
+			if not flying or not GH.States.Fly then
+				stopFly()
+				return
+			end
+
+			if not char.Parent or not hrp.Parent or not hum.Parent then
+				stopFly()
+				return
+			end
+
+			-- Atualizar camera
+			cam = workspace.CurrentCamera
+			if not cam then return end
+
+			local moveV = (keys.W and 1 or 0) + (keys.S and -1 or 0)
+			local moveH = (keys.D and 1 or 0) + (keys.A and -1 or 0)
+			local vert = (keys.Space and 1 or 0) + (keys.LeftControl and -1 or 0)
+
+			local lookVec = cam.CFrame.LookVector
+			local rightVec = cam.CFrame.RightVector
+
+			-- Direcao horizontal plana (sem componente Y)
+			local flatLook = Vector3.new(lookVec.X, 0, lookVec.Z)
+			if flatLook.Magnitude > 0 then
+				flatLook = flatLook.Unit
+			end
+
+			local flatRight = Vector3.new(rightVec.X, 0, rightVec.Z)
+			if flatRight.Magnitude > 0 then
+				flatRight = flatRight.Unit
+			end
+
+			local moveDir = (flatLook * moveV) + (flatRight * moveH) + Vector3.new(0, vert, 0)
+
+			if moveDir.Magnitude > 0 then
+				moveDir = moveDir.Unit
+			end
+
+			local currentSpeed = flySpeed * flySpeedMult * (keys.LeftShift and boostMultiplier or 1)
+			local newPos = hrp.Position + (moveDir * currentSpeed * deltaTime)
+
+			-- Rotacao apenas no eixo Y (sem tremedeira)
+			local lookAt = newPos + flatLook
+			hrp.CFrame = CFrame.lookAt(newPos, lookAt)
+
+			hrp.AssemblyLinearVelocity = Vector3.zero
+			hrp.AssemblyAngularVelocity = Vector3.zero
+		end)
+
+		-- Input: teclas de movimento
+		GH.Connections.FlyInput = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+			if gameProcessed then return end
+			if not GH.States.Fly then return end
+
+			if keys[input.KeyCode.Name] ~= nil then
+				keys[input.KeyCode.Name] = true
+			end
+		end)
+
+		local function onInputEnded(input)
+			if keys[input.KeyCode.Name] ~= nil then
+				keys[input.KeyCode.Name] = false
+			end
+		end
+		UserInputService.InputEnded:Connect(onInputEnded)
+
+		-- Scroll: ajustar velocidade
 		GH.Connections.FlyScroll = UserInputService.InputChanged:Connect(function(input)
 			if not GH.States.Fly then return end
 			if input.UserInputType == Enum.UserInputType.MouseWheel then
 				local dir = input.Position.Z > 0 and 1 or -1
-				FlySpeedMult = math.clamp(FlySpeedMult + dir * 0.25, 0.25, 5)
+				flySpeedMult = math.clamp(flySpeedMult + dir * 0.25, 0.25, 5)
 			end
-		end)
-
-		GH.Connections.Fly = RunService.Stepped:Connect(function()
-			if GH.isClosing then
-				GH.Disconnect("Fly")
-				GH.Disconnect("FlyScroll")
-				FlyCleanup(LocalPlayer.Character, LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid"), LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart"))
-				return
-			end
-
-			local c = LocalPlayer.Character
-			local h = c and c:FindFirstChildOfClass("Humanoid")
-			local r = c and c:FindFirstChild("HumanoidRootPart")
-			if not c or not r or not h or h.Health <= 0 then
-				GH.Disconnect("Fly")
-				GH.Disconnect("FlyScroll")
-				FlyCleanup(c, h, r)
-				return
-			end
-
-			h.PlatformStand = true
-
-			local bv = r:FindFirstChild("GH_FlyBV")
-			if not bv then
-				bv = Instance.new("BodyVelocity")
-				bv.Name = "GH_FlyBV"
-				bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-				bv.Parent = r
-			end
-
-			local bg = r:FindFirstChild("GH_FlyBG")
-			if not bg then
-				bg = Instance.new("BodyGyro")
-				bg.Name = "GH_FlyBG"
-				bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-				bg.P = 9e4
-				bg.Parent = r
-			end
-
-			FlySetNoclip(c, true)
-
-			local cam = workspace.CurrentCamera
-			if not cam then return end
-
-			local speed = GH.FlySpeed * FlySpeedMult
-
-			local camLook = cam.CFrame.LookVector
-			bg.CFrame = CFrame.new(r.Position, r.Position + Vector3.new(camLook.X, 0, camLook.Z))
-
-			local vel = Vector3.zero
-			if h.MoveDirection.Magnitude > 0 then
-				vel = h.MoveDirection * speed
-			end
-
-			local vert = 0
-			if UserInputService:IsKeyDown(Enum.KeyCode.Space) then vert = speed
-			elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then vert = -speed end
-
-			bv.Velocity = Vector3.new(vel.X, vert, vel.Z)
 		end)
 	end
+
+	function Cheats_ToggleFly(state, btn)
+		-- Cleanup anterior
+		stopFly()
+
+		if state then
+			flySpeedMult = 1
+			startFly()
+		end
+
+		GH.ShowToast(state and ("Fly " .. GH.T("toast_activated")) or ("Fly " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
+	end
+
+	-- Parar fly ao morrer/respawnar
+	LocalPlayer.CharacterAdded:Connect(function()
+		if GH.States.Fly then
+			task.wait(0.5)
+			stopFly()
+			-- Reativar se estava ativo
+			if GH.States.Fly then
+				startFly()
+			end
+		end
+	end)
 
 	GH.RegisterToggleButton("Fly", "toggle_fly", Cheats_ToggleFly, "Movement", "desc_fly")
 end
