@@ -70,10 +70,26 @@ return function(GH)
 		local head = char:FindFirstChild("Head")
 		if not head then return end
 
-		-- Esconder nome padrao do Roblox
+		-- Esconder nome padrao do Roblox (remover BillboardGuis que nao sao do ESP)
 		local hum = char:FindFirstChildOfClass("Humanoid")
 		if hum then
 			hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+		end
+		for _, obj in ipairs(char:GetDescendants()) do
+			if obj:IsA("BillboardGui") and not obj.Name:find("GH_ESP") then
+				pcall(function() obj.Enabled = false end)
+			end
+			if obj:IsA("TextLabel") and not obj.Name:find("GH_ESP") then
+				if obj.Text == jogador.Name or obj.Text == jogador.DisplayName then
+					pcall(function() obj.Visible = false end)
+				end
+			end
+		end
+		-- Also check for SurfaceGui name tags
+		for _, obj in ipairs(head:GetChildren()) do
+			if obj:IsA("BillboardGui") and not obj.Name:find("GH_ESP") then
+				pcall(function() obj:Destroy() end)
+			end
 		end
 
 		local relation = GetPlayerRelation(jogador)
