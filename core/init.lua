@@ -45,7 +45,6 @@ GH.Locales = {
 		update_section = "Atualizacao",
 		update_version = "Versao",
 		update_date = "Data da Atualizacao",
-		update_commit = "Ultimo Commit",
 		update_loading = "Carregando...",
 		update_error = "Erro ao buscar",
 		-- Toasts
@@ -243,7 +242,6 @@ GH.Locales = {
 		update_section = "Update Info",
 		update_version = "Version",
 		update_date = "Last Update",
-		update_commit = "Latest Commit",
 		update_loading = "Loading...",
 		update_error = "Failed to fetch",
 		-- Toasts
@@ -441,7 +439,6 @@ GH.Locales = {
 		update_section = "Info de Actualizacion",
 		update_version = "Version",
 		update_date = "Ultima Actualizacion",
-		update_commit = "Ultimo Commit",
 		update_loading = "Cargando...",
 		update_error = "Error al obtener",
 		-- Toasts
@@ -1616,11 +1613,6 @@ function GH.Initialize()
 		Content = GH.T("update_loading"),
 	})
 
-	local UpdateCommit = UpdateSection:AddParagraph({
-		Title = GH.T("update_commit"),
-		Content = GH.T("update_loading"),
-	})
-
 	-- Converter UTC para Horario de Brasilia (UTC-3)
 	local function utcToBrasilia(dateRaw)
 		local year, month, day, hour, min, sec = dateRaw:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+):(%d+)")
@@ -1680,14 +1672,12 @@ function GH.Initialize()
 				pcall(function()
 					UpdateVersion:SetDesc(shortSha)
 					UpdateDate:SetDesc(dateFormatted)
-					UpdateCommit:SetDesc(firstLine)
 				end)
 			end
 		else
 			pcall(function()
 				UpdateVersion:SetDesc(GH.T("update_error"))
 				UpdateDate:SetDesc(GH.T("update_error"))
-				UpdateCommit:SetDesc(GH.T("update_error"))
 			end)
 		end
 	end)
