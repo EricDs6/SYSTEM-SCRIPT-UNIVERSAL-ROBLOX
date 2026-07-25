@@ -1553,8 +1553,8 @@ function GH.Initialize()
 
 	-- Topbar buttons
 	local TopbarBtns = Instance.new("Frame")
-	TopbarBtns.Size = UDim2.new(0, 110, 1, 0)
-	TopbarBtns.Position = UDim2.new(1, -114, 0, 0)
+	TopbarBtns.Size = UDim2.new(0, 60, 1, 0)
+	TopbarBtns.Position = UDim2.new(1, -106, 0, 0)
 	TopbarBtns.BackgroundTransparency = 1
 	TopbarBtns.ZIndex = 3
 	TopbarBtns.Parent = Topbar
@@ -1562,7 +1562,7 @@ function GH.Initialize()
 	TopbarBtnsLayout.FillDirection = Enum.FillDirection.Horizontal
 	TopbarBtnsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
 	TopbarBtnsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-	TopbarBtnsLayout.Padding = UDim.new(0, 0)
+	TopbarBtnsLayout.Padding = UDim.new(0, 4)
 	TopbarBtnsLayout.Parent = TopbarBtns
 
 	local function MakeTopbarBtn(name, text, color)
@@ -1583,7 +1583,7 @@ function GH.Initialize()
 
 	local MinBtn = MakeTopbarBtn("Minimize", "—", W11.TextSecondary)
 
-	-- Close button: Windows 11 style (wider, full topbar height, red hover)
+	-- Close button: Windows 11 style (full topbar height, red hover) - parented to Topbar directly
 	local CloseBtn = Instance.new("TextButton")
 	CloseBtn.Name = "Close"
 	CloseBtn.Size = UDim2.new(0, 46, 1, 0)
@@ -1595,7 +1595,7 @@ function GH.Initialize()
 	CloseBtn.TextSize = 10
 	CloseBtn.AutoButtonColor = false
 	CloseBtn.ZIndex = 4
-	CloseBtn.Parent = TopbarBtns
+	CloseBtn.Parent = Topbar
 
 	-- ==========================================
 	-- SIDEBAR
