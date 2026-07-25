@@ -870,6 +870,7 @@ GH.Categories = {
 	{ Name = "Visual",   Icon = "eye",       Order = 3 },
 	{ Name = "Utility",  Icon = "wrench",    Order = 4 },
 	{ Name = "Troll",    Icon = "smile",     Order = 5 },
+	{ Name = "Settings", Icon = "gear",      Order = 6 },
 }
 
 -- Botões pendentes que serão criados após a UI existir
@@ -1552,8 +1553,8 @@ function GH.Initialize()
 
 	-- Topbar buttons
 	local TopbarBtns = Instance.new("Frame")
-	TopbarBtns.Size = UDim2.new(0, 80, 1, 0)
-	TopbarBtns.Position = UDim2.new(1, -84, 0, 0)
+	TopbarBtns.Size = UDim2.new(0, 110, 1, 0)
+	TopbarBtns.Position = UDim2.new(1, -114, 0, 0)
 	TopbarBtns.BackgroundTransparency = 1
 	TopbarBtns.ZIndex = 3
 	TopbarBtns.Parent = Topbar
@@ -1561,13 +1562,13 @@ function GH.Initialize()
 	TopbarBtnsLayout.FillDirection = Enum.FillDirection.Horizontal
 	TopbarBtnsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
 	TopbarBtnsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-	TopbarBtnsLayout.Padding = UDim.new(0, 4)
+	TopbarBtnsLayout.Padding = UDim.new(0, 0)
 	TopbarBtnsLayout.Parent = TopbarBtns
 
 	local function MakeTopbarBtn(name, text, color)
 		local btn = Instance.new("TextButton")
 		btn.Name = name
-		btn.Size = UDim2.new(0, 26, 0, 20)
+		btn.Size = UDim2.new(0, 28, 0, 22)
 		btn.BackgroundColor3 = W11.Surface
 		btn.Text = text
 		btn.TextColor3 = color or W11.TextSecondary
@@ -1580,9 +1581,21 @@ function GH.Initialize()
 		return btn
 	end
 
-	local SettingsBtn = MakeTopbarBtn("Settings", "⚙", W11.TextSecondary)
 	local MinBtn = MakeTopbarBtn("Minimize", "—", W11.TextSecondary)
-	local CloseBtn = MakeTopbarBtn("Close", "✕", W11.Red)
+
+	-- Close button: Windows 11 style (wider, full topbar height, red hover)
+	local CloseBtn = Instance.new("TextButton")
+	CloseBtn.Name = "Close"
+	CloseBtn.Size = UDim2.new(0, 46, 1, 0)
+	CloseBtn.Position = UDim2.new(1, -46, 0, 0)
+	CloseBtn.BackgroundColor3 = W11.Surface
+	CloseBtn.Text = "✕"
+	CloseBtn.TextColor3 = W11.Text
+	CloseBtn.Font = FontBold
+	CloseBtn.TextSize = 10
+	CloseBtn.AutoButtonColor = false
+	CloseBtn.ZIndex = 4
+	CloseBtn.Parent = TopbarBtns
 
 	-- ==========================================
 	-- SIDEBAR
@@ -1640,40 +1653,23 @@ function GH.Initialize()
 	Instance.new("UIPadding", Content).PaddingRight = UDim.new(0, 4)
 
 	-- ==========================================
-	-- SETTINGS PANEL
+	-- SETTINGS TAB (via sidebar, same as other tabs)
 	-- ==========================================
-	local SettingsPanel = Instance.new("Frame")
-	SettingsPanel.Name = "SettingsPanel"
-	SettingsPanel.Size = UDim2.new(1, -(SidebarW + 2), 1, -(TopbarH + 8))
-	SettingsPanel.Position = UDim2.new(1, 10, 0, TopbarH + 4)
-	SettingsPanel.BackgroundColor3 = W11.BG
-	SettingsPanel.BackgroundTransparency = 0.05
-	SettingsPanel.BorderSizePixel = 0
-	SettingsPanel.ClipsDescendants = true
-	SettingsPanel.ZIndex = 8
-	SettingsPanel.Parent = MainFrame
-	Instance.new("UICorner", SettingsPanel).CornerRadius = UDim.new(0, 8)
-	local spStroke = Instance.new("UIStroke")
-	spStroke.Color = W11.Border
-	spStroke.Thickness = 1
-	spStroke.Transparency = 0.4
-	spStroke.Parent = SettingsPanel
-
-	local SettingsScroll = Instance.new("ScrollingFrame")
-	SettingsScroll.Size = UDim2.new(1, -12, 1, -12)
-	SettingsScroll.Position = UDim2.new(0, 6, 0, 6)
-	SettingsScroll.BackgroundTransparency = 1
-	SettingsScroll.ScrollBarThickness = 3
-	SettingsScroll.ScrollBarImageColor3 = W11.Accent
-	SettingsScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	SettingsScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-	SettingsScroll.BorderSizePixel = 0
-	SettingsScroll.ZIndex = 9
-	SettingsScroll.Parent = SettingsPanel
-	Instance.new("UIListLayout", SettingsScroll).Padding = UDim.new(0, 6)
-	SettingsScroll.UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-	local settingsOpen = false
+	local SettingsContainer = Instance.new("ScrollingFrame")
+	SettingsContainer.Name = "Tab_Settings"
+	SettingsContainer.Size = UDim2.new(1, 0, 1, 0)
+	SettingsContainer.BackgroundTransparency = 1
+	SettingsContainer.ScrollBarThickness = 3
+	SettingsContainer.ScrollBarImageColor3 = W11.Accent
+	SettingsContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	SettingsContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+	SettingsContainer.BorderSizePixel = 0
+	SettingsContainer.Visible = false
+	SettingsContainer.ZIndex = 3
+	SettingsContainer.Parent = Content
+	Instance.new("UIListLayout", SettingsContainer).Padding = UDim.new(0, 3)
+	SettingsContainer.UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	Instance.new("UIPadding", SettingsContainer).PaddingTop = UDim.new(0, 2)
 
 	-- ==========================================
 	-- TOAST CONTAINER
@@ -1730,21 +1726,28 @@ function GH.Initialize()
 			end
 		end)
 
-		local container = Instance.new("ScrollingFrame")
-		container.Name = "Tab_" .. cat.Name
-		container.Size = UDim2.new(1, 0, 1, 0)
-		container.BackgroundTransparency = 1
-		container.ScrollBarThickness = 3
-		container.ScrollBarImageColor3 = W11.Accent
-		container.AutomaticCanvasSize = Enum.AutomaticSize.Y
-		container.CanvasSize = UDim2.new(0, 0, 0, 0)
-		container.BorderSizePixel = 0
-		container.Visible = (cat.Name == ActiveTab)
-		container.ZIndex = 3
-		container.Parent = Content
-		Instance.new("UIListLayout", container).Padding = UDim.new(0, 3)
-		container.UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		Instance.new("UIPadding", container).PaddingTop = UDim.new(0, 2)
+		-- Use existing SettingsContainer for Settings tab, create new for others
+		local container
+		if cat.Name == "Settings" then
+			container = SettingsContainer
+			container.Visible = false
+		else
+			container = Instance.new("ScrollingFrame")
+			container.Name = "Tab_" .. cat.Name
+			container.Size = UDim2.new(1, 0, 1, 0)
+			container.BackgroundTransparency = 1
+			container.ScrollBarThickness = 3
+			container.ScrollBarImageColor3 = W11.Accent
+			container.AutomaticCanvasSize = Enum.AutomaticSize.Y
+			container.CanvasSize = UDim2.new(0, 0, 0, 0)
+			container.BorderSizePixel = 0
+			container.Visible = (cat.Name == ActiveTab)
+			container.ZIndex = 3
+			container.Parent = Content
+			Instance.new("UIListLayout", container).Padding = UDim.new(0, 3)
+			container.UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			Instance.new("UIPadding", container).PaddingTop = UDim.new(0, 2)
+		end
 
 		TabContainers[cat.Name] = container
 
@@ -2250,8 +2253,8 @@ function GH.Initialize()
 		s.Font = FontBold
 		s.TextSize = 9
 		s.LayoutOrder = stOrder
-		s.ZIndex = 9
-		s.Parent = SettingsScroll
+		s.ZIndex = 3
+		s.Parent = SettingsContainer
 		stOrder += 1
 	end
 
@@ -2262,8 +2265,8 @@ function GH.Initialize()
 		frame.BackgroundColor3 = W11.Surface
 		frame.BorderSizePixel = 0
 		frame.LayoutOrder = stOrder
-		frame.ZIndex = 9
-		frame.Parent = SettingsScroll
+		frame.ZIndex = 3
+		frame.Parent = SettingsContainer
 		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 4)
 
 		local lbl = Instance.new("TextLabel")
@@ -2275,7 +2278,7 @@ function GH.Initialize()
 		lbl.Font = Font
 		lbl.TextSize = 10
 		lbl.TextXAlignment = Enum.TextXAlignment.Left
-		lbl.ZIndex = 10
+		lbl.ZIndex = 4
 		lbl.Parent = frame
 
 		local switchBG = Instance.new("Frame")
@@ -2283,7 +2286,7 @@ function GH.Initialize()
 		switchBG.Position = UDim2.new(1, -36, 0.5, -7)
 		switchBG.BackgroundColor3 = default and W11.Accent or W11.Surface
 		switchBG.BorderSizePixel = 0
-		switchBG.ZIndex = 10
+		switchBG.ZIndex = 4
 		switchBG.Parent = frame
 		Instance.new("UICorner", switchBG).CornerRadius = UDim.new(1, 0)
 
@@ -2292,7 +2295,7 @@ function GH.Initialize()
 		knob.Position = UDim2.new(0, default and 16 or 2, 0.5, -5)
 		knob.BackgroundColor3 = default and Color3.new(1, 1, 1) or W11.TextSecondary
 		knob.BorderSizePixel = 0
-		knob.ZIndex = 11
+		knob.ZIndex = 5
 		knob.Parent = switchBG
 		Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
 
@@ -2314,8 +2317,8 @@ function GH.Initialize()
 		frame.BackgroundColor3 = W11.Surface
 		frame.BorderSizePixel = 0
 		frame.LayoutOrder = stOrder
-		frame.ZIndex = 9
-		frame.Parent = SettingsScroll
+		frame.ZIndex = 3
+		frame.Parent = SettingsContainer
 		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 4)
 
 		local lbl = Instance.new("TextLabel")
@@ -2327,7 +2330,7 @@ function GH.Initialize()
 		lbl.Font = Font
 		lbl.TextSize = 10
 		lbl.TextXAlignment = Enum.TextXAlignment.Left
-		lbl.ZIndex = 10
+		lbl.ZIndex = 4
 		lbl.Parent = frame
 
 		local valLabel = Instance.new("TextLabel")
@@ -2339,7 +2342,7 @@ function GH.Initialize()
 		valLabel.Font = FontBold
 		valLabel.TextSize = 10
 		valLabel.TextXAlignment = Enum.TextXAlignment.Right
-		valLabel.ZIndex = 10
+		valLabel.ZIndex = 4
 		valLabel.Parent = frame
 
 		local bar = Instance.new("Frame")
@@ -2347,14 +2350,14 @@ function GH.Initialize()
 		bar.Position = UDim2.new(0.06, 0, 0, 28)
 		bar.BackgroundColor3 = W11.BorderSubtle
 		bar.BorderSizePixel = 0
-		bar.ZIndex = 10
+		bar.ZIndex = 4
 		bar.Parent = frame
 
 		local fill = Instance.new("Frame")
 		fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
 		fill.BackgroundColor3 = W11.Accent
 		fill.BorderSizePixel = 0
-		fill.ZIndex = 11
+		fill.ZIndex = 5
 		fill.Parent = bar
 
 		local knob = Instance.new("Frame")
@@ -2362,7 +2365,7 @@ function GH.Initialize()
 		knob.Position = UDim2.new((default - min) / (max - min), -4, 0.5, -4)
 		knob.BackgroundColor3 = Color3.new(1, 1, 1)
 		knob.BorderSizePixel = 0
-		knob.ZIndex = 12
+		knob.ZIndex = 6
 		knob.Parent = bar
 		Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
 
@@ -2372,7 +2375,7 @@ function GH.Initialize()
 		inputBtn.Position = UDim2.new(0, -5, 0.5, -10)
 		inputBtn.BackgroundTransparency = 1
 		inputBtn.Text = ""
-		inputBtn.ZIndex = 13
+		inputBtn.ZIndex = 7
 		inputBtn.Parent = bar
 
 		inputBtn.MouseButton1Down:Connect(function()
@@ -2409,7 +2412,7 @@ function GH.Initialize()
 	stSlider("Distancia Max ESP", 50, 2000, 300, function(v) GH.Settings.ESPMaxDistance = v end)
 
 	-- ==========================================
-	-- FECHAR — Padrão Op.txt: botão → FullCleanup → Destroy
+	-- FECHAR — Windows 11 style
 	-- ==========================================
 	CloseBtn.MouseButton1Click:Connect(function()
 		GH.FullCleanup()
@@ -2417,12 +2420,16 @@ function GH.Initialize()
 	end)
 
 	-- Topbar hover
-	for _, btn in ipairs({ SettingsBtn, MinBtn }) do
-		btn.MouseEnter:Connect(function() TweenService:Create(btn, GH.TI, { BackgroundColor3 = W11.SurfaceHover }):Play() end)
-		btn.MouseLeave:Connect(function() TweenService:Create(btn, GH.TI, { BackgroundColor3 = W11.Surface }):Play() end)
-	end
-	CloseBtn.MouseEnter:Connect(function() TweenService:Create(CloseBtn, GH.TI, { BackgroundColor3 = W11.RedHover }):Play() end)
-	CloseBtn.MouseLeave:Connect(function() TweenService:Create(CloseBtn, GH.TI, { BackgroundColor3 = W11.Red }):Play() end)
+	MinBtn.MouseEnter:Connect(function() TweenService:Create(MinBtn, GH.TI, { BackgroundColor3 = W11.SurfaceHover }):Play() end)
+	MinBtn.MouseLeave:Connect(function() TweenService:Create(MinBtn, GH.TI, { BackgroundColor3 = W11.Surface }):Play() end)
+
+	-- Close button: Windows 11 style (red hover, white X)
+	CloseBtn.MouseEnter:Connect(function()
+		TweenService:Create(CloseBtn, GH.TI, { BackgroundColor3 = W11.Red, TextColor3 = Color3.new(1, 1, 1) }):Play()
+	end)
+	CloseBtn.MouseLeave:Connect(function()
+		TweenService:Create(CloseBtn, GH.TI, { BackgroundColor3 = W11.Surface, TextColor3 = W11.Text }):Play()
+	end)
 
 	-- ==========================================
 	-- MINIMIZAR
@@ -2437,10 +2444,6 @@ function GH.Initialize()
 			Sidebar.Visible = false
 			Content.Visible = false
 			for _, c in pairs(TabContainers) do c.Visible = false end
-			if settingsOpen then
-				SettingsPanel.Position = UDim2.new(1, 10, 0, TopbarH + 4)
-				settingsOpen = false
-			end
 			TweenService:Create(MainFrame, GH.TI_Slow, { Size = UDim2.new(0, MiniW, 0, MiniH) }):Play()
 			MinBtn.Text = "+"
 		else
@@ -2451,27 +2454,6 @@ function GH.Initialize()
 				Content.Visible = true
 				if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = true end
 			end)
-		end
-	end)
-
-	-- ==========================================
-	-- SETTINGS PANEL (toggle)
-	-- ==========================================
-	SettingsBtn.MouseButton1Click:Connect(function()
-		settingsOpen = not settingsOpen
-		if settingsOpen then
-			TweenService:Create(SettingsPanel, GH.TI_Slow, { Position = UDim2.new(0, 6, 0, TopbarH + 4) }):Play()
-			SettingsBtn.BackgroundColor3 = W11.AccentDark
-			SettingsBtn.TextColor3 = Color3.new(1, 1, 1)
-			Content.Visible = false
-			Sidebar.Visible = false
-		else
-			TweenService:Create(SettingsPanel, GH.TI_Slow, { Position = UDim2.new(1, 10, 0, TopbarH + 4) }):Play()
-			SettingsBtn.BackgroundColor3 = W11.Surface
-			SettingsBtn.TextColor3 = W11.TextSecondary
-			Content.Visible = true
-			Sidebar.Visible = true
-			if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = true end
 		end
 	end)
 
