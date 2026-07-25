@@ -965,15 +965,29 @@ function GH.ShowPlayerPicker(title, callback)
 			local tag = ""
 			local nameColor = Color3.fromRGB(235, 235, 240)
 			if player then
-				if myTeam and player.Team and player.Team == myTeam then
-					tag = "[ALIADO] "
-					nameColor = player.Team.TeamColor.Color
-				elseif myTeam and player.Team and player.Team ~= myTeam then
-					tag = "[INIMIGO] "
-					nameColor = player.Team.TeamColor.Color
-				else
-					tag = "[NEUTRO] "
-					nameColor = Color3.fromRGB(180, 180, 190)
+				local pTeam = player.Team
+				local pTeamColor = player.TeamColor
+				local myTeamColor = myTeam and myTeam.TeamColor or LocalPlayer.TeamColor
+
+				-- Detectar time via Team object ou TeamColor
+				local hasTeams = (myTeam ~= nil) or (myTeamColor and myTeamColor ~= BrickColor.new("Medium stone grey"))
+				if hasTeams then
+					if pTeam and myTeam and pTeam == myTeam then
+						tag = "[ALIADO] "
+						nameColor = pTeam.TeamColor.Color
+					elseif pTeam and myTeam and pTeam ~= myTeam then
+						tag = "[INIMIGO] "
+						nameColor = pTeam.TeamColor.Color
+					elseif pTeamColor and myTeamColor and pTeamColor == myTeamColor then
+						tag = "[ALIADO] "
+						nameColor = pTeamColor.Color
+					elseif pTeamColor and myTeamColor and pTeamColor ~= myTeamColor then
+						tag = "[INIMIGO] "
+						nameColor = pTeamColor.Color
+					else
+						tag = "[NEUTRO] "
+						nameColor = Color3.fromRGB(180, 180, 190)
+					end
 				end
 			end
 			local b = Instance.new("TextButton")
