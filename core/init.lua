@@ -1559,28 +1559,40 @@ function GH.Initialize()
 	CloseBtn.Size = UDim2.new(0, BTN_SIZE, 0, BTN_SIZE)
 	CloseBtn.Position = UDim2.new(1, -BTN_SIZE - 8, 0.5, -BTN_SIZE / 2)
 	CloseBtn.BackgroundColor3 = W11.Surface
-	CloseBtn.Text = "X"
-	CloseBtn.TextColor3 = W11.Text
-	CloseBtn.Font = Enum.Font.SourceSans
-	CloseBtn.TextSize = 14
+	CloseBtn.Text = ""
 	CloseBtn.AutoButtonColor = false
 	CloseBtn.ZIndex = 4
 	CloseBtn.Parent = Topbar
 	Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 4)
+	local CloseBtnX = Instance.new("TextLabel")
+	CloseBtnX.Size = UDim2.new(1, 0, 1, 0)
+	CloseBtnX.BackgroundTransparency = 1
+	CloseBtnX.Text = "X"
+	CloseBtnX.TextColor3 = W11.Text
+	CloseBtnX.Font = Enum.Font.SourceSans
+	CloseBtnX.TextSize = 16
+	CloseBtnX.ZIndex = 5
+	CloseBtnX.Parent = CloseBtn
 
 	local MinBtn = Instance.new("TextButton")
 	MinBtn.Name = "Minimize"
 	MinBtn.Size = UDim2.new(0, BTN_SIZE, 0, BTN_SIZE)
 	MinBtn.Position = UDim2.new(1, -BTN_SIZE * 2 - 14, 0.5, -BTN_SIZE / 2)
 	MinBtn.BackgroundColor3 = W11.Surface
-	MinBtn.Text = "-"
-	MinBtn.TextColor3 = W11.TextSecondary
-	MinBtn.Font = Enum.Font.SourceSans
-	MinBtn.TextSize = 14
+	MinBtn.Text = ""
 	MinBtn.AutoButtonColor = false
 	MinBtn.ZIndex = 4
 	MinBtn.Parent = Topbar
 	Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 4)
+	local MinBtnDash = Instance.new("TextLabel")
+	MinBtnDash.Size = UDim2.new(1, 0, 1, 0)
+	MinBtnDash.BackgroundTransparency = 1
+	MinBtnDash.Text = "-"
+	MinBtnDash.TextColor3 = W11.TextSecondary
+	MinBtnDash.Font = Enum.Font.SourceSans
+	MinBtnDash.TextSize = 16
+	MinBtnDash.ZIndex = 5
+	MinBtnDash.Parent = MinBtn
 
 	-- ==========================================
 	-- SIDEBAR
