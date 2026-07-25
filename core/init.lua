@@ -1083,29 +1083,37 @@ function GH.ShowPlayerPicker(title, callback)
 		end
 	end)
 
-	-- Drag (so no titulo, ignorando os 56px da direita dos botoes)
-	local dragging, dragStart, startPos
-	local dragConn
+	-- Drag (exatamente igual ao painel principal)
+	local dragging, dragInput, dragStart, startPos
+	local dragConn = nil
+
 	tb.InputBegan:Connect(function(input)
-		if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then return end
-		local mouse = GH.Services.UserInputService:GetMouseLocation()
-		local maxX = tb.AbsolutePosition.X + tb.AbsoluteSize.X
-		if mouse.X > maxX - 56 then return end
-		dragging = true
-		dragStart = input.Position
-		startPos = frame.Position
-		if dragConn then dragConn:Disconnect() end
-		dragConn = GH.Services.RunService.Heartbeat:Connect(function()
-			if not dragging then return end
-			local delta = GH.Services.UserInputService:GetMouseLocation() - dragStart
-			frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-		end)
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
-				if dragConn then dragConn:Disconnect(); dragConn = nil end
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = frame.Position
+			if not dragConn then
+				dragConn = GH.Services.RunService.Heartbeat:Connect(function()
+					if not dragging then return end
+					if dragInput then
+						local delta = dragInput.Position - dragStart
+						frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+					end
+				end)
 			end
-		end)
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+					if dragConn then dragConn:Disconnect(); dragConn = nil end
+				end
+			end)
+		end
+	end)
+
+	tb.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
 	end)
 
 	return {
@@ -1250,33 +1258,42 @@ function GH.ShowInputPicker(title, placeholder, callback)
 		GH._InputPickerGui = nil
 	end)
 
-	-- Drag (so no titulo, ignorando os 56px da direita dos botoes)
-	local dragging, dragStart, startPos
-	local dragConn
+	-- Drag (exatamente igual ao painel principal)
+	local dragging, dragInput, dragStart, startPos
+	local dragConn = nil
+
 	tb.InputBegan:Connect(function(input)
-		if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then return end
-		local mouse = GH.Services.UserInputService:GetMouseLocation()
-		local maxX = tb.AbsolutePosition.X + tb.AbsoluteSize.X
-		if mouse.X > maxX - 56 then return end
-		dragging = true
-		dragStart = input.Position
-		startPos = frame.Position
-		if dragConn then dragConn:Disconnect() end
-		dragConn = GH.Services.RunService.Heartbeat:Connect(function()
-			if not dragging then return end
-			local delta = GH.Services.UserInputService:GetMouseLocation() - dragStart
-			frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-		end)
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
-				if dragConn then dragConn:Disconnect(); dragConn = nil end
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = frame.Position
+			if not dragConn then
+				dragConn = GH.Services.RunService.Heartbeat:Connect(function()
+					if not dragging then return end
+					if dragInput then
+						local delta = dragInput.Position - dragStart
+						frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+					end
+				end)
 			end
-		end)
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+					if dragConn then dragConn:Disconnect(); dragConn = nil end
+				end
+			end)
+		end
+	end)
+
+	tb.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
 	end)
 
 	return {
 		Close = function()
+			if dragConn then pcall(function() dragConn:Disconnect() end) end
 			gui:Destroy()
 			GH._InputPickerGui = nil
 		end,
