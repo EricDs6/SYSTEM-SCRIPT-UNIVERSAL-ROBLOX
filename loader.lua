@@ -133,7 +133,7 @@ if not Core then
 end
 
 -- ==========================================
--- 2. MÓDULOS MODULARES (arquivos individuais)
+-- 2. MÓDULOS POR CATEGORIA (download paralelo)
 -- ==========================================
 local categories = {
     { name = "Combat", files = {
@@ -160,19 +160,50 @@ local categories = {
     }}
 }
 
+-- Baixar todos os arquivos em paralelo
+local downloaded = {}
+local totalFiles = 0
+for _, cat in ipairs(categories) do
+    totalFiles = totalFiles + #cat.files
+end
+
+local completed = 0
+local allThreads = {}
+
 for _, cat in ipairs(categories) do
     for _, fileName in ipairs(cat.files) do
         local path = "modules/" .. cat.name:lower() .. "/" .. fileName .. ".lua"
-        UpdateStatus(cat.name .. ": " .. fileName)
+        local key = cat.name .. "/" .. fileName
 
-        local fn = fetch_module(path)
+        task.spawn(function()
+            local fn = fetch_module(path)
+            if fn then
+                downloaded[key] = fn
+            end
+            completed += 1
+            UpdateStatus("Baixando... " .. completed .. "/" .. totalFiles)
+        end)
+    end
+end
+
+-- Esperar todos os downloads terminarem
+while completed < totalFiles do
+    task.wait(0.1)
+end
+
+-- Executar todos os comandos em ordem por categoria
+for _, cat in ipairs(categories) do
+    UpdateStatus("Carregando " .. cat.name .. "...")
+    for _, fileName in ipairs(cat.files) do
+        local key = cat.name .. "/" .. fileName
+        local fn = downloaded[key]
         if fn then
             local ok, result = pcall(fn, Core)
             if not ok then
-                warn("[SYSTEM] Erro em " .. path .. ": " .. tostring(result))
+                warn("[SYSTEM] Erro em " .. key .. ": " .. tostring(result))
             end
         else
-            warn("[SYSTEM] Falha ao baixar: " .. path)
+            warn("[SYSTEM] Falha ao baixar: " .. key)
         end
     end
 end
