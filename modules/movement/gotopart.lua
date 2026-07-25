@@ -5,13 +5,15 @@ return function(GH)
 	local LocalPlayer = GH.LocalPlayer
 
 	function Cheats_ToggleGotoPart(state, btn)
-		if GH.Objects.GotoPartInput then
-			GH.Objects.GotoPartInput:Destroy()
-			GH.Objects.GotoPartInput = nil
+		if not state then
+			if GH.Objects.GotoPartPicker then
+				GH.Objects.GotoPartPicker.Close()
+				GH.Objects.GotoPartPicker = nil
+			end
+			return
 		end
-		if not state then return end
 
-		local function teleportToPart(partName)
+		local picker = GH.ShowInputPicker(GH.T("input_gotopart_title"), GH.T("input_gotopart_placeholder"), function(partName)
 			for _, v in ipairs(workspace:GetDescendants()) do
 				if v:IsA("BasePart") and v.Name:lower() == partName:lower() then
 					local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -22,19 +24,8 @@ return function(GH)
 					break
 				end
 			end
-		end
-
-		local input = GH.Tabs["Movement"]:AddInput("GotoPartInput", {
-			Title = GH.T("input_gotopart_title"),
-			Placeholder = GH.T("input_gotopart_placeholder"),
-			Finished = true,
-			Callback = function(value)
-				if value and value ~= "" then
-					teleportToPart(value)
-				end
-			end,
-		})
-		GH.Objects.GotoPartInput = input
+		end)
+		GH.Objects.GotoPartPicker = picker
 	end
 
 	GH.RegisterToggleButton("GotoPart", "toggle_gotopart", Cheats_ToggleGotoPart, "Movement", "desc_gotopart")

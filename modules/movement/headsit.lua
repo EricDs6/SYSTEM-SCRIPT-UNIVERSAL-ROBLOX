@@ -8,71 +8,38 @@ return function(GH)
 
 	function Cheats_ToggleHeadSit(state, btn)
 		GH.UnregisterMasterLoop("HeadSit")
-		GH.Disconnect("HeadSitPlayerAdded")
-		GH.Disconnect("HeadSitPlayerRemoving")
-		if GH.Objects.HeadSitDropdown then
-			GH.Objects.HeadSitDropdown:Destroy()
-			GH.Objects.HeadSitDropdown = nil
-		end
-		if not state then return end
 
-		local function refreshList()
-			local names = {}
-			for _, player in ipairs(Players:GetPlayers()) do
-				if player ~= LocalPlayer then
-					table.insert(names, player.Name)
+		if not state then
+			if GH.Objects.HeadSitPicker then
+				GH.Objects.HeadSitPicker.Close()
+				GH.Objects.HeadSitPicker = nil
+			end
+			local char = LocalPlayer.Character
+			if char then
+				local hum = char:FindFirstChildOfClass("Humanoid")
+				if hum then hum.PlatformStand = false end
+			end
+			return
+		end
+
+		local picker = GH.ShowPlayerPicker(GH.T("dropdown_headsit_title"), function(name)
+			local player = Players:FindFirstChild(name)
+			if player and player.Character then
+				local targetHead = player.Character:FindFirstChild("Head")
+				local myChar = LocalPlayer.Character
+				local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+				local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
+				if targetHead and myRoot and myHum then
+					myRoot.CFrame = targetHead.CFrame + Vector3.new(0, 1.5, 0)
+					myHum.PlatformStand = true
 				end
 			end
-			if GH.Objects.HeadSitDropdown then
-				GH.Objects.HeadSitDropdown:SetValues(names)
-			end
-		end
-
-		local initialNames = {}
-		for _, player in ipairs(Players:GetPlayers()) do
-			if player ~= LocalPlayer then
-				table.insert(initialNames, player.Name)
-			end
-		end
-
-		local dropdown = GH.Tabs["Movement"]:AddDropdown("HeadSit_Select", {
-			Title = GH.T("dropdown_headsit_title"),
-			Values = initialNames,
-			AllowNull = true,
-		})
-		GH.Objects.HeadSitDropdown = dropdown
-
-		dropdown:OnChanged(function(name)
-			if name then
-				local targetName = name
-				local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-				if hum then hum.Sit = true end
-
-				GH.RegisterMasterLoop("HeadSit", "Heartbeat", function()
-					if GH.isClosing or not GH.States.HeadSit then
-						GH.UnregisterMasterLoop("HeadSit")
-						return
-					end
-					local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-					local myHum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-					local target = Players:FindFirstChild(targetName)
-					local targetRoot = target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")
-					if root and targetRoot and myHum and myHum.Sit then
-						root.CFrame = targetRoot.CFrame * CFrame.new(0, 1.6, 0.4)
-					else
-						GH.UnregisterMasterLoop("HeadSit")
-						GH.States.HeadSit = false
-					end
-				end)
-			end
 		end)
+		GH.Objects.HeadSitPicker = picker
 
-		refreshList()
-		GH.Connections.HeadSitPlayerAdded = Players.PlayerAdded:Connect(function()
-			if GH.States.HeadSit then refreshList() end
-		end)
-		GH.Connections.HeadSitPlayerRemoving = Players.PlayerRemoving:Connect(function()
-			if GH.States.HeadSit then refreshList() end
+		GH.RegisterMasterLoop("HeadSit", "Render", function()
+			-- Find target from last selected
+			-- This will be managed by the picker callback
 		end)
 	end
 

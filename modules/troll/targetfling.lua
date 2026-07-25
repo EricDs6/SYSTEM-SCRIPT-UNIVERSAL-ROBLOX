@@ -6,119 +6,75 @@ return function(GH)
 	local RunService = GH.Services.RunService
 	local LocalPlayer = GH.LocalPlayer
 
-	local TargetFlingTarget = nil
+	GH.Cache.TargetFlingTarget = nil
 
 	function Cheats_ToggleTargetFling(state, btn)
 		GH.UnregisterMasterLoop("TargetFling")
-		GH.Disconnect("TargetFlingRespawn")
-		GH.Disconnect("TargetFlingPlayerAdded")
-		GH.Disconnect("TargetFlingPlayerRemoving")
-		if GH.Objects.TargetFlingDropdown then
-			GH.Objects.TargetFlingDropdown:Destroy()
-			GH.Objects.TargetFlingDropdown = nil
-		end
-		TargetFlingTarget = nil
 
-		pcall(function()
-			local char = LocalPlayer.Character
-			local hrp = char and char:FindFirstChild("HumanoidRootPart")
-			if hrp then
-				local oldSpin = hrp:FindFirstChild("GH_TargetSpin")
-				if oldSpin then oldSpin:Destroy() end
-				hrp.AssemblyAngularVelocity = Vector3.zero
-				hrp.AssemblyLinearVelocity = Vector3.zero
-				for _, part in ipairs(char:GetDescendants()) do
-					if part:IsA("BasePart") then part.CanCollide = true end
-				end
-				local hum = char:FindFirstChildOfClass("Humanoid")
-				if hum then hum.AutoRotate = true end
+		if not state then
+			if GH.Objects.TargetFlingPicker then
+				GH.Objects.TargetFlingPicker.Close()
+				GH.Objects.TargetFlingPicker = nil
 			end
-		end)
-
-		if not state then return end
-
-		local function startFlinging(targetPlayer)
-			TargetFlingTarget = targetPlayer
-
-			local char = LocalPlayer.Character
-			local hrp = char and char:FindFirstChild("HumanoidRootPart")
-			local hum = char and char:FindFirstChildOfClass("Humanoid")
-			if not hrp or not hum then return end
-			hum.AutoRotate = false
-			for _, part in ipairs(char:GetDescendants()) do
-				if part:IsA("BasePart") then part.CanCollide = false end
-			end
-
-			local oldSpin = hrp:FindFirstChild("GH_TargetSpin")
-			if oldSpin then oldSpin:Destroy() end
-			local spinForce = Instance.new("AngularVelocity")
-			spinForce.Name = "GH_TargetSpin"
-			spinForce.AngularVelocity = Vector3.new(0, 5000, 0)
-			spinForce.MaxTorque = math.huge
-			spinForce.Attachment0 = hrp:FindFirstChildOfClass("Attachment") or Instance.new("Attachment", hrp)
-			spinForce.Parent = hrp
-
-			GH.ShowToast(string.format(GH.T("toast_target_fling"), targetPlayer.Name), GH.Theme.Red, 2)
-
-			GH.RegisterMasterLoop("TargetFling", "Heartbeat", function()
-				if GH.isClosing or not GH.States.TargetFling then
-					GH.UnregisterMasterLoop("TargetFling"); return
-				end
-				local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-				local myHum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-				if not myHRP or not myHum or myHum.Health <= 0 then return end
-				for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
-					if part:IsA("BasePart") then part.CanCollide = false end
-				end
-				local targetHRP = TargetFlingTarget and TargetFlingTarget.Character and TargetFlingTarget.Character:FindFirstChild("HumanoidRootPart")
-				if targetHRP then
-					myHRP.CFrame = targetHRP.CFrame
-					myHRP.AssemblyLinearVelocity = Vector3.new(0, 100, 0)
+			GH.Cache.TargetFlingTarget = nil
+			-- Restore
+			pcall(function()
+				local char = LocalPlayer.Character
+				if char then
+					local hrp = char:FindFirstChild("HumanoidRootPart")
+					if hrp then
+						local spin = hrp:FindFirstChild("GH_TargetSpin")
+						if spin then spin:Destroy() end
+						hrp.AssemblyAngularVelocity = Vector3.zero
+						hrp.AssemblyLinearVelocity = Vector3.zero
+					end
+					local hum = char:FindFirstChildOfClass("Humanoid")
+					if hum then hum.AutoRotate = true end
+					for _, part in ipairs(char:GetDescendants()) do
+						if part:IsA("BasePart") then part.CanCollide = true end
+					end
 				end
 			end)
+			return
 		end
 
-		local function refreshList()
-			local names = {}
-			for _, player in ipairs(Players:GetPlayers()) do
-				if player ~= LocalPlayer then
-					table.insert(names, player.Name)
-				end
-			end
-			if GH.Objects.TargetFlingDropdown then
-				GH.Objects.TargetFlingDropdown:SetValues(names)
-			end
-		end
-
-		local initialNames = {}
-		for _, player in ipairs(Players:GetPlayers()) do
-			if player ~= LocalPlayer then
-				table.insert(initialNames, player.Name)
-			end
-		end
-
-		local dropdown = GH.Tabs["Troll"]:AddDropdown("TargetFling_Select", {
-			Title = GH.T("dropdown_targetfling_title"),
-			Values = initialNames,
-			AllowNull = true,
-		})
-		GH.Objects.TargetFlingDropdown = dropdown
-
-		dropdown:OnChanged(function(name)
-			if name then
-				local player = Players:FindFirstChild(name)
-				if player then
-					startFlinging(player)
-				end
+		local picker = GH.ShowPlayerPicker(GH.T("dropdown_targetfling_title"), function(name)
+			local player = Players:FindFirstChild(name)
+			if player then
+				GH.Cache.TargetFlingTarget = player
+				GH.ShowToast(string.format(GH.T("toast_target_fling"), name), GH.Theme.Red, 2)
 			end
 		end)
+		GH.Objects.TargetFlingPicker = picker
 
-		refreshList()
-		GH.Connections.TargetFlingPlayerAdded = Players.PlayerAdded:Connect(function()
-			if GH.States.TargetFling then refreshList() end
-		end)
-		GH.Connections.TargetFlingPlayerRemoving = Players.PlayerRemoving:Connect(function()
-			if GH.States.TargetFling then refreshList() end
+		GH.RegisterMasterLoop("TargetFling", "Heartbeat", function()
+			local target = GH.Cache.TargetFlingTarget
+			if not target or not target.Character then return end
+			local targetRoot = target.Character:FindFirstChild("HumanoidRootPart")
+			local myChar = LocalPlayer.Character
+			local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+			local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
+			if not targetRoot or not myRoot or not myHum then return end
+
+			-- Disable collisions
+			for _, part in ipairs(myChar:GetDescendants()) do
+				if part:IsA("BasePart") then part.CanCollide = false end
+			end
+			myHum.AutoRotate = false
+
+			-- Add spin
+			local spin = myRoot:FindFirstChild("GH_TargetSpin")
+			if not spin then
+				spin = Instance.new("AngularVelocity")
+				spin.Name = "GH_TargetSpin"
+				spin.AngularVelocity = Vector3.new(0, 100, 0)
+				spin.MaxTorque = math.huge
+				spin.P = math.huge
+				spin.Parent = myRoot
+			end
+
+			-- Move to target
+			myRoot.CFrame = targetRoot.CFrame + Vector3.new(0, -2, 0)
 		end)
 	end
 

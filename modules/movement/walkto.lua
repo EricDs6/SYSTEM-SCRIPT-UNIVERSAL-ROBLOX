@@ -3,74 +3,40 @@
 -- =============================================================================
 return function(GH)
 	local Players = GH.Services.Players
-	local RunService = GH.Services.RunService
 	local LocalPlayer = GH.LocalPlayer
+
+	GH.Cache.WalkToTarget = nil
 
 	function Cheats_ToggleWalkTo(state, btn)
 		GH.UnregisterMasterLoop("WalkTo")
-		GH.Disconnect("WalkToDied")
-		GH.Disconnect("WalkToPlayerAdded")
-		GH.Disconnect("WalkToPlayerRemoving")
-		if GH.Objects.WalkToDropdown then
-			GH.Objects.WalkToDropdown:Destroy()
-			GH.Objects.WalkToDropdown = nil
-		end
-		if not state then return end
 
-		local function refreshList()
-			local names = {}
-			for _, player in ipairs(Players:GetPlayers()) do
-				if player ~= LocalPlayer then
-					table.insert(names, player.Name)
-				end
+		if not state then
+			if GH.Objects.WalkToPicker then
+				GH.Objects.WalkToPicker.Close()
+				GH.Objects.WalkToPicker = nil
 			end
-			if GH.Objects.WalkToDropdown then
-				GH.Objects.WalkToDropdown:SetValues(names)
-			end
+			GH.Cache.WalkToTarget = nil
+			return
 		end
 
-		local initialNames = {}
-		for _, player in ipairs(Players:GetPlayers()) do
-			if player ~= LocalPlayer then
-				table.insert(initialNames, player.Name)
-			end
-		end
-
-		local dropdown = GH.Tabs["Movement"]:AddDropdown("WalkTo_Select", {
-			Title = GH.T("dropdown_walkto_title"),
-			Values = initialNames,
-			AllowNull = true,
-		})
-		GH.Objects.WalkToDropdown = dropdown
-
-		dropdown:OnChanged(function(name)
-			if name then
-				local targetName = name
-				GH.RegisterMasterLoop("WalkTo", "Heartbeat", function()
-					if GH.isClosing or not GH.States.WalkTo then
-						GH.UnregisterMasterLoop("WalkTo")
-						return
-					end
-					local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-					local target = Players:FindFirstChild(targetName)
-					local targetRoot = target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")
-					if hum and targetRoot then
-						if hum.SeatPart then hum.Sit = false end
-						hum:MoveTo(targetRoot.Position)
-					else
-						GH.UnregisterMasterLoop("WalkTo")
-						GH.States.WalkTo = false
-					end
-				end)
+		local picker = GH.ShowPlayerPicker(GH.T("dropdown_walkto_title"), function(name)
+			local player = Players:FindFirstChild(name)
+			if player then
+				GH.Cache.WalkToTarget = player
+				GH.ShowToast(string.format("Indo ate %s", name), GH.Theme.On, 2)
 			end
 		end)
+		GH.Objects.WalkToPicker = picker
 
-		refreshList()
-		GH.Connections.WalkToPlayerAdded = Players.PlayerAdded:Connect(function()
-			if GH.States.WalkTo then refreshList() end
-		end)
-		GH.Connections.WalkToPlayerRemoving = Players.PlayerRemoving:Connect(function()
-			if GH.States.WalkTo then refreshList() end
+		GH.RegisterMasterLoop("WalkTo", "Heartbeat", function()
+			local target = GH.Cache.WalkToTarget
+			if not target or not target.Character then return end
+			local targetRoot = target.Character:FindFirstChild("HumanoidRootPart")
+			local myChar = LocalPlayer.Character
+			local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
+			if targetRoot and myHum then
+				myHum:MoveTo(targetRoot.Position)
+			end
 		end)
 	end
 
