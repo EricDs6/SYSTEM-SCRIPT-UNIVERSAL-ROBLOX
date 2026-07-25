@@ -1590,26 +1590,27 @@ function GH.Initialize()
 	Sidebar.ClipsDescendants = true
 	Sidebar.Parent = MainFrame
 
-	-- Accent bar left (behind buttons)
+	-- Accent bar left (behind buttons) — parented to MainFrame to avoid UIListLayout
 	local AccentBar = Instance.new("Frame")
 	AccentBar.Name = "AccentBar"
-	AccentBar.Size = UDim2.new(0, 2, 1, 0)
+	AccentBar.Size = UDim2.new(0, 2, 1, -TopbarH)
+	AccentBar.Position = UDim2.new(0, 0, 0, TopbarH)
 	AccentBar.BackgroundColor3 = W11.Accent
 	AccentBar.BackgroundTransparency = 0.6
 	AccentBar.BorderSizePixel = 0
-	AccentBar.ZIndex = 1
-	AccentBar.Parent = Sidebar
+	AccentBar.ZIndex = 3
+	AccentBar.Parent = MainFrame
 
-	-- Sidebar right border
+	-- Sidebar right border — parented to MainFrame to avoid UIListLayout
 	local SidebarBorder = Instance.new("Frame")
 	SidebarBorder.Name = "SidebarBorder"
-	SidebarBorder.Size = UDim2.new(0, 1, 1, 0)
-	SidebarBorder.Position = UDim2.new(1, -1, 0, 0)
+	SidebarBorder.Size = UDim2.new(0, 1, 1, -TopbarH)
+	SidebarBorder.Position = UDim2.new(0, SidebarW - 1, 0, TopbarH)
 	SidebarBorder.BackgroundColor3 = W11.Border
 	SidebarBorder.BackgroundTransparency = 0.5
 	SidebarBorder.BorderSizePixel = 0
-	SidebarBorder.ZIndex = 1
-	SidebarBorder.Parent = Sidebar
+	SidebarBorder.ZIndex = 3
+	SidebarBorder.Parent = MainFrame
 
 	local SidebarLayout = Instance.new("UIListLayout")
 	SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
