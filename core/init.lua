@@ -810,10 +810,37 @@ GH.Categories = {
 }
 
 -- Botões pendentes que serão criados após a UI existir
-GH.PendingButtons = {} -- { {name, text, callback, category, description}, ... }
+GH.PendingButtons = {} -- { {name, localeKey, callback, category, descKey}, ... }
 
-function GH.RegisterToggleButton(name, text, callback, category, description)
-	table.insert(GH.PendingButtons, {name = name, text = text, callback = callback, category = category, description = description})
+function GH.RegisterToggleButton(name, localeKey, callback, category, descKey)
+	table.insert(GH.PendingButtons, {name = name, localeKey = localeKey, callback = callback, category = category, descKey = descKey})
+end
+
+-- ==========================================
+-- UI REFRESH (atualiza textos ao trocar idioma)
+-- ==========================================
+function GH.RefreshUI()
+	-- Atualizar toggles
+	for _, pending in ipairs(GH.PendingButtons) do
+		local btn = GH.Buttons[pending.name]
+		if btn then
+			pcall(function()
+				btn:SetTitle(GH.T(pending.localeKey))
+			end)
+			if pending.descKey then
+				pcall(function()
+					btn:SetDesc(GH.T(pending.descKey))
+				end)
+			end
+		end
+	end
+
+	-- Atualizar titulos das abas (categories)
+	if GH.Tabs then
+		for _, cat in ipairs(GH.Categories) do
+			-- Fluent tabs nao temSetTitle, mas o titulo e fixo em ingles
+		end
+	end
 end
 
 -- ==========================================
@@ -1462,8 +1489,8 @@ function GH.Initialize()
 		local tab = Tabs[pending.category] or Tabs["Combat"]
 
 		local toggle = tab:AddToggle(pending.name, {
-			Title = pending.text,
-			Description = pending.description or "",
+			Title = GH.T(pending.localeKey),
+			Description = pending.descKey and GH.T(pending.descKey) or "",
 			Default = false,
 		})
 
@@ -1499,6 +1526,7 @@ function GH.Initialize()
 		Default = LanguageReverse[GH.Settings.Language] or "Portugues",
 		Callback = function(value)
 			GH.Settings.Language = LanguageMap[value] or "pt"
+			GH.RefreshUI()
 		end,
 	})
 
