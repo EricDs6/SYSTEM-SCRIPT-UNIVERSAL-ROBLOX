@@ -126,7 +126,6 @@ return function(GH)
 			end)
 		end
 
-		GH.ShowToast(state and ("Head Size " .. GH.T("toast_activated")) or ("Head Size " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
 	GH.RegisterToggleButton("HeadSize", "toggle_headsize", Cheats_ToggleHeadSize, "Combat", "desc_headsize")

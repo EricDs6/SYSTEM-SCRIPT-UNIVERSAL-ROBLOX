@@ -45,7 +45,6 @@ return function(GH)
 			end)
 		end
 
-		GH.ShowToast(state and ("NoClip " .. GH.T("toast_activated")) or ("NoClip " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
 	GH.RegisterToggleButton("NoClip", "toggle_noclip", Cheats_ToggleNoClip, "Movement", "desc_noclip")

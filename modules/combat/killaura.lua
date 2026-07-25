@@ -39,7 +39,6 @@ return function(GH)
 				end
 			end)
 		end
-		GH.ShowToast(state and ("Kill Aura " .. GH.T("toast_activated")) or ("Kill Aura " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
 	GH.RegisterToggleButton("KillAura", "toggle_killaura", Cheats_ToggleKillAura, "Combat", "desc_killaura")

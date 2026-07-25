@@ -153,7 +153,6 @@ return function(GH)
 			startFly()
 		end
 
-		GH.ShowToast(state and ("Fly " .. GH.T("toast_activated")) or ("Fly " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
 	-- Parar fly ao morrer/respawnar

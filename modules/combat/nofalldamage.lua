@@ -20,7 +20,6 @@ return function(GH)
 	end)
 
 	function Cheats_ToggleNoFallDamage(state, btn)
-		GH.ShowToast(state and ("No Fall Damage " .. GH.T("toast_activated")) or ("No Fall Damage " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
 	GH.RegisterToggleButton("NoFallDamage", "toggle_nofalldamage", Cheats_ToggleNoFallDamage, "Combat", "desc_nofalldamage")

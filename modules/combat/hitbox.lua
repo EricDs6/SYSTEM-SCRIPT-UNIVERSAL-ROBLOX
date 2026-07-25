@@ -68,7 +68,6 @@ return function(GH)
 			end)
 		end
 
-		GH.ShowToast(state and ("Hitbox " .. GH.T("toast_activated")) or ("Hitbox " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
 	GH.RegisterToggleButton("Hitbox", "toggle_hitbox", Cheats_ToggleHitbox, "Combat", "desc_hitbox")

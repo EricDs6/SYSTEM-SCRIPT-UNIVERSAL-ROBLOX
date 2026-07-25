@@ -16,7 +16,6 @@ return function(GH)
 				if hum then hum.Health = hum.MaxHealth end
 			end)
 		end
-		GH.ShowToast(state and ("Infinite Health " .. GH.T("toast_activated")) or ("Infinite Health " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
 	GH.RegisterToggleButton("InfiniteHealth", "toggle_infinitehealth", Cheats_ToggleInfiniteHealth, "Combat", "desc_infinitehealth")

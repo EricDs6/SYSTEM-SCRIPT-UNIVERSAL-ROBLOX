@@ -64,7 +64,6 @@ return function(GH)
 
 	function Cheats_ToggleSilentAim(state, btn)
 		GH.SilentAimConfig.Enabled = state
-		GH.ShowToast(state and ("Silent Aim " .. GH.T("toast_activated")) or ("Silent Aim " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
 	GH.RegisterToggleButton("SilentAim", "toggle_silentaim", Cheats_ToggleSilentAim, "Combat", "desc_silentaim")

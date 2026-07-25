@@ -163,16 +163,16 @@ return function(GH)
 		-- === BARRA DE VIDA HORIZONTAL (fundo escuro) ===
 		local hpBarBg = Instance.new("Frame")
 		hpBarBg.Name = "GH_ESP_HpBarBg"
-		hpBarBg.Size = UDim2.new(0.7, 0, 0, 8)
-		hpBarBg.Position = UDim2.new(0.15, 0, 0, 44)
+		hpBarBg.Size = UDim2.new(0.5, 0, 0, 5)
+		hpBarBg.Position = UDim2.new(0.25, 0, 0, 46)
 		hpBarBg.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 		hpBarBg.BackgroundTransparency = 0.2
 		hpBarBg.BorderSizePixel = 1
 		hpBarBg.BorderColor3 = Color3.fromRGB(80, 80, 80)
 		hpBarBg.Parent = bg
-		Instance.new("UICorner", hpBarBg).CornerRadius = UDim.new(0, 3)
+		Instance.new("UICorner", hpBarBg).CornerRadius = UDim.new(1, 0)
 
-		-- === PREENCHIMENTO (cresce da esquerda pra direita) ===
+		-- === PREENCHIMENTO ===
 		local hpBarFill = Instance.new("Frame")
 		hpBarFill.Name = "GH_ESP_HpBarFill"
 		hpBarFill.Size = UDim2.new(1, 0, 1, 0)
@@ -180,13 +180,13 @@ return function(GH)
 		hpBarFill.BackgroundColor3 = colors.Main
 		hpBarFill.BorderSizePixel = 0
 		hpBarFill.Parent = hpBarBg
-		Instance.new("UICorner", hpBarFill).CornerRadius = UDim.new(0, 3)
+		Instance.new("UICorner", hpBarFill).CornerRadius = UDim.new(1, 0)
 
-		-- Texto da vida dentro da barra
+		-- Texto da vida (abaixo da barra)
 		local hpText = Instance.new("TextLabel")
 		hpText.Name = "GH_ESP_HpText"
-		hpText.Size = UDim2.new(1, 0, 1, 0)
-		hpText.Position = UDim2.new(0, 0, 0, 0)
+		hpText.Size = UDim2.new(1, 0, 0, 10)
+		hpText.Position = UDim2.new(0, 0, 0, 51)
 		hpText.BackgroundTransparency = 1
 		hpText.Text = "100/100"
 		hpText.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -195,7 +195,7 @@ return function(GH)
 		hpText.Font = Enum.Font.GothamBold
 		hpText.TextSize = 8
 		hpText.TextXAlignment = Enum.TextXAlignment.Center
-		hpText.Parent = hpBarBg
+		hpText.Parent = bg
 
 		espData[jogador] = {gui = bg, hl = hl}
 	end
@@ -346,7 +346,6 @@ return function(GH)
 			end)
 		end
 
-		GH.ShowToast(state and ("ESP " .. GH.T("toast_activated")) or ("ESP " .. GH.T("toast_deactivated")), state and GH.Theme.On or GH.Theme.Off, 2)
 	end
 
 	GH.RegisterToggleButton("ESP", "toggle_esp", Cheats_ToggleESP, "Combat", "desc_esp")
