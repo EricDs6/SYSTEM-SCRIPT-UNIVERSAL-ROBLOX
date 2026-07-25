@@ -93,12 +93,16 @@ return function(GH)
 			end
 		end)
 
-		-- Scroll: ajustar velocidade
-		GH.Connections.Fly_Scroll = UserInputService.InputChanged:Connect(function(input)
+		-- Teclas +/-: ajustar velocidade
+		GH.Connections.Fly_Scroll = UserInputService.InputBegan:Connect(function(input, gpe)
+			if gpe then return end
 			if not GH.States.Fly then return end
-			if input.UserInputType == Enum.UserInputType.MouseWheel then
-				local dir = input.Position.Z > 0 and 5 or -5
-				GH.FlySpeed = math.clamp((GH.FlySpeed or 20) + dir, 5, 200)
+			if input.KeyCode == Enum.KeyCode.Equals or input.KeyCode == Enum.KeyCode.KeypadPlus then
+				GH.FlySpeed = math.clamp((GH.FlySpeed or 20) + 5, 5, 200)
+				GH.ShowToast("Fly Speed: " .. GH.FlySpeed, GH.Theme.Accent, 1)
+			elseif input.KeyCode == Enum.KeyCode.Minus or input.KeyCode == Enum.KeyCode.KeypadMinus then
+				GH.FlySpeed = math.clamp((GH.FlySpeed or 20) - 5, 5, 200)
+				GH.ShowToast("Fly Speed: " .. GH.FlySpeed, GH.Theme.Accent, 1)
 			end
 		end)
 
