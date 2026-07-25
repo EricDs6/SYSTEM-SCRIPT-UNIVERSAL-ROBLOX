@@ -40,13 +40,26 @@ return function(GH)
 	local charAddedConns = {}
 
 	local function removerESP()
-		-- Restaurar nome padrao do Roblox
-		for jogador, _ in pairs(espData) do
+		-- Restaurar nome padrao do Roblox para TODOS os jogadores
+		for _, jogador in ipairs(Players:GetPlayers()) do
 			pcall(function()
-				if jogador and jogador.Character then
+				if jogador ~= LocalPlayer and jogador.Character then
 					local hum = jogador.Character:FindFirstChildOfClass("Humanoid")
 					if hum then
 						hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer
+					end
+				end
+			end)
+		end
+
+		-- Restaurar nomes de Roblox escondidos
+		for _, jogador in ipairs(Players:GetPlayers()) do
+			pcall(function()
+				if jogador ~= LocalPlayer and jogador.Character then
+					for _, obj in ipairs(jogador.Character:GetDescendants()) do
+						if obj:IsA("BillboardGui") and not obj.Name:find("GH_ESP") then
+							obj.Enabled = true
+						end
 					end
 				end
 			end)
@@ -58,11 +71,19 @@ return function(GH)
 		end
 		table.clear(charAddedConns)
 
+		-- Destruir folder e todos os objetos ESP dentro dele
 		if espFolder then
 			pcall(function() espFolder:Destroy() end)
 			espFolder = nil
 			GH.Objects.ESP_Folder = nil
 		end
+
+		-- Garantir limpeza via GH.Objects tambem
+		if GH.Objects.ESP_Folder and GH.Objects.ESP_Folder.Parent then
+			pcall(function() GH.Objects.ESP_Folder:Destroy() end)
+			GH.Objects.ESP_Folder = nil
+		end
+
 		GH.Disconnect("ESP_Render")
 		GH.Disconnect("ESP_Added")
 		GH.Disconnect("ESP_Removing")
@@ -78,11 +99,26 @@ return function(GH)
 		local head = char:FindFirstChild("Head")
 		if not head then return end
 
-		-- Esconder nome padrao do Roblox
 		local hum = char:FindFirstChildOfClass("Humanoid")
-		if hum then
-			hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+		if not hum then return end
+
+		-- Pular jogadores mortos
+		if hum.Health <= 0 then return end
+
+		-- Pular jogadores dentro de veiculos (vehicle seat como ancestor do HRP)
+		local hrp = char:FindFirstChild("HumanoidRootPart")
+		if hrp then
+			local parent = hrp.Parent
+			while parent do
+				if parent:IsA("VehicleSeat") or parent:IsA("Seat") then
+					return
+				end
+				parent = parent.Parent
+			end
 		end
+
+		-- Esconder nome padrao do Roblox
+		hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 		for _, obj in ipairs(char:GetDescendants()) do
 			if obj:IsA("BillboardGui") and not obj.Name:find("GH_ESP") then
 				pcall(function() obj.Enabled = false end)

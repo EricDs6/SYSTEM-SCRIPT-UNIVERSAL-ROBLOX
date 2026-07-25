@@ -1408,15 +1408,22 @@ function GH.FullCleanup()
 	end)
 
 	-- Limpar ESP
-	for _, p in ipairs(Players:GetPlayers()) do
-		if p ~= LocalPlayer and p.Character then
-			for _, obj in ipairs(p.Character:GetChildren()) do
-				if obj.Name:sub(1, 6) == "GH_ESP" then
-					pcall(function() obj:Destroy() end)
+	pcall(function()
+		-- Destruir espFolder completa (Highlights + BillboardGuis)
+		if GH.Objects.ESP_Folder and GH.Objects.ESP_Folder.Parent then
+			GH.Objects.ESP_Folder:Destroy()
+			GH.Objects.ESP_Folder = nil
+		end
+		-- Restaurar DisplayDistanceType de todos os jogadores
+		for _, p in ipairs(Players:GetPlayers()) do
+			if p ~= LocalPlayer and p.Character then
+				local hum = p.Character:FindFirstChildOfClass("Humanoid")
+				if hum then
+					hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer
 				end
 			end
 		end
-	end
+	end)
 
 	-- Limpar animacoes
 	pcall(function()
