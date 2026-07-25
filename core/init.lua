@@ -1684,25 +1684,41 @@ function GH.Initialize()
 	-- ==========================================
 	-- FECHAR (via botao do Fluent ou unloading)
 	-- ==========================================
-	-- O Fluent gerencia minimize/fechar via MinimizeKeybind
-	-- Cleanup é chamado quando o script é descarregado
 
+	-- Cleanup quando o player sai
 	Players.PlayerRemoving:Connect(function(player)
 		if player == GH.LocalPlayer then
-			pcall(function()
-				GH.FullCleanup()
-			end)
+			pcall(function() GH.FullCleanup() end)
 		end
 	end)
 
 	-- Cleanup quando o script e destruido pelo executor
 	if script then
 		script.Destroying:Connect(function()
-			pcall(function()
-				GH.FullCleanup()
-			end)
+			pcall(function() GH.FullCleanup() end)
 		end)
 	end
+
+	-- Hook no botao de fechar da janela Fluent
+	if Window.Window then
+		local closeBtn = Window.Window:FindFirstChild("CloseButton", true)
+			or Window.Window:FindFirstChild("X", true)
+		if closeBtn then
+			closeBtn.MouseButton1Click:Connect(function()
+				pcall(function() GH.FullCleanup() end)
+			end)
+		end
+	end
+
+	-- Fallback: detectar quando a janela e destruida
+	task.spawn(function()
+		while Window and Window.Window and Window.Window.Parent do
+			task.wait(0.5)
+		end
+		if not GH._cleaningUp then
+			pcall(function() GH.FullCleanup() end)
+		end
+	end)
 
 	-- Notificacao de carregamento
 	task.delay(0.5, function()
