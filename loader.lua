@@ -168,17 +168,14 @@ end
 -- ==========================================
 UpdateStatus("Tudo pronto! Iniciando...")
 
--- Delay de 5 segundos ANTES de abrir o painel principal
-task.wait(5)
-
 -- Transição suave para desaparecer (Fade Out)
-TweenService:Create(LoadFrame, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
-TweenService:Create(TitleLabel, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
-TweenService:Create(StatusLabel, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
-TweenService:Create(SpinnerStroke, TweenInfo.new(0.3), {Transparency = 1}):Play()
+TweenService:Create(LoadFrame, TweenInfo.new(0.25), {BackgroundTransparency = 1}):Play()
+TweenService:Create(TitleLabel, TweenInfo.new(0.25), {TextTransparency = 1}):Play()
+TweenService:Create(StatusLabel, TweenInfo.new(0.25), {TextTransparency = 1}):Play()
+TweenService:Create(SpinnerStroke, TweenInfo.new(0.25), {Transparency = 1}):Play()
 LoadFrame.UIStroke.Transparency = 1
 
-task.wait(0.3)
+task.wait(0.25)
 LoadGui:Destroy()
 
 -- Chama o painel principal APÓS a tela de load sumir completamente
