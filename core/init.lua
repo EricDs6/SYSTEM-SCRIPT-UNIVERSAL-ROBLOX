@@ -1559,7 +1559,7 @@ function GH.Initialize()
 	CloseBtn.Size = UDim2.new(0, BTN_SIZE, 0, BTN_SIZE)
 	CloseBtn.Position = UDim2.new(1, -BTN_SIZE - 8, 0.5, -BTN_SIZE / 2)
 	CloseBtn.BackgroundColor3 = W11.Surface
-	CloseBtn.Text = "✕"
+	CloseBtn.Text = "X"
 	CloseBtn.TextColor3 = W11.Text
 	CloseBtn.Font = Font
 	CloseBtn.TextSize = 10
