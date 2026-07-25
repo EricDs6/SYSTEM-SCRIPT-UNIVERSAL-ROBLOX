@@ -949,7 +949,8 @@ function GH.ShowPlayerPicker(title, callback)
 	contentFrame.Name = "Content"
 	contentFrame.Size = UDim2.new(1, 0, 1, -TopbarH)
 	contentFrame.Position = UDim2.new(0, 0, 0, TopbarH)
-	contentFrame.BackgroundTransparency = 1
+	contentFrame.BackgroundColor3 = GH.Theme.BG
+	contentFrame.BackgroundTransparency = 0.3
 	contentFrame.ClipsDescendants = true
 	contentFrame.ZIndex = 2
 	contentFrame.Parent = frame
@@ -959,7 +960,8 @@ function GH.ShowPlayerPicker(title, callback)
 	listScroll.Name = "PlayerList"
 	listScroll.Size = UDim2.new(1, -10, 1, -6)
 	listScroll.Position = UDim2.new(0, 5, 0, 3)
-	listScroll.BackgroundTransparency = 1
+	listScroll.BackgroundColor3 = Color3.fromRGB(14, 14, 17)
+	listScroll.BackgroundTransparency = 0.5
 	listScroll.ScrollBarThickness = 3
 	listScroll.ScrollBarImageColor3 = GH.Theme.Accent
 	listScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
@@ -977,7 +979,7 @@ function GH.ShowPlayerPicker(title, callback)
 
 	local function buildList()
 		for _, child in ipairs(listScroll:GetChildren()) do
-			if child:IsA("TextButton") then child:Destroy() end
+			if child:IsA("TextButton") or child:IsA("TextLabel") then child:Destroy() end
 		end
 		local names = {}
 		for _, player in ipairs(Players:GetPlayers()) do
@@ -986,6 +988,21 @@ function GH.ShowPlayerPicker(title, callback)
 			end
 		end
 		table.sort(names)
+
+		if #names == 0 then
+			local empty = Instance.new("TextLabel")
+			empty.Name = "EmptyMsg"
+			empty.Size = UDim2.new(1, 0, 0, 40)
+			empty.BackgroundTransparency = 1
+			empty.Text = "Nenhum jogador encontrado"
+			empty.TextColor3 = GH.Theme.Off
+			empty.Font = Enum.Font.GothamMedium
+			empty.TextSize = 11
+			empty.ZIndex = 4
+			empty.Parent = listScroll
+			return
+		end
+
 		for i, name in ipairs(names) do
 			local btn = Instance.new("TextButton")
 			btn.Name = name
