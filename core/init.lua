@@ -1551,38 +1551,36 @@ function GH.Initialize()
 	TitleLabel.ZIndex = 3
 	TitleLabel.Parent = Topbar
 
-	-- Topbar buttons
-	local TopbarBtns = Instance.new("Frame")
-	TopbarBtns.Size = UDim2.new(0, 80, 1, 0)
-	TopbarBtns.Position = UDim2.new(1, -86, 0, 0)
-	TopbarBtns.BackgroundTransparency = 1
-	TopbarBtns.ZIndex = 3
-	TopbarBtns.Parent = Topbar
-	local TopbarBtnsLayout = Instance.new("UIListLayout")
-	TopbarBtnsLayout.FillDirection = Enum.FillDirection.Horizontal
-	TopbarBtnsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
-	TopbarBtnsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-	TopbarBtnsLayout.Padding = UDim.new(0, 4)
-	TopbarBtnsLayout.Parent = TopbarBtns
+	-- Topbar buttons (Win11 style: small equal squares)
+	local BTN_SIZE = 24
 
-	local function MakeTopbarBtn(name, text, color)
-		local btn = Instance.new("TextButton")
-		btn.Name = name
-		btn.Size = UDim2.new(0, 36, 1, 0)
-		btn.BackgroundColor3 = W11.Surface
-		btn.Text = text
-		btn.TextColor3 = color or W11.TextSecondary
-		btn.Font = FontBold
-		btn.TextSize = 11
-		btn.AutoButtonColor = false
-		btn.ZIndex = 4
-		btn.Parent = TopbarBtns
-		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
-		return btn
-	end
+	local CloseBtn = Instance.new("TextButton")
+	CloseBtn.Name = "Close"
+	CloseBtn.Size = UDim2.new(0, BTN_SIZE, 0, BTN_SIZE)
+	CloseBtn.Position = UDim2.new(1, -BTN_SIZE - 8, 0.5, -BTN_SIZE / 2)
+	CloseBtn.BackgroundColor3 = W11.Surface
+	CloseBtn.Text = "✕"
+	CloseBtn.TextColor3 = W11.Text
+	CloseBtn.Font = Font
+	CloseBtn.TextSize = 10
+	CloseBtn.AutoButtonColor = false
+	CloseBtn.ZIndex = 4
+	CloseBtn.Parent = Topbar
+	Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 4)
 
-	local MinBtn = MakeTopbarBtn("Minimize", "—", W11.TextSecondary)
-	local CloseBtn = MakeTopbarBtn("Close", "✕", W11.Text)
+	local MinBtn = Instance.new("TextButton")
+	MinBtn.Name = "Minimize"
+	MinBtn.Size = UDim2.new(0, BTN_SIZE, 0, BTN_SIZE)
+	MinBtn.Position = UDim2.new(1, -BTN_SIZE * 2 - 14, 0.5, -BTN_SIZE / 2)
+	MinBtn.BackgroundColor3 = W11.Surface
+	MinBtn.Text = "—"
+	MinBtn.TextColor3 = W11.TextSecondary
+	MinBtn.Font = Font
+	MinBtn.TextSize = 10
+	MinBtn.AutoButtonColor = false
+	MinBtn.ZIndex = 4
+	MinBtn.Parent = Topbar
+	Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 4)
 
 	-- ==========================================
 	-- SIDEBAR
