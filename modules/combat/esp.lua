@@ -1,8 +1,7 @@
 -- =============================================================================
 -- COMMAND: ESP
--- Mostra nomes, vida e distancia dos jogadores atraves de paredes
--- Arquitetura: Folder no TargetGui + RenderStepped direto
--- Visual: Highlight + BillboardGui com tag, nome, barra de vida, info
+-- Box outline + Tag acima + Distancia abaixo + Barra de vida lateral
+-- Estilo: Team (verde) / Enemy (vermelho) / Neutral (amarelo)
 -- =============================================================================
 return function(GH)
 	local Players = GH.Services.Players
@@ -11,29 +10,26 @@ return function(GH)
 
 	local ESPColors = {
 		Enemy = {
-			HighlightFill = Color3.fromRGB(255, 30, 30),
-			HighlightOutline = Color3.fromRGB(255, 80, 80),
-			Text = Color3.fromRGB(255, 60, 60),
-			Tag = GH.T("esp_enemy"),
+			Main = Color3.fromRGB(255, 40, 40),
+			Dark = Color3.fromRGB(180, 20, 20),
+			Tag = "Enemy",
 		},
 		Ally = {
-			HighlightFill = Color3.fromRGB(30, 200, 30),
-			HighlightOutline = Color3.fromRGB(80, 255, 80),
-			Text = Color3.fromRGB(60, 255, 60),
-			Tag = GH.T("esp_ally"),
+			Main = Color3.fromRGB(40, 255, 40),
+			Dark = Color3.fromRGB(20, 160, 20),
+			Tag = "Team",
 		},
 		Neutral = {
-			HighlightFill = Color3.fromRGB(255, 200, 30),
-			HighlightOutline = Color3.fromRGB(255, 230, 100),
-			Text = Color3.fromRGB(255, 220, 50),
-			Tag = GH.T("esp_neutral"),
+			Main = Color3.fromRGB(255, 200, 40),
+			Dark = Color3.fromRGB(180, 140, 20),
+			Tag = "Player",
 		},
 	}
 
 	local function GetPlayerRelation(player)
 		if player == LocalPlayer then return nil end
 		if LocalPlayer.Team and player.Team then
-			if player.Team == LocalPlayer.Team then return "Ally"
+			if LocalPlayer.Team == player.Team then return "Ally"
 			else return "Enemy" end
 		end
 		return "Neutral"
@@ -59,7 +55,6 @@ return function(GH)
 
 		local char = jogador.Character
 		if not char then return end
-
 		local head = char:FindFirstChild("Head")
 		if not head then return end
 
@@ -67,88 +62,108 @@ return function(GH)
 		if not relation then return end
 		local colors = ESPColors[relation]
 
-		-- Highlight
+		-- === HIGHLIGHT (box outline no character) ===
 		local hl = Instance.new("Highlight")
 		hl.Name = "GH_ESP_HL"
-		hl.FillColor = colors.HighlightFill
-		hl.FillTransparency = 0.55
-		hl.OutlineColor = colors.HighlightOutline
+		hl.FillColor = colors.Main
+		hl.FillTransparency = 1 -- Sem preenchimento, so a borda
+		hl.OutlineColor = colors.Main
 		hl.OutlineTransparency = 0
 		hl.Adornee = char
 		hl.Parent = espFolder
 
-		-- BillboardGui
+		-- === BILLBOARDGUI (textos flutuando) ===
 		local bg = Instance.new("BillboardGui")
 		bg.Name = "GH_ESP_" .. jogador.Name
 		bg.Adornee = head
-		bg.Size = UDim2.new(0, 200, 0, 46)
-		bg.StudsOffset = Vector3.new(0, 3, 0)
+		bg.Size = UDim2.new(0, 160, 0, 80)
+		bg.StudsOffset = Vector3.new(0, 3.5, 0)
 		bg.AlwaysOnTop = true
 		bg.Parent = espFolder
 
-		-- Tag ([INIMIGO], [ALIADO], [JOGADOR])
+		-- Tag (TEAM / ENEMY / PLAYER) - acima do box
 		local tagLabel = Instance.new("TextLabel")
 		tagLabel.Name = "GH_ESP_Tag"
-		tagLabel.Size = UDim2.new(1, 0, 0, 14)
+		tagLabel.Size = UDim2.new(1, 0, 0, 18)
 		tagLabel.Position = UDim2.new(0, 0, 0, 0)
 		tagLabel.BackgroundTransparency = 1
 		tagLabel.Text = colors.Tag
-		tagLabel.TextColor3 = colors.Text
+		tagLabel.TextColor3 = colors.Main
 		tagLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-		tagLabel.TextStrokeTransparency = 0.3
+		tagLabel.TextStrokeTransparency = 0.2
 		tagLabel.Font = Enum.Font.GothamBlack
-		tagLabel.TextSize = 13
+		tagLabel.TextSize = 16
 		tagLabel.TextXAlignment = Enum.TextXAlignment.Center
 		tagLabel.Parent = bg
 
-		-- Nome
+		-- Nome - abaixo da tag
 		local nameLabel = Instance.new("TextLabel")
 		nameLabel.Name = "GH_ESP_Name"
-		nameLabel.Size = UDim2.new(1, 0, 0, 13)
-		nameLabel.Position = UDim2.new(0, 0, 0, 14)
+		nameLabel.Size = UDim2.new(1, 0, 0, 14)
+		nameLabel.Position = UDim2.new(0, 0, 0, 18)
 		nameLabel.BackgroundTransparency = 1
 		nameLabel.Text = jogador.Name
 		nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 		nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-		nameLabel.TextStrokeTransparency = 0.3
+		nameLabel.TextStrokeTransparency = 0.2
 		nameLabel.Font = Enum.Font.GothamBold
-		nameLabel.TextSize = 11
+		nameLabel.TextSize = 12
 		nameLabel.TextXAlignment = Enum.TextXAlignment.Center
 		nameLabel.Parent = bg
 
-		-- Barra de vida (fundo)
-		local hpBg = Instance.new("Frame")
-		hpBg.Name = "GH_ESP_HpBg"
-		hpBg.Size = UDim2.new(0.6, 0, 0, 3)
-		hpBg.Position = UDim2.new(0.2, 0, 0, 28)
-		hpBg.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-		hpBg.BorderSizePixel = 0
-		hpBg.Parent = bg
-		Instance.new("UICorner", hpBg).CornerRadius = UDim.new(0, 2)
+		-- === BARRA DE VIDA VERTICAL (lado esquerdo) ===
+		-- Fundo da barra
+		local hpBarBg = Instance.new("Frame")
+		hpBarBg.Name = "GH_ESP_HpBarBg"
+		hpBarBg.Size = UDim2.new(0, 4, 0, 50)
+		hpBarBg.Position = UDim2.new(0, -12, 0.5, -25)
+		hpBarBg.AnchorPoint = Vector2.new(0, 0.5)
+		hpBarBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+		hpBarBg.BackgroundTransparency = 0.3
+		hpBarBg.BorderSizePixel = 0
+		hpBarBg.Parent = bg
+		Instance.new("UICorner", hpBarBg).CornerRadius = UDim.new(0, 2)
 
-		-- Barra de vida (preenchimento)
-		local hpFill = Instance.new("Frame")
-		hpFill.Name = "GH_ESP_HpFill"
-		hpFill.Size = UDim2.new(1, 0, 1, 0)
-		hpFill.BackgroundColor3 = colors.Text
-		hpFill.BorderSizePixel = 0
-		hpFill.Parent = hpBg
-		Instance.new("UICorner", hpFill).CornerRadius = UDim.new(0, 2)
+		-- Preenchimento da barra (cresce de baixo pra cima)
+		local hpBarFill = Instance.new("Frame")
+		hpBarFill.Name = "GH_ESP_HpBarFill"
+		hpBarFill.Size = UDim2.new(1, 0, 1, 0)
+		hpBarFill.Position = UDim2.new(0, 0, 1, 0)
+		hpBarFill.AnchorPoint = Vector2.new(0, 1)
+		hpBarFill.BackgroundColor3 = colors.Main
+		hpBarFill.BorderSizePixel = 0
+		hpBarFill.Parent = hpBarBg
+		Instance.new("UICorner", hpBarFill).CornerRadius = UDim.new(0, 2)
 
-		-- Info (vida + distancia)
-		local infoLabel = Instance.new("TextLabel")
-		infoLabel.Name = "GH_ESP_Info"
-		infoLabel.Size = UDim2.new(1, 0, 0, 12)
-		infoLabel.Position = UDim2.new(0, 0, 0, 32)
-		infoLabel.BackgroundTransparency = 1
-		infoLabel.Text = ""
-		infoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-		infoLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-		infoLabel.TextStrokeTransparency = 0.3
-		infoLabel.Font = Enum.Font.GothamMedium
-		infoLabel.TextSize = 10
-		infoLabel.TextXAlignment = Enum.TextXAlignment.Center
-		infoLabel.Parent = bg
+		-- Distancia - abaixo do nome
+		local distLabel = Instance.new("TextLabel")
+		distLabel.Name = "GH_ESP_Dist"
+		distLabel.Size = UDim2.new(1, 0, 0, 14)
+		distLabel.Position = UDim2.new(0, 0, 0, 34)
+		distLabel.BackgroundTransparency = 1
+		distLabel.Text = "0M"
+		distLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+		distLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+		distLabel.TextStrokeTransparency = 0.3
+		distLabel.Font = Enum.Font.GothamMedium
+		distLabel.TextSize = 11
+		distLabel.TextXAlignment = Enum.TextXAlignment.Center
+		distLabel.Parent = bg
+
+		-- Vida (numero) - ao lado da barra
+		local hpLabel = Instance.new("TextLabel")
+		hpLabel.Name = "GH_ESP_HpText"
+		hpLabel.Size = UDim2.new(0, 40, 0, 14)
+		hpLabel.Position = UDim2.new(0, 6, 0, 50)
+		hpLabel.BackgroundTransparency = 1
+		hpLabel.Text = "100"
+		hpLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		hpLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+		hpLabel.TextStrokeTransparency = 0.3
+		hpLabel.Font = Enum.Font.GothamBold
+		hpLabel.TextSize = 10
+		hpLabel.TextXAlignment = Enum.TextXAlignment.Left
+		hpLabel.Parent = bg
 
 		espData[jogador] = {gui = bg, hl = hl}
 	end
@@ -157,7 +172,6 @@ return function(GH)
 		removerESP()
 
 		if state then
-			-- Pasta no TargetGui
 			espFolder = Instance.new("Folder")
 			espFolder.Name = "GH_ESP_Folder"
 			local ok = pcall(function() espFolder.Parent = GH.TargetGui end)
@@ -165,12 +179,10 @@ return function(GH)
 				espFolder.Parent = LocalPlayer:WaitForChild("PlayerGui")
 			end
 
-			-- Criar ESP para quem ja esta no servidor
 			for _, jogador in ipairs(Players:GetPlayers()) do
 				criarESP(jogador)
 			end
 
-			-- Novos players
 			GH.Connections.ESP_Added = Players.PlayerAdded:Connect(function(jogador)
 				jogador.CharacterAdded:Connect(function()
 					if GH.States.ESP then
@@ -180,12 +192,10 @@ return function(GH)
 				end)
 			end)
 
-			-- Players que saem
 			GH.Connections.ESP_Removing = Players.PlayerRemoving:Connect(function(jogador)
 				espData[jogador] = nil
 			end)
 
-			-- Recriar ESP no respawn
 			for _, jogador in ipairs(Players:GetPlayers()) do
 				if jogador ~= LocalPlayer then
 					jogador.CharacterAdded:Connect(function()
@@ -197,7 +207,7 @@ return function(GH)
 				end
 			end
 
-			-- Loop de atualizacao (vida, distancia, cores)
+			-- Loop de atualizacao
 			GH.Connections.ESP_Render = RunService.RenderStepped:Connect(function()
 				if not GH.States.ESP then return end
 
@@ -238,10 +248,13 @@ return function(GH)
 					local tagLabel = bg:FindFirstChild("GH_ESP_Tag")
 					if tagLabel then
 						tagLabel.Visible = GH.Settings.ESPShowTag
-						if tagLabel.Text ~= colors.Tag then
-							tagLabel.Text = colors.Tag
-							tagLabel.TextColor3 = colors.Text
-						end
+						tagLabel.Text = colors.Tag
+						tagLabel.TextColor3 = colors.Main
+					end
+
+					-- Highlight cor
+					if hl then
+						hl.OutlineColor = colors.Main
 					end
 
 					-- Nome
@@ -254,35 +267,36 @@ return function(GH)
 					local maxHp = math.floor(hum.MaxHealth)
 					local ratio = maxHp > 0 and math.clamp(hp / maxHp, 0, 1) or 0
 
-					local hpBg = bg:FindFirstChild("GH_ESP_HpBg")
-					if hpBg then
-						hpBg.Visible = GH.Settings.ESPShowHealth
-						local hpFill = hpBg:FindFirstChild("GH_ESP_HpFill")
-						if hpFill then
-							hpFill.Size = UDim2.new(ratio, 0, 1, 0)
-							if ratio >= 0.6 then hpFill.BackgroundColor3 = Color3.fromRGB(0, 220, 80)
-							elseif ratio >= 0.3 then hpFill.BackgroundColor3 = Color3.fromRGB(255, 180, 0)
-							else hpFill.BackgroundColor3 = Color3.fromRGB(255, 50, 50) end
+					-- Barra de vida vertical
+					local hpBarBg = bg:FindFirstChild("GH_ESP_HpBarBg")
+					if hpBarBg then
+						hpBarBg.Visible = GH.Settings.ESPShowHealth
+						local hpBarFill = hpBarBg:FindFirstChild("GH_ESP_HpBarFill")
+						if hpBarFill then
+							hpBarFill.Size = UDim2.new(1, 0, ratio, 0)
+							-- Cor da barra baseada na vida
+							if ratio >= 0.6 then
+								hpBarFill.BackgroundColor3 = Color3.fromRGB(0, 220, 80)
+							elseif ratio >= 0.3 then
+								hpBarFill.BackgroundColor3 = Color3.fromRGB(255, 180, 0)
+							else
+								hpBarFill.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+							end
 						end
 					end
 
-					-- Info
-					local infoLabel = bg:FindFirstChild("GH_ESP_Info")
-					if infoLabel then
-						local showInfo = GH.Settings.ESPShowHealth or GH.Settings.ESPShowDistance
-						infoLabel.Visible = showInfo
-						if showInfo then
-							if GH.Settings.ESPShowHealth and GH.Settings.ESPShowDistance then
-								infoLabel.Text = hp .. "/" .. maxHp .. "  |  " .. dist .. "m"
-							elseif GH.Settings.ESPShowHealth then
-								infoLabel.Text = hp .. "/" .. maxHp
-							else
-								infoLabel.Text = dist .. "m"
-							end
-							if ratio >= 0.6 then infoLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
-							elseif ratio >= 0.3 then infoLabel.TextColor3 = Color3.fromRGB(255, 200, 80)
-							else infoLabel.TextColor3 = Color3.fromRGB(255, 80, 80) end
-						end
+					-- Texto da vida
+					local hpLabel = bg:FindFirstChild("GH_ESP_HpText")
+					if hpLabel then
+						hpLabel.Visible = GH.Settings.ESPShowHealth
+						hpLabel.Text = hp .. "/" .. maxHp
+					end
+
+					-- Distancia
+					local distLabel = bg:FindFirstChild("GH_ESP_Dist")
+					if distLabel then
+						distLabel.Visible = GH.Settings.ESPShowDistance
+						distLabel.Text = dist .. "M"
 					end
 				end
 			end)
