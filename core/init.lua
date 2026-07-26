@@ -2491,7 +2491,7 @@ function GH.Initialize()
 		FilterToggles(SearchBar.Text)
 	end)
 
-	ClearX.MouseButton1Click:Connect(function()
+	SearchClear.MouseButton1Click:Connect(function()
 		SearchBar.Text = ""
 		SearchClear.Visible = false
 		FilterToggles("")
