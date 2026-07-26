@@ -111,6 +111,7 @@ GH.Locales = {
 		toggle_btools = "BTools",
 		toggle_breakvelocity = "Break Velocity",
 		toggle_invisibleparts = "Invisible Parts",
+		toggle_voiceaudio = "Voice Audio (Link)",
 		toggle_trollfling = "Tornado Fling",
 		toggle_targetfling = "Target Fling",
 		toggle_spasms = "Spasmos",
@@ -172,6 +173,7 @@ GH.Locales = {
 		desc_btools = "Ferramentas de construcao (HopperBins)",
 		desc_breakvelocity = "Reseta toda velocidade do personagem",
 		desc_invisible_parts = "Mostra partes que estao invisiveis no mapa",
+		desc_voiceaudio = "Toca audio no voice do Roblox via link. Comando: !audio <url>",
 		desc_trollfling = "Gira rapidamente para jogar outros jogadores",
 		desc_targetfling = "Seleciona um alvo e voa ate ele para derrubar",
 		desc_spasms = "Animacao de convulsao (requer R6)",
@@ -211,6 +213,11 @@ GH.Locales = {
 		toast_click_detectors = "Click Detectors ativados!",
 		toast_proximity_prompts = "Proximity Prompts ativados!",
 		toast_btools = "BTools ativados!",
+		toast_voiceaudio_playing = "Tocando audio no voice!",
+		toast_voiceaudio_no_url = "Nenhum link de audio informado",
+		toast_voiceaudio_no_char = "Personagem nao encontrado",
+		input_voiceaudio_title = "Voice Audio - Link do Audio",
+		input_voiceaudio_placeholder = "Cole o link do audio...",
 		toast_velocity_reset = "Velocity resetado!",
 		toast_invisible_shown = "%s partes invisiveis mostradas",
 		toast_clothes_removed = "Roupas removidas!",
@@ -314,6 +321,7 @@ GH.Locales = {
 		toggle_btools = "BTools",
 		toggle_breakvelocity = "Break Velocity",
 		toggle_invisibleparts = "Invisible Parts",
+		toggle_voiceaudio = "Voice Audio (Link)",
 		toggle_trollfling = "Tornado Fling",
 		toggle_targetfling = "Target Fling",
 		toggle_spasms = "Spasms",
@@ -375,6 +383,7 @@ GH.Locales = {
 		desc_btools = "Building tools (HopperBins)",
 		desc_breakvelocity = "Resets all character velocity",
 		desc_invisible_parts = "Shows invisible parts on map",
+		desc_voiceaudio = "Plays audio in Roblox voice via link. Command: !audio <url>",
 		desc_trollfling = "Spins rapidly to fling other players",
 		desc_targetfling = "Select a target and fly to them to knock down",
 		desc_spasms = "Convulsion animation (requires R6)",
@@ -414,6 +423,11 @@ GH.Locales = {
 		toast_click_detectors = "Click Detectors enabled!",
 		toast_proximity_prompts = "Proximity Prompts enabled!",
 		toast_btools = "BTools enabled!",
+		toast_voiceaudio_playing = "Playing audio in voice!",
+		toast_voiceaudio_no_url = "No audio link provided",
+		toast_voiceaudio_no_char = "Character not found",
+		input_voiceaudio_title = "Voice Audio - Audio Link",
+		input_voiceaudio_placeholder = "Paste audio link...",
 		toast_velocity_reset = "Velocity reset!",
 		toast_invisible_shown = "%s invisible parts shown",
 		toast_clothes_removed = "Clothes removed!",
@@ -517,6 +531,7 @@ GH.Locales = {
 		toggle_btools = "BTools",
 		toggle_breakvelocity = "Break Velocity",
 		toggle_invisibleparts = "Invisible Parts",
+		toggle_voiceaudio = "Voice Audio (Link)",
 		toggle_trollfling = "Tornado Fling",
 		toggle_targetfling = "Target Fling",
 		toggle_spasms = "Espasmos",
@@ -578,6 +593,7 @@ GH.Locales = {
 		desc_btools = "Herramientas de construccion (HopperBins)",
 		desc_breakvelocity = "Resetea toda velocidad del personaje",
 		desc_invisible_parts = "Muestra partes que estan invisibles en el mapa",
+		desc_voiceaudio = "Reproduce audio en el voice de Roblox via enlace. Comando: !audio <url>",
 		desc_trollfling = "Gira rapidamente para lanzar a otros jugadores",
 		desc_targetfling = "Selecciona un objetivo y vuela hasta el para derribar",
 		desc_spasms = "Animacion de convulsion (requiere R6)",
@@ -617,6 +633,11 @@ GH.Locales = {
 		toast_click_detectors = "Click Detectors activados!",
 		toast_proximity_prompts = "Proximity Prompts activados!",
 		toast_btools = "BTools activados!",
+		toast_voiceaudio_playing = "Reproduciendo audio en voice!",
+		toast_voiceaudio_no_url = "No se proporciono enlace de audio",
+		toast_voiceaudio_no_char = "Personaje no encontrado",
+		input_voiceaudio_title = "Voice Audio - Enlace del Audio",
+		input_voiceaudio_placeholder = "Pega el enlace del audio...",
 		toast_velocity_reset = "Velocity reseteado!",
 		toast_invisible_shown = "%s partes invisibles mostradas",
 		toast_clothes_removed = "Ropa eliminada!",
@@ -1832,6 +1853,21 @@ function GH.FullCleanup()
 	pcall(function()
 		local gui = GH.TargetGui:FindFirstChild("GH_Crosshair")
 		if gui then gui:Destroy() end
+	end)
+
+	-- VoiceAudio: parar e destruir som
+	pcall(function()
+		local char = LocalPlayer.Character
+		if char then
+			local hrp = char:FindFirstChild("HumanoidRootPart")
+			if hrp then
+				local snd = hrp:FindFirstChild("GH_VoiceAudio")
+				if snd then
+					snd:Stop()
+					snd:Destroy()
+				end
+			end
+		end
 	end)
 
 	-- Spasms: parar animacao
