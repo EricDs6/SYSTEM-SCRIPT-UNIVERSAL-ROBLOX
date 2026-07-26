@@ -3570,38 +3570,39 @@ function GH.Initialize()
 	-- AUTO-UPDATE CHECKER (checa a cada 60s)
 	-- ==========================================
 	task.spawn(function()
+		task.wait(30)
 		local currentHash = GH.Version and GH.Version.Hash or "unknown"
 		if currentHash == "unknown" then return end
 
-		local running = true
-		while running do
+		while not GH.Stopped do
 			task.wait(60)
-			if GH.Stopped or not GH.ScreenGui or not GH.ScreenGui.Parent then running = false end
+			if GH.Stopped then break end
+			if not GH.ScreenGui or not GH.ScreenGui.Parent then break end
 
-			if running then
-				pcall(function()
-					local HttpService = game:GetService("HttpService")
-					local result = game:HttpGet(
-						"https://api.github.com/repos/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/commits/main?_=" .. tostring(os.clock()):gsub("%.", ""),
-						true
-					)
-					if result then
-						local data = HttpService:JSONDecode(result)
-						if data and data.sha then
-							local latestHash = string.sub(data.sha, 1, 7)
-							if latestHash ~= currentHash then
-								GH.ShowToast(
-									GH.T("toast_new_update") .. " (v" .. latestHash .. ")",
-									Color3.fromRGB(255, 180, 0),
-									nil,
-									true
-								)
-								running = false
-							end
+			local ok, result = pcall(function()
+				local HttpService = game:GetService("HttpService")
+				local resp = game:HttpGet(
+					"https://api.github.com/repos/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/commits/main?_=" .. tostring(os.clock()):gsub("%.", ""),
+					true
+				)
+				if resp then
+					local data = HttpService:JSONDecode(resp)
+					if data and data.sha then
+						local latestHash = string.sub(data.sha, 1, 7)
+						if latestHash ~= currentHash then
+							GH.ShowToast(
+								GH.T("toast_new_update") .. " (v" .. latestHash .. ")",
+								Color3.fromRGB(255, 180, 0),
+								nil,
+								true
+							)
+							return true
 						end
 					end
-				end)
-			end
+				end
+				return false
+			end)
+			if ok and result == true then break end
 		end
 	end)
 end
