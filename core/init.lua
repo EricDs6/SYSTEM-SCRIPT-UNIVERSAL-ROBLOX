@@ -3346,6 +3346,7 @@ function GH.Initialize()
 		if minimized then
 			Sidebar.Visible = false
 			Content.Visible = false
+			FPSLabel.Visible = false
 			for _, c in pairs(TabContainers) do c.Visible = false end
 			TweenService:Create(MainFrame, GH.TI_Slow, { Size = UDim2.new(0, MiniW, 0, MiniH) }):Play()
 			MinBtn.Text = "+"
@@ -3355,6 +3356,7 @@ function GH.Initialize()
 			task.delay(0.15, function()
 				Sidebar.Visible = true
 				Content.Visible = true
+				FPSLabel.Visible = true
 				if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = true end
 			end)
 		end
