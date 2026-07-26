@@ -1,6 +1,6 @@
 -- =============================================================================
 -- COMMAND: TARGET FLING
--- Fling em direcao a um jogador alvo
+-- Fling em direcao a um jogador alvo (logica FE Cosmic)
 -- =============================================================================
 return function(GH)
 	local Players = GH.Services.Players
@@ -8,6 +8,7 @@ return function(GH)
 	local LocalPlayer = GH.LocalPlayer
 
 	GH.Cache.TargetFlingTarget = nil
+	GH.Cache.TargetFlingDied = nil
 
 	function Cheats_ToggleTargetFling(state, btn)
 		GH.UnregisterMasterLoop("TargetFling")
@@ -29,12 +30,19 @@ return function(GH)
 					hrp.AssemblyAngularVelocity = Vector3.zero
 					hrp.AssemblyLinearVelocity = Vector3.zero
 				end
-				if hum then
-					hum.AutoRotate = true
-					hum.PlatformStand = false
+				if hum then hum.AutoRotate = true end
+				if char then
+					for _, child in pairs(char:GetDescendants()) do
+						if child:IsA("BasePart") then
+							child.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)
+							child.Massless = false
+							child.CanCollide = true
+						end
+					end
 				end
-				for _, part in ipairs(char:GetDescendants()) do
-					if part:IsA("BasePart") then part.CanCollide = true end
+				if GH.Cache.TargetFlingDied then
+					GH.Cache.TargetFlingDied:Disconnect()
+					GH.Cache.TargetFlingDied = nil
 				end
 			end)
 			return
@@ -64,19 +72,41 @@ return function(GH)
 			local targetRoot = target.Character:FindFirstChild("HumanoidRootPart")
 			if not targetRoot then return end
 
-			-- NAO desativar CanCollide (causa morte ao cair no chao)
-			-- Em vez disso, usar PlatformStand para manter estavel
-			myHum.AutoRotate = false
-			myHum.PlatformStand = true
+			-- Aplicar PhysicalProperties pesadas (uma vez)
+			if not myRoot:GetAttribute("FlingSetup") then
+				for _, child in pairs(myChar:GetDescendants()) do
+					if child:IsA("BasePart") then
+						child.CustomPhysicalProperties = PhysicalProperties.new(100, 0.3, 0.5)
+						child.Massless = true
+						child.CanCollide = false
+					end
+				end
+				myRoot:SetAttribute("FlingSetup", true)
 
-			-- Criar ou manter spin
+				-- Detectar morte
+				if myHum then
+					GH.Cache.TargetFlingDied = myHum.Died:Connect(function()
+						if GH.States.TargetFling then
+							GH.States.TargetFling = false
+							local b = GH.Buttons["TargetFling"]
+							if b and GH.Callbacks["TargetFling"] then
+								pcall(GH.Callbacks["TargetFling"], false, b)
+							end
+						end
+					end)
+				end
+			end
+
+			myHum.AutoRotate = false
+
+			-- Criar BodyAngularVelocity pulsante
 			local spin = myRoot:FindFirstChild("GH_TargetSpin")
 			if not spin then
-				spin = Instance.new("AngularVelocity")
+				spin = Instance.new("BodyAngularVelocity")
 				spin.Name = "GH_TargetSpin"
-				spin.AngularVelocity = Vector3.new(0, 120, 0)
-				spin.MaxTorque = math.huge
-				spin.Attachment0 = myRoot:FindFirstChildOfClass("Attachment") or Instance.new("Attachment", myRoot)
+				spin.AngularVelocity = Vector3.new(0, 99999, 0)
+				spin.MaxTorque = Vector3.new(0, math.huge, 0)
+				spin.P = math.huge
 				spin.Parent = myRoot
 			end
 
@@ -90,13 +120,17 @@ return function(GH)
 				local speed = 120
 				myRoot.AssemblyLinearVelocity = moveDir * speed + Vector3.new(0, 15, 0)
 			else
-				-- Perto o suficiente: girar em cima dele
+				-- Perto: girar em cima dele (pulso)
 				myRoot.CFrame = myRoot.CFrame:Lerp(
 					CFrame.new(targetRoot.Position + Vector3.new(0, 1, 0)),
 					0.4
 				)
-				-- Manter no ar
 				myRoot.AssemblyLinearVelocity = Vector3.new(0, 25, 0)
+			end
+
+			-- Pulso de velocidade angular
+			if spin then
+				spin.AngularVelocity = Vector3.new(0, 99999, 0)
 			end
 		end)
 	end
