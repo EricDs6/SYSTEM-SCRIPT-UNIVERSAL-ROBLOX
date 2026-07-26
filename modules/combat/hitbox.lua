@@ -1,11 +1,15 @@
 -- =============================================================================
 -- COMMAND: HITBOX
--- Expande a hitbox (HumanoidRootPart) dos inimigos para acertar mais facil
--- Abordagem: direto no Root.Size (estilo FE Cosmic)
+-- Expande a hitbox (HumanoidRootPart) dos jogadores para acertar mais facil
+-- Abordagem: direto no Root.Size com visual colorido (estilo FE Cosmic)
 -- =============================================================================
 return function(GH)
 	local Players = GH.Services.Players
 	local LocalPlayer = GH.LocalPlayer
+
+	-- Inicializa cache
+	GH.Cache = GH.Cache or {}
+	GH.Cache.OrigHRPSizes = GH.Cache.OrigHRPSizes or {}
 
 	function Cheats_ToggleHitbox(state, btn)
 		-- Restaurar hitboxes originais
@@ -17,6 +21,7 @@ return function(GH)
 						root.Size = GH.Cache.OrigHRPSizes[player]
 						root.Transparency = 1
 						root.CanCollide = false
+						root.Color = Color3.fromRGB(128, 128, 128) -- cor neutra ao restaurar
 					end
 				end
 			end)
@@ -34,14 +39,16 @@ return function(GH)
 								GH.Cache.OrigHRPSizes[player] = root.Size
 							end
 							root.Size = Vector3.new(size, size, size)
-							root.Transparency = 0.4
+							root.Transparency = 0.25 -- mais visivel
 							root.CanCollide = false
+							-- Cor vermelha semi-transparente para destacar a hitbox
+							root.Color = Color3.fromRGB(255, 50, 50)
 						end
 					end)
 				end
 			end
 
-			-- Manter hitbox com loop simples (para novos players e respawns)
+			-- Manter hitbox com loop (para novos players e respawns)
 			GH.RegisterMasterLoop("Hitbox", "Heartbeat", function()
 				if GH.isClosing or not GH.States.Hitbox then
 					GH.UnregisterMasterLoop("Hitbox")
@@ -58,8 +65,9 @@ return function(GH)
 								end
 								if root.Size ~= Vector3.new(sz, sz, sz) then
 									root.Size = Vector3.new(sz, sz, sz)
-									root.Transparency = 0.4
+									root.Transparency = 0.25
 									root.CanCollide = false
+									root.Color = Color3.fromRGB(255, 50, 50)
 								end
 							end
 						end)
@@ -67,7 +75,6 @@ return function(GH)
 				end
 			end)
 		end
-
 	end
 
 	GH.RegisterToggleButton("Hitbox", "toggle_hitbox", Cheats_ToggleHitbox, "Combat", "desc_hitbox")
