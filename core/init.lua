@@ -113,6 +113,7 @@ GH.Locales = {
 		toggle_invisibleparts = "Invisible Parts",
 		toggle_voiceaudio = "Voice Audio (Link)",
 		toggle_tptovehicle = "TP para Veiculo",
+		toggle_noplayercollide = "Sem Colisao com Players",
 		toggle_trollfling = "Tornado Fling",
 		toggle_targetfling = "Target Fling",
 		toggle_spasms = "Spasmos",
@@ -176,6 +177,7 @@ GH.Locales = {
 		desc_invisible_parts = "Mostra partes que estao invisiveis no mapa",
 		desc_voiceaudio = "Toca audio no voice do Roblox via link. Comando: !audio <url>",
 		desc_tptovehicle = "Mostra lista de veiculos e teleporta direto para o piloto",
+		desc_noplayercollide = "Remove colisao com outros jogadores, passe atraves deles",
 		desc_trollfling = "Gira rapidamente para jogar outros jogadores",
 		desc_targetfling = "Seleciona um alvo e voa ate ele para derrubar",
 		desc_spasms = "Animacao de convulsao (requer R6)",
@@ -329,6 +331,7 @@ GH.Locales = {
 		toggle_invisibleparts = "Invisible Parts",
 		toggle_voiceaudio = "Voice Audio (Link)",
 		toggle_tptovehicle = "TP to Vehicle",
+		toggle_noplayercollide = "No Player Collision",
 		toggle_trollfling = "Tornado Fling",
 		toggle_targetfling = "Target Fling",
 		toggle_spasms = "Spasms",
@@ -392,6 +395,7 @@ GH.Locales = {
 		desc_invisible_parts = "Shows invisible parts on map",
 		desc_voiceaudio = "Plays audio in Roblox voice via link. Command: !audio <url>",
 		desc_tptovehicle = "Shows vehicle list and teleports directly to the pilot",
+		desc_noplayercollide = "Removes collision with other players, walk through them",
 		desc_trollfling = "Spins rapidly to fling other players",
 		desc_targetfling = "Select a target and fly to them to knock down",
 		desc_spasms = "Convulsion animation (requires R6)",
@@ -545,6 +549,7 @@ GH.Locales = {
 		toggle_invisibleparts = "Invisible Parts",
 		toggle_voiceaudio = "Voice Audio (Link)",
 		toggle_tptovehicle = "TP a Vehiculo",
+		toggle_noplayercollide = "Sin Colision con Jugadores",
 		toggle_trollfling = "Tornado Fling",
 		toggle_targetfling = "Target Fling",
 		toggle_spasms = "Espasmos",
@@ -608,6 +613,7 @@ GH.Locales = {
 		desc_invisible_parts = "Muestra partes que estan invisibles en el mapa",
 		desc_voiceaudio = "Reproduce audio en el voice de Roblox via enlace. Comando: !audio <url>",
 		desc_tptovehicle = "Muestra lista de vehiculos y teleporta directo al piloto",
+		desc_noplayercollide = "Elimina la colision con otros jugadores, pasa atraves de ellos",
 		desc_trollfling = "Gira rapidamente para lanzar a otros jugadores",
 		desc_targetfling = "Selecciona un objetivo y vuela hasta el para derribar",
 		desc_spasms = "Animacion de convulsion (requiere R6)",
@@ -1893,6 +1899,16 @@ function GH.FullCleanup()
 		if GH.TargetGui:FindFirstChild("GH_VehiclePicker") then
 			GH.TargetGui["GH_VehiclePicker"]:Destroy()
 		end
+	end)
+
+	-- NoPlayerCollide: restaurar colisao de todos os players
+	pcall(function()
+		for part, origCanCollide in pairs(GH.Cache.OrigPlayerCollides) do
+			if part and part.Parent then
+				part.CanCollide = origCanCollide
+			end
+		end
+		table.clear(GH.Cache.OrigPlayerCollides)
 	end)
 
 	-- Spasms: parar animacao
