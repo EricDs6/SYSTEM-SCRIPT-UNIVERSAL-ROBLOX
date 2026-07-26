@@ -11,22 +11,29 @@ return function(GH)
 	GH.Cache = GH.Cache or {}
 	GH.Cache.OrigHRPSizes = GH.Cache.OrigHRPSizes or {}
 
-	-- Helper pra detectar se um jogador eh inimigo
+	-- Helper pra detectar se um jogador eh inimigo (mesma logica do player picker)
 	local function IsEnemy(player)
 		if player == LocalPlayer then return false end
 		local myTeam = LocalPlayer.Team
 		local pTeam = player.Team
-		local myTeamColor = LocalPlayer.TeamColor
 		local pTeamColor = player.TeamColor
-		-- Se tem time definido, compara
-		if myTeam or (myTeamColor and myTeamColor ~= BrickColor.new("Medium stone grey")) then
-			if pTeam and myTeam then
-				return pTeam ~= myTeam
-			elseif pTeamColor and myTeamColor then
-				return pTeamColor ~= myTeamColor
+		local myTeamColor = myTeam and myTeam.TeamColor or LocalPlayer.TeamColor
+
+		local hasTeams = (myTeam ~= nil) or (myTeamColor and myTeamColor ~= BrickColor.new("Medium stone grey"))
+		if hasTeams then
+			if pTeam and myTeam and pTeam == myTeam then
+				return false -- aliado
+			elseif pTeam and myTeam and pTeam ~= myTeam then
+				return true -- inimigo
+			elseif pTeamColor and myTeamColor and pTeamColor == myTeamColor then
+				return false -- aliado (por cor)
+			elseif pTeamColor and myTeamColor and pTeamColor ~= myTeamColor then
+				return true -- inimigo (por cor)
 			end
+			-- neutro: nao considera inimigo
+			return false
 		end
-		-- Sem times definidos, considera todos inimigos
+		-- Sem times definidos, todos sao inimigos
 		return true
 	end
 
