@@ -1,4 +1,4 @@
--- =============================================================================
+mimo-- =============================================================================
 -- CORE — Sistema compartilhado entre todos os módulos (GUI Custom Win11)
 -- =============================================================================
 --!nonstrict
@@ -2137,6 +2137,47 @@ function GH.Initialize()
 	MinBtnDash.ZIndex = 5
 	MinBtnDash.Parent = MinBtn
 
+	-- Reload button (restart server)
+	local ReloadBtn = Instance.new("TextButton")
+	ReloadBtn.Name = "Reload"
+	ReloadBtn.Size = UDim2.new(0, BTN_SIZE, 0, BTN_SIZE)
+	ReloadBtn.Position = UDim2.new(1, -BTN_SIZE * 3 - 20, 0.5, -BTN_SIZE / 2)
+	ReloadBtn.BackgroundColor3 = W11.Surface
+	ReloadBtn.Text = ""
+	ReloadBtn.AutoButtonColor = false
+	ReloadBtn.ZIndex = 4
+	ReloadBtn.Parent = Topbar
+	Instance.new("UICorner", ReloadBtn).CornerRadius = UDim.new(0, 4)
+	local ReloadBtnIcon = Instance.new("TextLabel")
+	ReloadBtnIcon.Size = UDim2.new(1, 0, 1, 0)
+	ReloadBtnIcon.BackgroundTransparency = 1
+	ReloadBtnIcon.Text = "\xE2\x86\xBB"
+	ReloadBtnIcon.TextColor3 = W11.TextSecondary
+	ReloadBtnIcon.Font = Enum.Font.SourceSans
+	ReloadBtnIcon.TextSize = 16
+	ReloadBtnIcon.ZIndex = 5
+	ReloadBtnIcon.Parent = ReloadBtn
+
+	-- Reload hover effect
+	ReloadBtn.MouseEnter:Connect(function()
+		TweenService:Create(ReloadBtn, GH.TI, { BackgroundColor3 = W11.AccentDark }):Play()
+		TweenService:Create(ReloadBtnIcon, GH.TI, { TextColor3 = W11.AccentGlow }):Play()
+	end)
+	ReloadBtn.MouseLeave:Connect(function()
+		TweenService:Create(ReloadBtn, GH.TI, { BackgroundColor3 = W11.Surface }):Play()
+		TweenService:Create(ReloadBtnIcon, GH.TI, { TextColor3 = W11.TextSecondary }):Play()
+	end)
+
+	-- Reload click: restart server (same as ServerRejoin)
+	ReloadBtn.MouseButton1Click:Connect(function()
+		task.spawn(function()
+			pcall(function()
+				game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+			end)
+		end)
+		GH.ShowToast("Reiniciando servidor...", W11.Accent, 3)
+	end)
+
 	-- ==========================================
 	-- SIDEBAR
 	-- ==========================================
@@ -3252,4 +3293,4 @@ end
 -- ==========================================
 -- RETURN GH
 -- ==========================================
-return GH
+return GH
