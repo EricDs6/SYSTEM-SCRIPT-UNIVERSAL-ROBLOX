@@ -2362,50 +2362,139 @@ function GH.Initialize()
 	-- ==========================================
 	local SearchBar = Instance.new("TextBox")
 	SearchBar.Name = "SearchBar"
-	SearchBar.Size = UDim2.new(1, 0, 0, 26)
+	SearchBar.Size = UDim2.new(1, -32, 0, 28)
 	SearchBar.Position = UDim2.new(0, 0, 0, 0)
 	SearchBar.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
 	SearchBar.PlaceholderText = "Procurar comando..."
-	SearchBar.PlaceholderColor3 = Color3.fromRGB(100, 100, 115)
+	SearchBar.PlaceholderColor3 = Color3.fromRGB(90, 90, 105)
 	SearchBar.Text = ""
-	SearchBar.TextColor3 = Color3.fromRGB(235, 235, 240)
-	SearchBar.Font = Enum.Font.GothamMedium
+	SearchBar.TextColor3 = W11.Text
+	SearchBar.Font = Font
 	SearchBar.TextSize = 11
 	SearchBar.TextXAlignment = Enum.TextXAlignment.Left
 	SearchBar.ClearTextOnFocus = false
 	SearchBar.ZIndex = 10
 	SearchBar.Parent = Content
-	Instance.new("UICorner", SearchBar).CornerRadius = UDim.new(0, 4)
-	Instance.new("UIPadding", SearchBar).PaddingLeft = UDim.new(0, 6)
+	Instance.new("UICorner", SearchBar).CornerRadius = UDim.new(0, 6)
+	Instance.new("UIPadding", SearchBar).PaddingLeft = UDim.new(0, 8)
+
+	-- Clear button (X)
+	local SearchClear = Instance.new("TextButton")
+	SearchClear.Name = "ClearBtn"
+	SearchClear.Size = UDim2.new(0, 22, 0, 22)
+	SearchClear.Position = UDim2.new(1, -26, 0.5, -11)
+	SearchClear.BackgroundColor3 = Color3.fromRGB(50, 50, 58)
+	SearchClear.Text = ""
+	SearchClear.AutoButtonColor = false
+	SearchClear.Visible = false
+	SearchClear.ZIndex = 11
+	SearchClear.Parent = SearchBar
+	Instance.new("UICorner", SearchClear).CornerRadius = UDim.new(0, 4)
+	local ClearX = Instance.new("TextLabel")
+	ClearX.Size = UDim2.new(1, 0, 1, 0)
+	ClearX.BackgroundTransparency = 1
+	ClearX.Text = "X"
+	ClearX.TextColor3 = W11.TextSecondary
+	ClearX.Font = Enum.Font.SourceSans
+	ClearX.TextSize = 12
+	ClearX.ZIndex = 12
+	ClearX.Parent = SearchClear
+	ClearX.MouseEnter:Connect(function()
+		TweenService:Create(ClearX, GH.TI, { TextColor3 = W11.Red }):Play()
+	end)
+	ClearX.MouseLeave:Connect(function()
+		TweenService:Create(ClearX, GH.TI, { TextColor3 = W11.TextSecondary }):Play()
+	end)
+
+	-- Hover effect for search bar
+	SearchBar.Focused:Connect(function()
+		TweenService:Create(SearchBar, GH.TI, { BackgroundColor3 = Color3.fromRGB(35, 35, 42) }):Play()
+	end)
+	SearchBar.FocusLost:Connect(function()
+		TweenService:Create(SearchBar, GH.TI, { BackgroundColor3 = Color3.fromRGB(28, 28, 32) }):Play()
+	end)
 
 	GH.Tabs = TabAPIs
 
 	-- ==========================================
-	-- SEARCH FILTER (filtra toggles por nome)
+	-- SEARCH FILTER (pesquisa em TODAS as abas, nome + descricao)
 	-- ==========================================
+	local PreviousActiveTab = ActiveTab
+
 	local function FilterToggles(text)
-		local search = text:lower()
+		local search = text:lower():gsub("%s+", "")
+		local totalMatches = 0
+		local firstMatchTab = nil
+		local isSearching = (search ~= "")
+
 		for catName, container in pairs(TabContainers) do
 			if catName ~= "Settings" then
 				for _, child in ipairs(container:GetChildren()) do
 					if child:IsA("TextButton") then
 						local label = child:FindFirstChild("GH_ToggleLabel")
+						local desc = child:FindFirstChild("GH_DescLabel")
 						if label then
-							local cmdName = label.Text:lower()
-							if search == "" or cmdName:find(search, 1, true) then
-								child.Visible = true
-							else
-								child.Visible = false
+							local cmdName = label.Text:lower():gsub("%s+", "")
+							local cmdDesc = desc and desc.Text:lower():gsub("%s+", "") or ""
+							local match = (search == "") or cmdName:find(search, 1, true) or cmdDesc:find(search, 1, true)
+							child.Visible = match
+							if match and search ~= "" then
+								totalMatches = totalMatches + 1
+								if not firstMatchTab then firstMatchTab = catName end
 							end
 						end
 					end
 				end
 			end
 		end
+
+		-- Auto-mudar para aba com resultado quando pesquisando
+		if isSearching and firstMatchTab and firstMatchTab ~= ActiveTab then
+			PreviousActiveTab = ActiveTab
+			if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = false end
+			if TabButtons[ActiveTab] then
+				TweenService:Create(TabButtons[ActiveTab], GH.TI, { BackgroundColor3 = Color3.fromRGB(30, 30, 36), TextColor3 = Color3.fromRGB(200, 200, 210) }):Play()
+				local oldIndicator = TabButtons[ActiveTab]:FindFirstChild("Indicator")
+				if oldIndicator then oldIndicator.Visible = false end
+			end
+			ActiveTab = firstMatchTab
+			if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = true end
+			if TabButtons[ActiveTab] then
+				TweenService:Create(TabButtons[ActiveTab], GH.TI, { BackgroundColor3 = Color3.fromRGB(10, 35, 60), TextColor3 = W11.Accent }):Play()
+				local newIndicator = TabButtons[ActiveTab]:FindFirstChild("Indicator")
+				if newIndicator then newIndicator.Visible = true end
+			end
+			Sidebar.Visible = true
+			Content.Visible = true
+		end
+
+		-- Restaurar aba anterior quando limpar busca
+		if not isSearching and PreviousActiveTab and PreviousActiveTab ~= ActiveTab then
+			if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = false end
+			if TabButtons[ActiveTab] then
+				TweenService:Create(TabButtons[ActiveTab], GH.TI, { BackgroundColor3 = Color3.fromRGB(30, 30, 36), TextColor3 = Color3.fromRGB(200, 200, 210) }):Play()
+				local oldIndicator = TabButtons[ActiveTab]:FindFirstChild("Indicator")
+				if oldIndicator then oldIndicator.Visible = false end
+			end
+			ActiveTab = PreviousActiveTab
+			if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = true end
+			if TabButtons[ActiveTab] then
+				TweenService:Create(TabButtons[ActiveTab], GH.TI, { BackgroundColor3 = Color3.fromRGB(10, 35, 60), TextColor3 = W11.Accent }):Play()
+				local newIndicator = TabButtons[ActiveTab]:FindFirstChild("Indicator")
+				if newIndicator then newIndicator.Visible = true end
+			end
+		end
 	end
 
 	SearchBar:GetPropertyChangedSignal("Text"):Connect(function()
+		SearchClear.Visible = (SearchBar.Text ~= "")
 		FilterToggles(SearchBar.Text)
+	end)
+
+	ClearX.MouseButton1Click:Connect(function()
+		SearchBar.Text = ""
+		SearchClear.Visible = false
+		FilterToggles("")
 	end)
 
 	-- ==========================================
