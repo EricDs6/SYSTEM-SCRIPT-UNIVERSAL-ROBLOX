@@ -288,7 +288,7 @@ local categories = {
 		"vehiclefly", "spectate", "gotopart", "crawl"
 	}},
 	{ name = "Visual", files = {
-		"xray", "nightmode", "fullbright", "tracers", "crosshair", "fovchanger"
+		"xray", "nightmode", "fullbright", "tracers", "crosshair", "fovchanger", "fpsbooster"
 	}},
 	{ name = "Utility", files = {
 		"clicktp", "gravity", "customspawn", "freecam", "flashback", "coords", "thirdperson",
