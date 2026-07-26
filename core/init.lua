@@ -3528,7 +3528,8 @@ function GH.Initialize()
 		local currentHash = GH.Version and GH.Version.Hash or "unknown"
 		if currentHash == "unknown" then return end
 
-		while not GH.Stopped do
+		local updateFound = false
+		while not GH.Stopped and not updateFound do
 			task.wait(60)
 			if GH.Stopped then break end
 
@@ -3550,8 +3551,7 @@ function GH.Initialize()
 								nil,
 								true
 							)
-							-- Parar de checar apos encontrar atualizacao
-							break
+							updateFound = true
 						end
 					end
 				end
