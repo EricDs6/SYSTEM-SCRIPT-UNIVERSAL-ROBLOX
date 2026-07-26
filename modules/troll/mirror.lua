@@ -33,6 +33,15 @@ return function(GH)
 					hrp.AssemblyLinearVelocity = Vector3.zero
 					hrp.AssemblyAngularVelocity = Vector3.zero
 				end
+				-- Restaura colisao e massa das partes
+				if char then
+					for _, child in pairs(char:GetDescendants()) do
+						if child:IsA("BasePart") then
+							child.CanCollide = true
+							child.Massless = false
+						end
+					end
+				end
 			end)
 			if GH.Cache.MirrorDied then
 				GH.Cache.MirrorDied:Disconnect()
