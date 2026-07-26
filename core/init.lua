@@ -119,6 +119,7 @@ GH.Locales = {
 		toggle_forcepush = "Force Push (Defesa)",
 		toggle_trollfling = "Tornado Fling",
 		toggle_targetfling = "Target Fling",
+		toggle_walkfling = "Walk Fling",
 		toggle_spasms = "Spasmos",
 		toggle_naked = "Naked",
 		toggle_freeze = "Freeze All",
@@ -185,6 +186,7 @@ GH.Locales = {
 		desc_forcepush = "Empurra jogadores proximos automaticamente (defesa contra flingers)",
 		desc_trollfling = "Gira rapidamente para jogar outros jogadores",
 		desc_targetfling = "Seleciona um alvo e voa ate ele para derrubar",
+		desc_walkfling = "Fling ao caminhar sem girar (logica FE Cosmic)",
 		desc_spasms = "Animacao de convulsao (requer R6)",
 		desc_naked = "Remove todas as roupas do seu personagem",
 		desc_freeze = "Congela todos os jogadores no servidor",
@@ -342,6 +344,7 @@ GH.Locales = {
 		toggle_forcepush = "Force Push (Defense)",
 		toggle_trollfling = "Tornado Fling",
 		toggle_targetfling = "Target Fling",
+		toggle_walkfling = "Walk Fling",
 		toggle_spasms = "Spasms",
 		toggle_naked = "Naked",
 		toggle_freeze = "Freeze All",
@@ -408,6 +411,7 @@ GH.Locales = {
 		desc_forcepush = "Pushes nearby players away automatically (defense against flingers)",
 		desc_trollfling = "Spins rapidly to fling other players",
 		desc_targetfling = "Select a target and fly to them to knock down",
+		desc_walkfling = "Fling while walking without spinning (FE Cosmic logic)",
 		desc_spasms = "Convulsion animation (requires R6)",
 		desc_naked = "Removes all clothes from your character",
 		desc_freeze = "Freezes all players in the server",
@@ -565,6 +569,7 @@ GH.Locales = {
 		toggle_forcepush = "Force Push (Defensa)",
 		toggle_trollfling = "Tornado Fling",
 		toggle_targetfling = "Target Fling",
+		toggle_walkfling = "Walk Fling",
 		toggle_spasms = "Espasmos",
 		toggle_naked = "Naked",
 		toggle_freeze = "Freeze All",
@@ -631,6 +636,7 @@ GH.Locales = {
 		desc_forcepush = "Empuja a los jugadores cercanos automaticamente (defensa contra flingers)",
 		desc_trollfling = "Gira rapidamente para lanzar a otros jugadores",
 		desc_targetfling = "Selecciona un objetivo y vuela hasta el para derribar",
+		desc_walkfling = "Fling al caminar sin girar (logica FE Cosmic)",
 		desc_spasms = "Animacion de convulsion (requiere R6)",
 		desc_naked = "Elimina todas las ropas de tu personaje",
 		desc_freeze = "Congela a todos los jugadores en el servidor",
@@ -1974,6 +1980,18 @@ function GH.FullCleanup()
 				hum.HipHeight = GH.Cache.OrigHipHeight
 				GH.Cache.OrigHipHeight = nil
 			end
+		end
+	end)
+
+	-- WalkFling: desconectar
+	pcall(function()
+		if GH.Cache.WalkFlingConn then
+			GH.Cache.WalkFlingConn:Disconnect()
+			GH.Cache.WalkFlingConn = nil
+		end
+		if GH.Cache.WalkFlingDied then
+			GH.Cache.WalkFlingDied:Disconnect()
+			GH.Cache.WalkFlingDied = nil
 		end
 	end)
 
