@@ -2151,7 +2151,7 @@ function GH.Initialize()
 	local ReloadBtnIcon = Instance.new("TextLabel")
 	ReloadBtnIcon.Size = UDim2.new(1, 0, 1, 0)
 	ReloadBtnIcon.BackgroundTransparency = 1
-	ReloadBtnIcon.Text = "\xE2\x86\xBB"
+	ReloadBtnIcon.Text = "R"
 	ReloadBtnIcon.TextColor3 = W11.TextSecondary
 	ReloadBtnIcon.Font = Enum.Font.SourceSans
 	ReloadBtnIcon.TextSize = 16
