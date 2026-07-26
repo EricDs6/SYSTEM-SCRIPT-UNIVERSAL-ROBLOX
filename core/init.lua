@@ -51,6 +51,7 @@ GH.Locales = {
 		toast_activated = "Ativado!",
 		toast_deactivated = "Desativado!",
 		toast_script_loaded = "Script carregado com sucesso!",
+		toast_new_update = "Nova atualizacao disponivel! Reinjecte para atualizar",
 		toast_debug_failed = "DEBUG: %s falhou",
 		-- ESP
 		esp_enemy = "[INIMIGO]",
@@ -269,6 +270,7 @@ GH.Locales = {
 		toast_activated = "Enabled!",
 		toast_deactivated = "Disabled!",
 		toast_script_loaded = "Script loaded successfully!",
+		toast_new_update = "New update available! Reinject to update",
 		toast_debug_failed = "DEBUG: %s failed",
 		-- ESP
 		esp_enemy = "[ENEMY]",
@@ -487,6 +489,7 @@ GH.Locales = {
 		toast_activated = "Activado!",
 		toast_deactivated = "Desactivado!",
 		toast_script_loaded = "Script cargado con exito!",
+		toast_new_update = "Nueva actualizacion disponible! Reinyecte para actualizar",
 		toast_debug_failed = "DEBUG: %s fallo",
 		-- ESP
 		esp_enemy = "[ENEMIGO]",
@@ -3459,6 +3462,40 @@ function GH.Initialize()
 		local msg = GH.T("toast_script_loaded")
 		if v and v ~= "unknown" then msg = msg .. " (v" .. v .. ")" end
 		GH.ShowToast(msg, W11.On, 5)
+	end)
+
+	-- ==========================================
+	-- AUTO-UPDATE CHECKER (checa a cada 60s)
+	-- ==========================================
+	task.spawn(function()
+		local currentHash = GH.Version and GH.Version.Hash or "unknown"
+		if currentHash == "unknown" then return end
+
+		while not GH.Stopped do
+			task.wait(60)
+			if GH.Stopped then break end
+
+			pcall(function()
+				local HttpService = game:GetService("HttpService")
+				local result = game:HttpGet(
+					"https://api.github.com/repos/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/commits/main?_=" .. tostring(os.clock()):gsub("%.", ""),
+					true
+				)
+				if result then
+					local data = HttpService:JSONDecode(result)
+					if data and data.sha then
+						local latestHash = string.sub(data.sha, 1, 7)
+						if latestHash ~= currentHash then
+							GH.ShowToast(
+								GH.T("toast_new_update") .. " (v" .. latestHash .. ")",
+								Color3.fromRGB(255, 180, 0),
+								8
+							)
+						end
+					end
+				end
+			end)
+		end
 	end)
 end
 
