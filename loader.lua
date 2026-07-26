@@ -184,15 +184,14 @@ end
 -- ==========================================
 -- LOGICA DE DOWNLOAD (com retry e cache bust)
 -- ==========================================
-local CACHE_BUST = tostring(os.clock()):gsub("%.", "") .. "_" .. tostring(math.random(100000, 999999))
 local BASE_URL = "https://raw.githubusercontent.com/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/main/"
 
--- Verificar versao mais recente do GitHub
+-- Verificar versao mais recente do GitHub (forca fetch sem cache)
 local LatestCommitHash = "unknown"
 local LatestCommitDate = "unknown"
 do
 	local ok, result = pcall(function()
-		return game:HttpGet("https://api.github.com/repos/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/commits/main", true)
+		return game:HttpGet("https://api.github.com/repos/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/commits/main?_=" .. tostring(os.clock()):gsub("%.", ""), true)
 	end)
 	if ok and result then
 		local HttpService = game:GetService("HttpService")
@@ -208,6 +207,9 @@ do
 		end
 	end
 end
+
+-- Usar commit hash como cache bust para forcar download fresco
+local CACHE_BUST = LatestCommitHash ~= "unknown" and LatestCommitHash or tostring(os.clock()):gsub("%.", "") .. "_" .. tostring(math.random(100000, 999999))
 
 local function fetch_module(path)
 	local MAX_RETRIES = 3
