@@ -818,7 +818,7 @@ end
 -- ==========================================
 -- NOTIFICATION SYSTEM (Toast customizado Win11)
 -- ==========================================
-function GH.ShowToast(message, color, duration)
+function GH.ShowToast(message, color, duration, persistent)
 	if GH.SilentRestore then return end
 	if not GH.ScreenGui or not GH.ScreenGui.Parent then return end
 
@@ -826,8 +826,8 @@ function GH.ShowToast(message, color, duration)
 		if not GH.ToastContainer then
 			GH.ToastContainer = Instance.new("Frame")
 			GH.ToastContainer.Name = "GH_ToastContainer"
-			GH.ToastContainer.Size = UDim2.new(0, 280, 1, 0)
-			GH.ToastContainer.Position = UDim2.new(1, -290, 0, 40)
+			GH.ToastContainer.Size = UDim2.new(0, 320, 1, 0)
+			GH.ToastContainer.Position = UDim2.new(1, -330, 0, 40)
 			GH.ToastContainer.BackgroundTransparency = 1
 			GH.ToastContainer.ZIndex = 9999
 			GH.ToastContainer.Parent = GH.ScreenGui
@@ -862,8 +862,39 @@ function GH.ShowToast(message, color, duration)
 		accent.BorderSizePixel = 0
 		accent.Parent = toast
 
+		-- Botao X para fechar (apenas em toasts persistentes)
+		local closeBtn = nil
+		if persistent then
+			closeBtn = Instance.new("TextButton")
+			closeBtn.Size = UDim2.new(0, 22, 0, 22)
+			closeBtn.Position = UDim2.new(1, -26, 0.5, -11)
+			closeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 58)
+			closeBtn.Text = ""
+			closeBtn.AutoButtonColor = false
+			closeBtn.ZIndex = 10003
+			closeBtn.Parent = toast
+			Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 4)
+
+			local closeX = Instance.new("TextLabel")
+			closeX.Size = UDim2.new(1, 0, 1, 0)
+			closeX.BackgroundTransparency = 1
+			closeX.Text = "X"
+			closeX.TextColor3 = Color3.fromRGB(180, 180, 190)
+			closeX.Font = Enum.Font.SourceSans
+			closeX.TextSize = 12
+			closeX.ZIndex = 10004
+			closeX.Parent = closeBtn
+
+			closeBtn.MouseEnter:Connect(function()
+				TweenService:Create(closeBtn, GH.TI, { BackgroundColor3 = Color3.fromRGB(255, 60, 60) }):Play()
+			end)
+			closeBtn.MouseLeave:Connect(function()
+				TweenService:Create(closeBtn, GH.TI, { BackgroundColor3 = Color3.fromRGB(50, 50, 58) }):Play()
+			end)
+		end
+
 		local label = Instance.new("TextLabel")
-		label.Size = UDim2.new(1, -14, 1, 0)
+		label.Size = UDim2.new(1, persistent and -40 or -14, 1, 0)
 		label.Position = UDim2.new(0, 10, 0, 0)
 		label.BackgroundTransparency = 1
 		label.Text = message
@@ -879,7 +910,7 @@ function GH.ShowToast(message, color, duration)
 			Size = UDim2.new(1, 0, 0, 32),
 		}):Play()
 
-		task.delay(duration or 3, function()
+		local function closeToast()
 			if toast and toast.Parent then
 				TweenService:Create(toast, GH.TI_Slow, {
 					Size = UDim2.new(1, 0, 0, 0),
@@ -888,7 +919,15 @@ function GH.ShowToast(message, color, duration)
 					if toast and toast.Parent then toast:Destroy() end
 				end)
 			end
-		end)
+		end
+
+		if closeBtn then
+			closeBtn.MouseButton1Click:Connect(closeToast)
+		end
+
+		if not persistent then
+			task.delay(duration or 3, closeToast)
+		end
 	end)
 end
 
@@ -3504,11 +3543,15 @@ function GH.Initialize()
 					if data and data.sha then
 						local latestHash = string.sub(data.sha, 1, 7)
 						if latestHash ~= currentHash then
+							-- Toast persistente com botao X
 							GH.ShowToast(
 								GH.T("toast_new_update") .. " (v" .. latestHash .. ")",
 								Color3.fromRGB(255, 180, 0),
-								8
+								nil,
+								true
 							)
+							-- Parar de checar apos encontrar atualizacao
+							break
 						end
 					end
 				end
