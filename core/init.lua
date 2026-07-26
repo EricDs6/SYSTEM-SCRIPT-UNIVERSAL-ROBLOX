@@ -3528,34 +3528,35 @@ function GH.Initialize()
 		local currentHash = GH.Version and GH.Version.Hash or "unknown"
 		if currentHash == "unknown" then return end
 
-		local updateFound = false
-		while not GH.Stopped and not updateFound do
+		local running = true
+		while running and not GH.Stopped do
 			task.wait(60)
-			if GH.Stopped then break end
+			if GH.Stopped then running = false end
 
-			pcall(function()
-				local HttpService = game:GetService("HttpService")
-				local result = game:HttpGet(
-					"https://api.github.com/repos/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/commits/main?_=" .. tostring(os.clock()):gsub("%.", ""),
-					true
-				)
-				if result then
-					local data = HttpService:JSONDecode(result)
-					if data and data.sha then
-						local latestHash = string.sub(data.sha, 1, 7)
-						if latestHash ~= currentHash then
-							-- Toast persistente com botao X
-							GH.ShowToast(
-								GH.T("toast_new_update") .. " (v" .. latestHash .. ")",
-								Color3.fromRGB(255, 180, 0),
-								nil,
-								true
-							)
-							updateFound = true
+			if running then
+				pcall(function()
+					local HttpService = game:GetService("HttpService")
+					local result = game:HttpGet(
+						"https://api.github.com/repos/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/commits/main?_=" .. tostring(os.clock()):gsub("%.", ""),
+						true
+					)
+					if result then
+						local data = HttpService:JSONDecode(result)
+						if data and data.sha then
+							local latestHash = string.sub(data.sha, 1, 7)
+							if latestHash ~= currentHash then
+								GH.ShowToast(
+									GH.T("toast_new_update") .. " (v" .. latestHash .. ")",
+									Color3.fromRGB(255, 180, 0),
+									nil,
+									true
+								)
+								running = false
+							end
 						end
 					end
-				end
-			end)
+				end)
+			end
 		end
 	end)
 end
