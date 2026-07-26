@@ -29,7 +29,10 @@ return function(GH)
 					hrp.AssemblyAngularVelocity = Vector3.zero
 					hrp.AssemblyLinearVelocity = Vector3.zero
 				end
-				if hum then hum.AutoRotate = true end
+				if hum then
+					hum.AutoRotate = true
+					hum.PlatformStand = false
+				end
 				for _, part in ipairs(char:GetDescendants()) do
 					if part:IsA("BasePart") then part.CanCollide = true end
 				end
@@ -61,11 +64,10 @@ return function(GH)
 			local targetRoot = target.Character:FindFirstChild("HumanoidRootPart")
 			if not targetRoot then return end
 
-			-- Desativar colisao do nosso personagem
-			for _, part in ipairs(myChar:GetDescendants()) do
-				if part:IsA("BasePart") then part.CanCollide = false end
-			end
+			-- NAO desativar CanCollide (causa morte ao cair no chao)
+			-- Em vez disso, usar PlatformStand para manter estavel
 			myHum.AutoRotate = false
+			myHum.PlatformStand = true
 
 			-- Criar ou manter spin
 			local spin = myRoot:FindFirstChild("GH_TargetSpin")
@@ -86,15 +88,15 @@ return function(GH)
 				-- Voar ate o alvo
 				local moveDir = dir.Unit
 				local speed = 120
-				myRoot.AssemblyLinearVelocity = moveDir * speed + Vector3.new(0, 5, 0)
+				myRoot.AssemblyLinearVelocity = moveDir * speed + Vector3.new(0, 15, 0)
 			else
 				-- Perto o suficiente: girar em cima dele
 				myRoot.CFrame = myRoot.CFrame:Lerp(
-					CFrame.new(targetRoot.Position + Vector3.new(0, -1, 0)),
+					CFrame.new(targetRoot.Position + Vector3.new(0, 1, 0)),
 					0.4
 				)
-				-- Impulsionar para cima para manter no ar
-				myRoot.AssemblyLinearVelocity = Vector3.new(0, 20, 0)
+				-- Manter no ar
+				myRoot.AssemblyLinearVelocity = Vector3.new(0, 25, 0)
 			end
 		end)
 	end
