@@ -3529,9 +3529,9 @@ function GH.Initialize()
 		if currentHash == "unknown" then return end
 
 		local running = true
-		while running and not GH.Stopped do
+		while running do
 			task.wait(60)
-			if GH.Stopped then running = false end
+			if GH.Stopped or not GH.ScreenGui or not GH.ScreenGui.Parent then running = false end
 
 			if running then
 				pcall(function()
