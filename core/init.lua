@@ -112,6 +112,7 @@ GH.Locales = {
 		toggle_breakvelocity = "Break Velocity",
 		toggle_invisibleparts = "Invisible Parts",
 		toggle_voiceaudio = "Voice Audio (Link)",
+		toggle_tptovehicle = "TP para Veiculo",
 		toggle_trollfling = "Tornado Fling",
 		toggle_targetfling = "Target Fling",
 		toggle_spasms = "Spasmos",
@@ -174,6 +175,7 @@ GH.Locales = {
 		desc_breakvelocity = "Reseta toda velocidade do personagem",
 		desc_invisible_parts = "Mostra partes que estao invisiveis no mapa",
 		desc_voiceaudio = "Toca audio no voice do Roblox via link. Comando: !audio <url>",
+		desc_tptovehicle = "Mostra lista de veiculos e teleporta direto para o piloto",
 		desc_trollfling = "Gira rapidamente para jogar outros jogadores",
 		desc_targetfling = "Seleciona um alvo e voa ate ele para derrubar",
 		desc_spasms = "Animacao de convulsao (requer R6)",
@@ -218,6 +220,10 @@ GH.Locales = {
 		toast_voiceaudio_no_char = "Personagem nao encontrado",
 		input_voiceaudio_title = "Voice Audio - Link do Audio",
 		input_voiceaudio_placeholder = "Cole o link do audio...",
+		toast_tptovehicle_tp = "TP para %s",
+		toast_tptovehicle_notfound = "Nenhum veiculo encontrado",
+		input_tptovehicle_title = "TP para Veiculo",
+		input_tptovehicle_placeholder = "Procurar veiculo...",
 		toast_velocity_reset = "Velocity resetado!",
 		toast_invisible_shown = "%s partes invisiveis mostradas",
 		toast_clothes_removed = "Roupas removidas!",
@@ -322,6 +328,7 @@ GH.Locales = {
 		toggle_breakvelocity = "Break Velocity",
 		toggle_invisibleparts = "Invisible Parts",
 		toggle_voiceaudio = "Voice Audio (Link)",
+		toggle_tptovehicle = "TP to Vehicle",
 		toggle_trollfling = "Tornado Fling",
 		toggle_targetfling = "Target Fling",
 		toggle_spasms = "Spasms",
@@ -384,6 +391,7 @@ GH.Locales = {
 		desc_breakvelocity = "Resets all character velocity",
 		desc_invisible_parts = "Shows invisible parts on map",
 		desc_voiceaudio = "Plays audio in Roblox voice via link. Command: !audio <url>",
+		desc_tptovehicle = "Shows vehicle list and teleports directly to the pilot",
 		desc_trollfling = "Spins rapidly to fling other players",
 		desc_targetfling = "Select a target and fly to them to knock down",
 		desc_spasms = "Convulsion animation (requires R6)",
@@ -428,6 +436,10 @@ GH.Locales = {
 		toast_voiceaudio_no_char = "Character not found",
 		input_voiceaudio_title = "Voice Audio - Audio Link",
 		input_voiceaudio_placeholder = "Paste audio link...",
+		toast_tptovehicle_tp = "TP to %s",
+		toast_tptovehicle_notfound = "No vehicles found",
+		input_tptovehicle_title = "TP to Vehicle",
+		input_tptovehicle_placeholder = "Search vehicle...",
 		toast_velocity_reset = "Velocity reset!",
 		toast_invisible_shown = "%s invisible parts shown",
 		toast_clothes_removed = "Clothes removed!",
@@ -532,6 +544,7 @@ GH.Locales = {
 		toggle_breakvelocity = "Break Velocity",
 		toggle_invisibleparts = "Invisible Parts",
 		toggle_voiceaudio = "Voice Audio (Link)",
+		toggle_tptovehicle = "TP a Vehiculo",
 		toggle_trollfling = "Tornado Fling",
 		toggle_targetfling = "Target Fling",
 		toggle_spasms = "Espasmos",
@@ -594,6 +607,7 @@ GH.Locales = {
 		desc_breakvelocity = "Resetea toda velocidad del personaje",
 		desc_invisible_parts = "Muestra partes que estan invisibles en el mapa",
 		desc_voiceaudio = "Reproduce audio en el voice de Roblox via enlace. Comando: !audio <url>",
+		desc_tptovehicle = "Muestra lista de vehiculos y teleporta directo al piloto",
 		desc_trollfling = "Gira rapidamente para lanzar a otros jugadores",
 		desc_targetfling = "Selecciona un objetivo y vuela hasta el para derribar",
 		desc_spasms = "Animacion de convulsion (requiere R6)",
@@ -638,6 +652,10 @@ GH.Locales = {
 		toast_voiceaudio_no_char = "Personaje no encontrado",
 		input_voiceaudio_title = "Voice Audio - Enlace del Audio",
 		input_voiceaudio_placeholder = "Pega el enlace del audio...",
+		toast_tptovehicle_tp = "TP a %s",
+		toast_tptovehicle_notfound = "No se encontraron vehiculos",
+		input_tptovehicle_title = "TP a Vehiculo",
+		input_tptovehicle_placeholder = "Buscar vehiculo...",
 		toast_velocity_reset = "Velocity reseteado!",
 		toast_invisible_shown = "%s partes invisibles mostradas",
 		toast_clothes_removed = "Ropa eliminada!",
@@ -1867,6 +1885,13 @@ function GH.FullCleanup()
 					snd:Destroy()
 				end
 			end
+		end
+	end)
+
+	-- TpToVehicle: fechar GUI
+	pcall(function()
+		if GH.TargetGui:FindFirstChild("GH_VehiclePicker") then
+			GH.TargetGui["GH_VehiclePicker"]:Destroy()
 		end
 	end)
 
