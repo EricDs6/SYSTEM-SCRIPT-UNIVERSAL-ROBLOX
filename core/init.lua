@@ -2215,6 +2215,43 @@ function GH.Initialize()
 	mainStroke.Parent = MainFrame
 
 	-- ==========================================
+	-- FPS COUNTER (canto inferior esquerdo)
+	-- ==========================================
+	local FPSLabel = Instance.new("TextLabel")
+	FPSLabel.Name = "FPSCounter"
+	FPSLabel.Size = UDim2.new(0, 80, 0, 16)
+	FPSLabel.Position = UDim2.new(0, 8, 1, -22)
+	FPSLabel.BackgroundTransparency = 1
+	FPSLabel.Text = "FPS: --"
+	FPSLabel.TextColor3 = Color3.fromRGB(100, 100, 115)
+	FPSLabel.Font = Enum.Font.RobotoMono
+	FPSLabel.TextSize = 9
+	FPSLabel.TextXAlignment = Enum.TextXAlignment.Left
+	FPSLabel.ZIndex = 3
+	FPSLabel.Parent = MainFrame
+
+	-- FPS tracking
+	local fpsFrames = 0
+	local fpsLastUpdate = os.clock()
+	RunService.RenderStepped:Connect(function()
+		fpsFrames += 1
+		local now = os.clock()
+		if now - fpsLastUpdate >= 1 then
+			local fps = math.floor(fpsFrames / (now - fpsLastUpdate) + 0.5)
+			FPSLabel.Text = "FPS: " .. fps
+			if fps >= 50 then
+				FPSLabel.TextColor3 = Color3.fromRGB(80, 200, 120)
+			elseif fps >= 30 then
+				FPSLabel.TextColor3 = Color3.fromRGB(200, 180, 80)
+			else
+				FPSLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+			end
+			fpsFrames = 0
+			fpsLastUpdate = now
+		end
+	end)
+
+	-- ==========================================
 	-- TOPBAR
 	-- ==========================================
 	local Topbar = Instance.new("Frame")
