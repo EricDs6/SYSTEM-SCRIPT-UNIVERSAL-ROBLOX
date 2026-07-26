@@ -2399,10 +2399,10 @@ function GH.Initialize()
 	ClearX.TextSize = 12
 	ClearX.ZIndex = 12
 	ClearX.Parent = SearchClear
-	ClearX.MouseEnter:Connect(function()
+	SearchClear.MouseEnter:Connect(function()
 		TweenService:Create(ClearX, GH.TI, { TextColor3 = W11.Red }):Play()
 	end)
-	ClearX.MouseLeave:Connect(function()
+	SearchClear.MouseLeave:Connect(function()
 		TweenService:Create(ClearX, GH.TI, { TextColor3 = W11.TextSecondary }):Play()
 	end)
 
