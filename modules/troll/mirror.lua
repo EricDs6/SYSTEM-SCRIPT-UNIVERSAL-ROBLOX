@@ -69,11 +69,14 @@ return function(GH)
 					bp.Parent = myRoot
 					GH.Cache.MirrorBodyPos = bp
 
-					-- Torna as partes massless e sem colisao pra nao prender
+					-- Torna as partes sem colisao pra nao prender
 					for _, child in pairs(myChar:GetDescendants()) do
 						if child:IsA("BasePart") then
-							child.Massless = true
 							child.CanCollide = false
+							-- Massless em todas exceto o Root (pra nao desestabilizar o BodyPosition)
+							if child ~= myRoot then
+								child.Massless = true
+							end
 						end
 					end
 
@@ -110,15 +113,14 @@ return function(GH)
 			if not targetRoot or not myRoot then return end
 
 			-- Calcula posicao espelhada: mirrored = 2 * center - targetPos
-			local mirroredPos = 2 * center - targetRoot.Position
+			local mirroredPos = Vector3.new(
+				2 * center.X - targetRoot.Position.X,
+				targetRoot.Position.Y, -- espelha a altura do alvo
+				2 * center.Z - targetRoot.Position.Z
+			)
 
-			-- Move suavemente via BodyPosition
+			-- Move suavemente via BodyPosition (sem mexer no CFrame pra nao causar jitter)
 			bp.Position = mirroredPos
-
-			-- Espelha a rotacao no eixo Y (inverte a direcao que o alvo olha)
-			local targetCF = targetRoot.CFrame
-			local mirrorCF = CFrame.new(myRoot.Position) * CFrame.Angles(0, -targetCF:ToEulerAnglesYXZ(), 0)
-			myRoot.CFrame = mirrorCF
 		end)
 	end
 
