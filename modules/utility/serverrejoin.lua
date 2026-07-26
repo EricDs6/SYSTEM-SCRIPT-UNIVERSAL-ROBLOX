@@ -12,7 +12,7 @@ return function(GH)
 		if not state then return end
 		task.spawn(function()
 			pcall(function()
-				game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+				game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
 			end)
 		end)
 		task.delay(2, function() GH.States.ServerRejoin = false end)
