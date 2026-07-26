@@ -285,7 +285,7 @@ local categories = {
 		"fly", "noclip", "sprint", "speed", "infinitejump", "bunnyhop",
 		"teleportplayer", "blink", "vehiclespeed", "nojumpcooldown",
 		"float", "swim", "vehiclegoto", "walkto", "orbit", "headsit",
-		"vehiclefly", "spectate", "gotopart"
+		"vehiclefly", "spectate", "gotopart", "crawl"
 	}},
 	{ name = "Visual", files = {
 		"xray", "nightmode", "fullbright", "tracers", "crosshair", "fovchanger"

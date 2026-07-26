@@ -60,6 +60,7 @@ GH.Locales = {
 		-- Toggle titles
 		toggle_hitbox = "Hitbox Gigante",
 		toggle_esp = "Ativar ESP",
+		toggle_crawl = "Rastejar",
 		toggle_triggerbot = "TriggerBot",
 		toggle_silentaim = "Silent Aim",
 		toggle_nofling = "No Fling",
@@ -151,6 +152,7 @@ GH.Locales = {
 		desc_vehiclefly = "Voar dirigindo veiculos. WASD+QE",
 		desc_spectate = "Camera segue um jogador selecionado",
 		desc_gotopart = "Teleporta para uma parte pelo nome",
+		desc_crawl = "Faz o personagem rastejar no chao",
 		desc_xray = "Veja atraves de paredes e objeitos",
 		desc_nightmode = "Escurece o ambiente para ver melhor",
 		desc_fullbright = "Iluminacao maxima, nada de sombras",
@@ -279,6 +281,7 @@ GH.Locales = {
 		-- Toggle titles
 		toggle_hitbox = "Giant Hitbox",
 		toggle_esp = "Enable ESP",
+		toggle_crawl = "Crawl",
 		toggle_triggerbot = "TriggerBot",
 		toggle_silentaim = "Silent Aim",
 		toggle_nofling = "No Fling",
@@ -370,6 +373,7 @@ GH.Locales = {
 		desc_vehiclefly = "Fly while driving vehicles. WASD+QE",
 		desc_spectate = "Camera follows a selected player",
 		desc_gotopart = "Teleport to a part by name",
+		desc_crawl = "Makes the character crawl on the ground",
 		desc_xray = "See through walls and objects",
 		desc_nightmode = "Darkens environment for better visibility",
 		desc_fullbright = "Maximum brightness, no shadows",
@@ -498,6 +502,7 @@ GH.Locales = {
 		-- Toggle titles
 		toggle_hitbox = "Hitbox Gigante",
 		toggle_esp = "Activar ESP",
+		toggle_crawl = "Arrastrarse",
 		toggle_triggerbot = "TriggerBot",
 		toggle_silentaim = "Silent Aim",
 		toggle_nofling = "No Fling",
@@ -589,6 +594,7 @@ GH.Locales = {
 		desc_vehiclefly = "Volando manejando vehiculos. WASD+QE",
 		desc_spectate = "Camara sigue a un jugador seleccionado",
 		desc_gotopart = "Teletransporta a una parte por nombre",
+		desc_crawl = "Hace que el personaje se arrastre por el suelo",
 		desc_xray = "Ver a traves de paredes y objetos",
 		desc_nightmode = "Oscurece el ambiente para ver mejor",
 		desc_fullbright = "Iluminacion maxima, sin sombras",
@@ -1912,6 +1918,18 @@ function GH.FullCleanup()
 			end
 		end
 		table.clear(GH.Cache.OrigPlayerCollides)
+	end)
+
+	-- Crawl: restaurar HipHeight
+	pcall(function()
+		local char = LocalPlayer.Character
+		if char then
+			local hum = char:FindFirstChildOfClass("Humanoid")
+			if hum and GH.Cache.OrigHipHeight then
+				hum.HipHeight = GH.Cache.OrigHipHeight
+				GH.Cache.OrigHipHeight = nil
+			end
+		end
 	end)
 
 	-- Spasms: parar animacao
