@@ -294,7 +294,7 @@ local categories = {
 		"clicktp", "gravity", "customspawn", "freecam", "flashback", "coords", "thirdperson",
 		"serverrejoin", "autoclicker", "proximityinstant", "antiafk", "antikick",
 		"autocollect", "fireclickdetectors", "fireproximityprompts", "btools",
-		"breakvelocity", "invisibleparts", "anchor", "voiceaudio", "tptovehicle", "noplayercollide", "forcepush"
+		"breakvelocity", "invisibleparts", "anchor", "voiceaudio", "tptovehicle", "tpspawn", "noplayercollide", "forcepush"
 	}},
 	{ name = "Troll", files = {
 		"trollfling", "targetfling", "walkfling", "autofling", "spasms", "naked", "freeze", "pushall", "mirror"
