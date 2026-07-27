@@ -1854,14 +1854,11 @@ function GH.Stats.Start()
 	-- Enviar evento de injecao
 	GH.Stats.SendInjectionEvent()
 
-	-- Incrementar contadores
-	GH.Stats.IncrementCounter("injections")
-	GH.Stats.IncrementCounter("online")
+	-- Incrementar contador local de injecoes
+	GH.Stats.TotalInjections = GH.Stats.TotalInjections + 1
+	GH.UpdateLiveIndicators()
 
-	-- Buscar contadores iniciais
-	GH.Stats.RefreshCounts()
-
-	-- Enviar heartbeat e atualizar contadores a cada 30 segundos
+	-- Atualizar contadores a cada 30 segundos (jogadores no servidor)
 	task.spawn(function()
 		while GH.Stats.IsOnline and not GH.Stopped do
 			task.wait(30)
@@ -1899,56 +1896,13 @@ function GH.UpdateLiveIndicators()
 	end)
 end
 
--- Buscar contadores de um servico externo (countapi.xyz)
+-- Atualizar contadores automaticamente usando dados locais
 function GH.Stats.RefreshCounts()
 	pcall(function()
-		local request = http_request or (syn and syn.request) or (http and http.request)
-		if not request then return end
-
-		-- Buscar online users
-		local ok, result = pcall(function()
-			return request({
-				Url = "https://api.countapi.xyz/get/systemscript/online",
-				Method = "GET",
-			})
-		end)
-
-		if ok and result and result.Body then
-			local data = GH.Services.HttpService:JSONDecode(result.Body)
-			if data and data.value then
-				GH.Stats.OnlineUsers = data.value
-			end
-		end
-
-		-- Buscar injecoes totais
-		local ok2, result2 = pcall(function()
-			return request({
-				Url = "https://api.countapi.xyz/get/systemscript/injections",
-				Method = "GET",
-			})
-		end)
-
-		if ok2 and result2 and result2.Body then
-			local data2 = GH.Services.HttpService:JSONDecode(result2.Body)
-			if data2 and data2.value then
-				GH.Stats.TotalInjections = data2.value
-			end
-		end
-
+		-- Online = jogadores no servidor atual
+		GH.Stats.OnlineUsers = #Players:GetPlayers()
 		-- Atualizar UI
 		GH.UpdateLiveIndicators()
-	end)
-end
-
--- Incrementar contadores no servico externo
-function GH.Stats.IncrementCounter(name)
-	pcall(function()
-		local request = http_request or (syn and syn.request) or (http and http.request)
-		if not request then return end
-		request({
-			Url = "https://api.countapi.xyz/hit/systemscript/" .. name,
-			Method = "GET",
-		})
 	end)
 end
 
