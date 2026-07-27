@@ -41,6 +41,9 @@ GH.Locales = {
 		stats_device = "Meu Device",
 		stats_status = "Status",
 		stats_active = "Ativo",
+		stats_live = "AO VIVO",
+		stats_online_label = "Online",
+		stats_injected_label = "Injetado",
 		-- Update info
 		update_section = "Atualizacao",
 		update_version = "Versao",
@@ -281,6 +284,9 @@ GH.Locales = {
 		stats_device = "My Device",
 		stats_status = "Status",
 		stats_active = "Active",
+		stats_live = "LIVE",
+		stats_online_label = "Online",
+		stats_injected_label = "Injected",
 		-- Update info
 		update_section = "Update Info",
 		update_version = "Version",
@@ -521,6 +527,9 @@ GH.Locales = {
 		stats_device = "Mi Dispositivo",
 		stats_status = "Estado",
 		stats_active = "Activo",
+		stats_live = "EN VIVO",
+		stats_online_label = "En Linea",
+		stats_injected_label = "Inyectado",
 		-- Update info
 		update_section = "Info de Actualizacion",
 		update_version = "Version",
@@ -1845,12 +1854,20 @@ function GH.Stats.Start()
 	-- Enviar evento de injecao
 	GH.Stats.SendInjectionEvent()
 
-	-- Enviar heartbeat a cada 60 segundos
+	-- Incrementar contadores
+	GH.Stats.IncrementCounter("injections")
+	GH.Stats.IncrementCounter("online")
+
+	-- Buscar contadores iniciais
+	GH.Stats.RefreshCounts()
+
+	-- Enviar heartbeat e atualizar contadores a cada 30 segundos
 	task.spawn(function()
 		while GH.Stats.IsOnline and not GH.Stopped do
-			task.wait(60)
+			task.wait(30)
 			if GH.Stats.IsOnline and not GH.Stopped then
 				GH.Stats.SendHeartbeat()
+				GH.Stats.RefreshCounts()
 			end
 		end
 	end)
@@ -1862,6 +1879,77 @@ function GH.Stats.Start()
 			GH.Stats.SendDisconnectEvent()
 		end)
 	end
+end
+
+-- ==========================================
+-- LIVE INDICATOR — Atualizar contadores em tempo real
+-- ==========================================
+
+-- Atualizar os labels do indicador ao vivo na topbar
+function GH.UpdateLiveIndicators()
+	pcall(function()
+		if GH._LiveIndicators then
+			if GH._LiveIndicators.OnlineValue then
+				GH._LiveIndicators.OnlineValue.Text = tostring(GH.Stats.OnlineUsers)
+			end
+			if GH._LiveIndicators.InjectedValue then
+				GH._LiveIndicators.InjectedValue.Text = tostring(GH.Stats.TotalInjections)
+			end
+		end
+	end)
+end
+
+-- Buscar contadores de um servico externo (countapi.xyz)
+function GH.Stats.RefreshCounts()
+	pcall(function()
+		local request = http_request or (syn and syn.request) or (http and http.request)
+		if not request then return end
+
+		-- Buscar online users
+		local ok, result = pcall(function()
+			return request({
+				Url = "https://api.countapi.xyz/get/systemscript/online",
+				Method = "GET",
+			})
+		end)
+
+		if ok and result and result.Body then
+			local data = GH.Services.HttpService:JSONDecode(result.Body)
+			if data and data.value then
+				GH.Stats.OnlineUsers = data.value
+			end
+		end
+
+		-- Buscar injecoes totais
+		local ok2, result2 = pcall(function()
+			return request({
+				Url = "https://api.countapi.xyz/get/systemscript/injections",
+				Method = "GET",
+			})
+		end)
+
+		if ok2 and result2 and result2.Body then
+			local data2 = GH.Services.HttpService:JSONDecode(result2.Body)
+			if data2 and data2.value then
+				GH.Stats.TotalInjections = data2.value
+			end
+		end
+
+		-- Atualizar UI
+		GH.UpdateLiveIndicators()
+	end)
+end
+
+-- Incrementar contadores no servico externo
+function GH.Stats.IncrementCounter(name)
+	pcall(function()
+		local request = http_request or (syn and syn.request) or (http and http.request)
+		if not request then return end
+		request({
+			Url = "https://api.countapi.xyz/hit/systemscript/" .. name,
+			Method = "GET",
+		})
+	end)
 end
 
 -- ==========================================
@@ -2368,7 +2456,7 @@ function GH.Initialize()
 	Topbar.Parent = MainFrame
 
 	local TitleLabel = Instance.new("TextLabel")
-	TitleLabel.Size = UDim2.new(1, -120, 1, 0)
+	TitleLabel.Size = UDim2.new(1, -360, 1, 0)
 	TitleLabel.Position = UDim2.new(0, 14, 0, 0)
 	TitleLabel.BackgroundTransparency = 1
 	TitleLabel.Text = "SYSTEM SCRIPT"
@@ -2378,6 +2466,166 @@ function GH.Initialize()
 	TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	TitleLabel.ZIndex = 3
 	TitleLabel.Parent = Topbar
+
+	-- ==========================================
+	-- LIVE INDICATOR (bolinha vermelha piscante + contadores)
+	-- ==========================================
+	local LiveContainer = Instance.new("Frame")
+	LiveContainer.Name = "LiveContainer"
+	LiveContainer.Size = UDim2.new(0, 220, 0, 20)
+	LiveContainer.Position = UDim2.new(1, -340, 0.5, -10)
+	LiveContainer.BackgroundTransparency = 1
+	LiveContainer.ZIndex = 3
+	LiveContainer.Parent = Topbar
+
+	-- Bolinha vermelha piscante
+	local LiveDot = Instance.new("Frame")
+	LiveDot.Name = "LiveDot"
+	LiveDot.Size = UDim2.new(0, 6, 0, 6)
+	LiveDot.Position = UDim2.new(0, 0, 0.5, -3)
+	LiveDot.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+	LiveDot.BorderSizePixel = 0
+	LiveDot.ZIndex = 4
+	LiveDot.Parent = LiveContainer
+	Instance.new("UICorner", LiveDot).CornerRadius = UDim.new(1, 0)
+
+	-- Glow ao redor da bolinha
+	local LiveGlow = Instance.new("Frame")
+	LiveGlow.Name = "LiveGlow"
+	LiveGlow.Size = UDim2.new(0, 10, 0, 10)
+	LiveGlow.Position = UDim2.new(0, -2, 0.5, -5)
+	LiveGlow.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+	LiveGlow.BackgroundTransparency = 0.6
+	LiveGlow.BorderSizePixel = 0
+	LiveGlow.ZIndex = 3
+	LiveGlow.Parent = LiveContainer
+	Instance.new("UICorner", LiveGlow).CornerRadius = UDim.new(1, 0)
+
+	-- Label "AO VIVO"
+	local LiveLabel = Instance.new("TextLabel")
+	LiveLabel.Name = "LiveLabel"
+	LiveLabel.Size = UDim2.new(0, 44, 1, 0)
+	LiveLabel.Position = UDim2.new(0, 12, 0, 0)
+	LiveLabel.BackgroundTransparency = 1
+	LiveLabel.Text = GH.T("stats_live")
+	LiveLabel.TextColor3 = Color3.fromRGB(255, 70, 70)
+	LiveLabel.Font = FontBold
+	LiveLabel.TextSize = 8
+	LiveLabel.TextXAlignment = Enum.TextXAlignment.Left
+	LiveLabel.ZIndex = 4
+	LiveLabel.Parent = LiveContainer
+
+	-- Contador Online
+	local OnlineIcon = Instance.new("TextLabel")
+	OnlineIcon.Name = "OnlineIcon"
+	OnlineIcon.Size = UDim2.new(0, 10, 1, 0)
+	OnlineIcon.Position = UDim2.new(0, 60, 0, 0)
+	OnlineIcon.BackgroundTransparency = 1
+	OnlineIcon.Text = "●"
+	OnlineIcon.TextColor3 = Color3.fromRGB(0, 200, 100)
+	OnlineIcon.Font = Enum.Font.SourceSans
+	OnlineIcon.TextSize = 8
+	OnlineIcon.ZIndex = 4
+	OnlineIcon.Parent = LiveContainer
+
+	local OnlineLabel = Instance.new("TextLabel")
+	OnlineLabel.Name = "OnlineLabel"
+	OnlineLabel.Size = UDim2.new(0, 40, 1, 0)
+	OnlineLabel.Position = UDim2.new(0, 70, 0, 0)
+	OnlineLabel.BackgroundTransparency = 1
+	OnlineLabel.Text = GH.T("stats_online_label")
+	OnlineLabel.TextColor3 = W11.TextSecondary
+	OnlineLabel.Font = Font
+	OnlineLabel.TextSize = 8
+	OnlineLabel.TextXAlignment = Enum.TextXAlignment.Left
+	OnlineLabel.ZIndex = 4
+	OnlineLabel.Parent = LiveContainer
+
+	local OnlineValue = Instance.new("TextLabel")
+	OnlineValue.Name = "OnlineValue"
+	OnlineValue.Size = UDim2.new(0, 30, 1, 0)
+	OnlineValue.Position = UDim2.new(0, 106, 0, 0)
+	OnlineValue.BackgroundTransparency = 1
+	OnlineValue.Text = "0"
+	OnlineValue.TextColor3 = Color3.fromRGB(0, 200, 100)
+	OnlineValue.Font = FontBold
+	OnlineValue.TextSize = 9
+	OnlineValue.TextXAlignment = Enum.TextXAlignment.Left
+	OnlineValue.ZIndex = 4
+	OnlineValue.Parent = LiveContainer
+
+	-- Contador Injetado
+	local InjectedIcon = Instance.new("TextLabel")
+	InjectedIcon.Name = "InjectedIcon"
+	InjectedIcon.Size = UDim2.new(0, 10, 1, 0)
+	InjectedIcon.Position = UDim2.new(0, 140, 0, 0)
+	InjectedIcon.BackgroundTransparency = 1
+	InjectedIcon.Text = "●"
+	InjectedIcon.TextColor3 = GH.Theme.Accent
+	InjectedIcon.Font = Enum.Font.SourceSans
+	InjectedIcon.TextSize = 8
+	InjectedIcon.ZIndex = 4
+	InjectedIcon.Parent = LiveContainer
+
+	local InjectedLabel = Instance.new("TextLabel")
+	InjectedLabel.Name = "InjectedLabel"
+	InjectedLabel.Size = UDim2.new(0, 50, 1, 0)
+	InjectedLabel.Position = UDim2.new(0, 150, 0, 0)
+	InjectedLabel.BackgroundTransparency = 1
+	InjectedLabel.Text = GH.T("stats_injected_label")
+	InjectedLabel.TextColor3 = W11.TextSecondary
+	InjectedLabel.Font = Font
+	InjectedLabel.TextSize = 8
+	InjectedLabel.TextXAlignment = Enum.TextXAlignment.Left
+	InjectedLabel.ZIndex = 4
+	InjectedLabel.Parent = LiveContainer
+
+	local InjectedValue = Instance.new("TextLabel")
+	InjectedValue.Name = "InjectedValue"
+	InjectedValue.Size = UDim2.new(0, 30, 1, 0)
+	InjectedValue.Position = UDim2.new(0, 196, 0, 0)
+	InjectedValue.BackgroundTransparency = 1
+	InjectedValue.Text = "0"
+	InjectedValue.TextColor3 = GH.Theme.Accent
+	InjectedValue.Font = FontBold
+	InjectedValue.TextSize = 9
+	InjectedValue.TextXAlignment = Enum.TextXAlignment.Left
+	InjectedValue.ZIndex = 4
+	InjectedValue.Parent = LiveContainer
+
+	-- Animacao de piscar da bolinha LIVE (pulso suave)
+	task.spawn(function()
+		while not GH.Stopped and not GH.isClosing do
+			-- Pulso ON
+			TweenService:Create(LiveDot, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				BackgroundTransparency = 0,
+				Size = UDim2.new(0, 8, 0, 8),
+			}):Play()
+			TweenService:Create(LiveGlow, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				BackgroundTransparency = 0.3,
+				Size = UDim2.new(0, 14, 0, 14),
+				Position = UDim2.new(0, -4, 0.5, -7),
+			}):Play()
+			task.wait(0.8)
+			-- Pulso OFF
+			TweenService:Create(LiveDot, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				BackgroundTransparency = 0.5,
+				Size = UDim2.new(0, 6, 0, 6),
+			}):Play()
+			TweenService:Create(LiveGlow, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				BackgroundTransparency = 0.7,
+				Size = UDim2.new(0, 10, 0, 10),
+				Position = UDim2.new(0, -2, 0.5, -5),
+			}):Play()
+			task.wait(0.8)
+		end
+	end)
+
+	-- Salvar referencias para atualizacao externa
+	GH._LiveIndicators = {
+		OnlineValue = OnlineValue,
+		InjectedValue = InjectedValue,
+	}
 
 	-- Topbar buttons (Win11 style: small equal squares)
 	local BTN_SIZE = 24
