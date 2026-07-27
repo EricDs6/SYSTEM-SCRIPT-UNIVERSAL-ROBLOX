@@ -1,12 +1,18 @@
 -- =============================================================================
 -- COMMAND: ESP
--- Box outline + Tag + Nome + Distancia + Barra de vida horizontal
+-- BoxHandleAdornment (box 3D) + BillboardGui + Highlight
 -- Estilo: Team (verde) / Enemy (vermelho) / Neutral (amarelo)
+-- Features: Barra de vida + Distancia
 -- =============================================================================
 return function(GH)
 	local Players = GH.Services.Players
 	local RunService = GH.Services.RunService
 	local LocalPlayer = GH.LocalPlayer
+
+	-- Cores configuraveis
+	_G.FriendColor = Color3.fromRGB(0, 0, 255)
+	_G.EnemyColor = Color3.fromRGB(255, 0, 0)
+	_G.UseTeamColor = true
 
 	local ESPColors = {
 		Enemy = {
@@ -35,12 +41,29 @@ return function(GH)
 		return "Neutral"
 	end
 
+	local function GetESPColor(player)
+		if _G.UseTeamColor and player.TeamColor then
+			return player.TeamColor.Color
+		end
+		return (GetPlayerRelation(player) == "Ally") and _G.FriendColor or _G.EnemyColor
+	end
+
 	local espFolder = nil
 	local espData = {}
 	local charAddedConns = {}
 
+	-- === Templates ===
+	local BoxTemplate = Instance.new("BoxHandleAdornment")
+	BoxTemplate.Name = "ESP_Box"
+	BoxTemplate.Size = Vector3.new(1, 2, 1)
+	BoxTemplate.Color3 = Color3.new(100 / 255, 100 / 255, 100 / 255)
+	BoxTemplate.Transparency = 0.7
+	BoxTemplate.ZIndex = 0
+	BoxTemplate.AlwaysOnTop = true
+	BoxTemplate.Visible = false
+
 	local function removerESP()
-		-- Restaurar nome padrao do Roblox para TODOS os jogadores
+		-- Restaurar nome padrao do Roblox
 		for _, jogador in ipairs(Players:GetPlayers()) do
 			pcall(function()
 				if jogador ~= LocalPlayer and jogador.Character then
@@ -52,7 +75,7 @@ return function(GH)
 			end)
 		end
 
-		-- Restaurar nomes de Roblox escondidos
+		-- Restaurar Billboards escondidos
 		for _, jogador in ipairs(Players:GetPlayers()) do
 			pcall(function()
 				if jogador ~= LocalPlayer and jogador.Character then
@@ -71,14 +94,13 @@ return function(GH)
 		end
 		table.clear(charAddedConns)
 
-		-- Destruir folder e todos os objetos ESP dentro dele
+		-- Destruir folder
 		if espFolder then
 			pcall(function() espFolder:Destroy() end)
 			espFolder = nil
 			GH.Objects.ESP_Folder = nil
 		end
 
-		-- Garantir limpeza via GH.Objects tambem
 		if GH.Objects.ESP_Folder and GH.Objects.ESP_Folder.Parent then
 			pcall(function() GH.Objects.ESP_Folder:Destroy() end)
 			GH.Objects.ESP_Folder = nil
@@ -102,10 +124,9 @@ return function(GH)
 		local hum = char:FindFirstChildOfClass("Humanoid")
 		if not hum then return end
 
-		-- Pular jogadores mortos
 		if hum.Health <= 0 then return end
 
-		-- Pular jogadores dentro de veiculos (vehicle seat como ancestor do HRP)
+		-- Pular jogadores dentro de veiculos
 		local hrp = char:FindFirstChild("HumanoidRootPart")
 		if hrp then
 			local parent = hrp.Parent
@@ -117,7 +138,7 @@ return function(GH)
 			end
 		end
 
-		-- Esconder nome padrao do Roblox
+		-- Esconder nome padrao
 		hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 		for _, obj in ipairs(char:GetDescendants()) do
 			if obj:IsA("BillboardGui") and not obj.Name:find("GH_ESP") then
@@ -128,22 +149,33 @@ return function(GH)
 		local relation = GetPlayerRelation(jogador)
 		if not relation then return end
 		local colors = ESPColors[relation]
+		local espColor = GetESPColor(jogador)
 
-		-- === HIGHLIGHT (box outline) ===
+		-- === BOX HANDLE ADORNMENT (Box 3D) ===
+		local box = BoxTemplate:Clone()
+		box.Name = "GH_ESP_Box_" .. jogador.Name
+		box.Color3 = espColor
+		box.Adornee = char
+		box.AlwaysOnTop = true
+		box.Visible = true
+		box.Parent = espFolder
+
+		-- === HIGHLIGHT (Outline) ===
 		local hl = Instance.new("Highlight")
 		hl.Name = "GH_ESP_HL"
-		hl.FillColor = colors.Main
+		hl.FillColor = espColor
 		hl.FillTransparency = 1
-		hl.OutlineColor = colors.Main
+		hl.OutlineColor = espColor
 		hl.OutlineTransparency = 0
 		hl.Adornee = char
+		hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 		hl.Parent = espFolder
 
 		-- === BILLBOARDGUI ===
 		local bg = Instance.new("BillboardGui")
 		bg.Name = "GH_ESP_" .. jogador.Name
 		bg.Adornee = head
-		bg.Size = UDim2.new(0, 180, 0, 70)
+		bg.Size = UDim2.new(0, 200, 0, 70)
 		bg.StudsOffset = Vector3.new(0, 3.5, 0)
 		bg.AlwaysOnTop = true
 		bg.Parent = espFolder
@@ -155,7 +187,7 @@ return function(GH)
 		tagLabel.Position = UDim2.new(0, 0, 0, 0)
 		tagLabel.BackgroundTransparency = 1
 		tagLabel.Text = colors.Tag
-		tagLabel.TextColor3 = colors.Main
+		tagLabel.TextColor3 = espColor
 		tagLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 		tagLabel.TextStrokeTransparency = 0.1
 		tagLabel.Font = Enum.Font.GothamBlack
@@ -208,12 +240,12 @@ return function(GH)
 		local hpBarFill = Instance.new("Frame")
 		hpBarFill.Name = "GH_ESP_HpBarFill"
 		hpBarFill.Size = UDim2.new(1, 0, 1, 0)
-		hpBarFill.BackgroundColor3 = colors.Main
+		hpBarFill.BackgroundColor3 = espColor
 		hpBarFill.BorderSizePixel = 0
 		hpBarFill.Parent = hpBarBg
 		Instance.new("UICorner", hpBarFill).CornerRadius = UDim.new(1, 0)
 
-		-- Texto HP (abaixo da barra, filho do bg)
+		-- Texto HP
 		local hpText = Instance.new("TextLabel")
 		hpText.Name = "GH_ESP_HpText"
 		hpText.Size = UDim2.new(0.5, 0, 0, 10)
@@ -228,7 +260,7 @@ return function(GH)
 		hpText.TextXAlignment = Enum.TextXAlignment.Center
 		hpText.Parent = bg
 
-		espData[jogador] = {gui = bg, hl = hl}
+		espData[jogador] = {gui = bg, hl = hl, box = box}
 	end
 
 	function Cheats_ToggleESP(state, btn)
@@ -247,7 +279,6 @@ return function(GH)
 				criarESP(jogador)
 			end
 
-			-- Armazenar conexoes CharacterAdded para limpar depois
 			charAddedConns = {}
 
 			GH.Connections.ESP_Added = Players.PlayerAdded:Connect(function(jogador)
@@ -288,7 +319,6 @@ return function(GH)
 			GH.Connections.ESP_Render = RunService.RenderStepped:Connect(function()
 				if not GH.States.ESP or GH.isClosing then return end
 
-				-- Trava de seguranca: se a pasta foi deletada (painel fechado), auto-destruir
 				if not espFolder or not espFolder.Parent then
 					removerESP()
 					return
@@ -303,9 +333,10 @@ return function(GH)
 					pcall(function()
 						local bg = data.gui
 						local hl = data.hl
+						local box = data.box
 						if not (bg and bg.Parent) then return end
 
-						-- === PASSO 1: Aplicar configs em TODOS (sempre) ===
+						-- Aplicar configs
 						local tagLabel = bg:FindFirstChild("GH_ESP_Tag")
 						local nameLabel = bg:FindFirstChild("GH_ESP_Name")
 						local hpBarBg = bg:FindFirstChild("GH_ESP_HpBarBg")
@@ -318,10 +349,11 @@ return function(GH)
 						local hpText = bg:FindFirstChild("GH_ESP_HpText")
 						if hpText then hpText.Visible = GH.Settings.ESPShowHealth end
 
-						-- === PASSO 2: Verificar se player existe ===
+						-- Verificar se player existe
 						if not (jogador and jogador.Parent and jogador.Character) then
 							bg.Enabled = false
 							if hl then hl.Enabled = false end
+							if box then box.Visible = false end
 							return
 						end
 
@@ -331,33 +363,40 @@ return function(GH)
 						if not (head and hum) then
 							bg.Enabled = false
 							if hl then hl.Enabled = false end
+							if box then box.Visible = false end
 							return
 						end
 
-						-- === PASSO 3: Distancia ===
+						-- Distancia
 						local dist = (myPos - head.Position).Magnitude
 
 						if dist > GH.Settings.ESPMaxDistance then
 							bg.Enabled = false
 							if hl then hl.Enabled = false end
+							if box then box.Visible = false end
 							return
 						end
 
 						bg.Enabled = true
 						if hl then hl.Enabled = true end
+						if box then box.Visible = true end
 
-						-- === PASSO 4: Cores e dados ===
+						-- Cores e dados
 						local relation = GetPlayerRelation(jogador)
 						if not relation then return end
-						local colors = ESPColors[relation]
+						local espColor = GetESPColor(jogador)
 
 						if tagLabel then
-							tagLabel.Text = colors.Tag
-							tagLabel.TextColor3 = colors.Main
+							tagLabel.Text = ESPColors[relation].Tag
+							tagLabel.TextColor3 = espColor
 						end
 
 						if hl then
-							hl.OutlineColor = colors.Main
+							hl.OutlineColor = espColor
+						end
+
+						if box then
+							box.Color3 = espColor
 						end
 
 						if nameLabel then
@@ -381,9 +420,9 @@ return function(GH)
 									hpBarFill.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
 								end
 							end
-							local hpText = hpBarBg:FindFirstChild("GH_ESP_HpText")
-							if hpText then
-								hpText.Text = hp .. "/" .. maxHp
+							local hpText2 = hpBarBg:FindFirstChild("GH_ESP_HpText")
+							if hpText2 then
+								hpText2.Text = hp .. "/" .. maxHp
 							end
 						end
 
