@@ -49,7 +49,7 @@ return function(GH)
 			tpBtn.MouseButton1Click:Connect(function()
 				local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 				if hrp then
-					hrp.CFrame = CFrame.new(point.Position + Vector3.new(0, 3, 0))
+					GH.TweenTeleport(hrp, CFrame.new(point.Position + Vector3.new(0, 3, 0)))
 					GH.ShowToast("Teleportado para " .. point.Name, GH.Theme.On, 2)
 				end
 			end)

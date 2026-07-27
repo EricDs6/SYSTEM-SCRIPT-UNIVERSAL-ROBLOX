@@ -40,7 +40,7 @@ return function(GH)
 					if hrp then
 						local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 						if hum and hum.SeatPart then hum.Sit = false end
-						hrp.CFrame = GH.Cache.LastDeathCFrame
+						GH.TweenTeleport(hrp, GH.Cache.LastDeathCFrame)
 						GH.ShowToast(GH.T("toast_flashback"), GH.Theme.Accent, 2)
 					end
 				end

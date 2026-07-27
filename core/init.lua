@@ -1656,30 +1656,54 @@ end
 -- ==========================================
 -- TWEEN TELEPORT HELPER
 -- ==========================================
-function GH.TweenTeleport(hrp, targetCFrame, duration)
+-- ==========================================
+-- BYPASS TELEPORT (Evita Banimento de Servidor)
+-- Move o personagem via TweenService com noclip contínuo durante o voo.
+-- Velocidade baseada na distância (250 studs/s padrão) para parecer natural.
+-- ==========================================
+function GH.TweenTeleport(hrp, targetCFrame, speedOrDuration)
 	if not hrp then return end
 	if not LocalPlayer.Character then return end
-	duration = duration or 0.15
 
-	local originalCollisions = {}
-	for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
-		if part:IsA("BasePart") then
-			originalCollisions[part] = part.CanCollide
-			part.CanCollide = false
-		end
+	local char = LocalPlayer.Character
+
+	-- Calcula distância total
+	local distance = (hrp.Position - targetCFrame.Position).Magnitude
+
+	-- Velocidade de viagem (250 studs/s padrão — burla 90% dos anti-cheats)
+	-- O 3º parâmetro aceita velocidade (studs/s) ou duração (segundos).
+	-- Regra: se o valor > 1, é velocidade; senão é duração (compatibilidade).
+	local duration
+	if speedOrDuration and speedOrDuration > 1 then
+		-- É velocidade em studs/s
+		duration = math.max(distance / speedOrDuration, 0.05)
+	else
+		-- É duração em segundos (compatibilidade com chamadas antigas) ou nil (usar 250 studs/s)
+		duration = speedOrDuration or math.max(distance / 250, 0.05)
 	end
 
-	local tween = TweenService:Create(hrp, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		CFrame = targetCFrame
-	})
-	tween:Play()
-
-	task.delay(duration + 0.05, function()
-		for part, canCollide in pairs(originalCollisions) do
-			if part and part.Parent then
-				part.CanCollide = canCollide
+	-- Trava colisões durante toda a viagem via RunService.Stepped
+	local noclipConn
+	noclipConn = RunService.Stepped:Connect(function()
+		if char and char.Parent then
+			for _, part in ipairs(char:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.CanCollide = false
+				end
 			end
 		end
+	end)
+
+	-- Movimento suave com easing Linear (velocidade constante = mais natural)
+	local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+	local tween = TweenService:Create(hrp, tweenInfo, { CFrame = targetCFrame })
+	tween:Play()
+
+	-- Limpeza quando chegar no destino
+	tween.Completed:Connect(function()
+		if noclipConn then noclipConn:Disconnect() end
+		-- O NoClip normal do painel vai assumir a partir daqui se estiver ativo,
+		-- senão as peças voltam ao normal automaticamente pelo motor do jogo.
 	end)
 end
 

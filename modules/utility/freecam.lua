@@ -146,10 +146,10 @@ return function(GH)
 				targetPos = cam.CFrame.Position + Vector3.new(0, 3, 0)
 			end
 
-			hrp.CFrame = CFrame.new(targetPos, targetPos + cam.CFrame.LookVector)
-			hum.PlatformStand = false
-			hum:ChangeState(Enum.HumanoidStateType.GettingUp)
-			GH.ShowToast("Teleportado!", GH.Theme.On, 1)
+		GH.TweenTeleport(hrp, CFrame.new(targetPos, targetPos + cam.CFrame.LookVector))
+		hum.PlatformStand = false
+		hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+		GH.ShowToast("Teleportado!", GH.Theme.On, 1)
 		end
 	end
 
