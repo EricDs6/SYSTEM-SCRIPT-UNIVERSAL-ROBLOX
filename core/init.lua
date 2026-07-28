@@ -37,13 +37,11 @@ GH.Locales = {
 		-- Stats
 		stats_section = "Estatisticas",
 		stats_online = "Usuarios Online",
-		stats_injections = "Injecoes Totais",
 		stats_device = "Meu Device",
 		stats_status = "Status",
 		stats_active = "Ativo",
 		stats_live = "AO VIVO",
 		stats_online_label = "Online",
-		stats_injected_label = "Injetado",
 		-- Update info
 		update_section = "Atualizacao",
 		update_version = "Versao",
@@ -280,13 +278,11 @@ GH.Locales = {
 		-- Stats
 		stats_section = "Statistics",
 		stats_online = "Online Users",
-		stats_injections = "Total Injections",
 		stats_device = "My Device",
 		stats_status = "Status",
 		stats_active = "Active",
 		stats_live = "LIVE",
 		stats_online_label = "Online",
-		stats_injected_label = "Injected",
 		-- Update info
 		update_section = "Update Info",
 		update_version = "Version",
@@ -523,13 +519,11 @@ GH.Locales = {
 		-- Stats
 		stats_section = "Estadisticas",
 		stats_online = "Usuarios En Linea",
-		stats_injections = "Inyecciones Totales",
 		stats_device = "Mi Dispositivo",
 		stats_status = "Estado",
 		stats_active = "Activo",
 		stats_live = "EN VIVO",
 		stats_online_label = "En Linea",
-		stats_injected_label = "Inyectado",
 		-- Update info
 		update_section = "Info de Actualizacion",
 		update_version = "Version",
@@ -1722,7 +1716,6 @@ end
 GH.Stats = {
 	WebhookURL = "https://discord.com/api/webhooks/1530334217723052042/NKbEN44nHaLiUwgYov5NiixxVtCPbvMOf0Gc12KHp1PI9cZYNoBRfJt4MW797h32DkhO",
 	OnlineUsers = 0,
-	TotalInjections = 0,
 	DeviceID = tostring(LocalPlayer.UserId),
 	IsOnline = true,
 }
@@ -1854,9 +1847,6 @@ function GH.Stats.Start()
 	-- Enviar evento de injecao
 	GH.Stats.SendInjectionEvent()
 
-	-- Incrementar contador local de injecoes
-	GH.Stats.TotalInjections = GH.Stats.TotalInjections + 1
-
 	-- Atualizar online imediatamente
 	GH.Stats.RefreshCounts()
 
@@ -1890,9 +1880,6 @@ function GH.UpdateLiveIndicators()
 		if GH._LiveIndicators then
 			if GH._LiveIndicators.OnlineValue then
 				GH._LiveIndicators.OnlineValue.Text = tostring(GH.Stats.OnlineUsers)
-			end
-			if GH._LiveIndicators.InjectedValue then
-				GH._LiveIndicators.InjectedValue.Text = tostring(GH.Stats.TotalInjections)
 			end
 		end
 	end)
@@ -2511,43 +2498,7 @@ function GH.Initialize()
 	OnlineValue.Parent = LiveContainer
 
 	-- Contador Injetado
-	local InjectedIcon = Instance.new("TextLabel")
-	InjectedIcon.Name = "InjectedIcon"
-	InjectedIcon.Size = UDim2.new(0, 10, 1, 0)
-	InjectedIcon.Position = UDim2.new(0, 140, 0, 0)
-	InjectedIcon.BackgroundTransparency = 1
-	InjectedIcon.Text = "●"
-	InjectedIcon.TextColor3 = GH.Theme.Accent
-	InjectedIcon.Font = Enum.Font.SourceSans
-	InjectedIcon.TextSize = 8
-	InjectedIcon.ZIndex = 4
-	InjectedIcon.Parent = LiveContainer
 
-	local InjectedLabel = Instance.new("TextLabel")
-	InjectedLabel.Name = "InjectedLabel"
-	InjectedLabel.Size = UDim2.new(0, 50, 1, 0)
-	InjectedLabel.Position = UDim2.new(0, 150, 0, 0)
-	InjectedLabel.BackgroundTransparency = 1
-	InjectedLabel.Text = GH.T("stats_injected_label")
-	InjectedLabel.TextColor3 = W11.TextSecondary
-	InjectedLabel.Font = Font
-	InjectedLabel.TextSize = 8
-	InjectedLabel.TextXAlignment = Enum.TextXAlignment.Left
-	InjectedLabel.ZIndex = 4
-	InjectedLabel.Parent = LiveContainer
-
-	local InjectedValue = Instance.new("TextLabel")
-	InjectedValue.Name = "InjectedValue"
-	InjectedValue.Size = UDim2.new(0, 30, 1, 0)
-	InjectedValue.Position = UDim2.new(0, 196, 0, 0)
-	InjectedValue.BackgroundTransparency = 1
-	InjectedValue.Text = "0"
-	InjectedValue.TextColor3 = GH.Theme.Accent
-	InjectedValue.Font = FontBold
-	InjectedValue.TextSize = 9
-	InjectedValue.TextXAlignment = Enum.TextXAlignment.Left
-	InjectedValue.ZIndex = 4
-	InjectedValue.Parent = LiveContainer
 
 	-- Animacao de piscar da bolinha LIVE (pulso suave)
 	task.spawn(function()
@@ -2580,7 +2531,6 @@ function GH.Initialize()
 	-- Salvar referencias para atualizacao externa
 	GH._LiveIndicators = {
 		OnlineValue = OnlineValue,
-		InjectedValue = InjectedValue,
 	}
 
 	-- Topbar buttons (Win11 style: small equal squares)
