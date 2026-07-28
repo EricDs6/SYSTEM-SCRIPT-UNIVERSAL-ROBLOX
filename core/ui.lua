@@ -530,43 +530,64 @@ end)
 	-- ==========================================
 	-- PLAYER AVATAR (bottom of sidebar)
 	-- ==========================================
+	-- Calculate remaining space after tabs dynamically
+	local AvatarH = PanelH - TopbarH - (#Categories * 33) - 10
+	if AvatarH < 100 then AvatarH = 100 end
+
 	local AvatarContainer = Instance.new("Frame")
 	AvatarContainer.Name = "AvatarContainer"
-	AvatarContainer.Size = UDim2.new(1, -8, 0, 70)
-	AvatarContainer.BackgroundTransparency = 1
+	AvatarContainer.Size = UDim2.new(1, -8, 0, AvatarH)
+	AvatarContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
+	AvatarContainer.BackgroundTransparency = 0.3
+	AvatarContainer.BorderSizePixel = 0
 	AvatarContainer.LayoutOrder = 9999
 	AvatarContainer.ZIndex = 3
 	AvatarContainer.Parent = Sidebar
+	Instance.new("UICorner", AvatarContainer).CornerRadius = UDim.new(0, 8)
 
 	local AvatarImage = Instance.new("ImageLabel")
 	AvatarImage.Name = "AvatarImage"
-	AvatarImage.Size = UDim2.new(0, 48, 0, 48)
-	AvatarImage.Position = UDim2.new(0.5, -24, 0, 4)
+	AvatarImage.Size = UDim2.new(0, 72, 0, 72)
+	AvatarImage.Position = UDim2.new(0.5, -36, 0, 10)
 	AvatarImage.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
 	AvatarImage.BorderSizePixel = 0
-	AvatarImage.ScaleType = Enum.ScaleType.Fit
+	AvatarImage.ScaleType = Enum.ScaleType.Crop
 	AvatarImage.ZIndex = 4
 	AvatarImage.Parent = AvatarContainer
-	Instance.new("UICorner", AvatarImage).CornerRadius = UDim.new(0, 24)
+	Instance.new("UICorner", AvatarImage).CornerRadius = UDim.new(0, 36)
 	local AvatarStroke = Instance.new("UIStroke")
 	AvatarStroke.Color = W11.Accent
-	AvatarStroke.Thickness = 1.5
-	AvatarStroke.Transparency = 0.3
+	AvatarStroke.Thickness = 2
+	AvatarStroke.Transparency = 0.2
 	AvatarStroke.Parent = AvatarImage
 
 	local PlayerNameLabel = Instance.new("TextLabel")
 	PlayerNameLabel.Name = "PlayerName"
-	PlayerNameLabel.Size = UDim2.new(1, -4, 0, 14)
-	PlayerNameLabel.Position = UDim2.new(0, 2, 1, -16)
+	PlayerNameLabel.Size = UDim2.new(1, -8, 0, 16)
+	PlayerNameLabel.Position = UDim2.new(0, 4, 0, 88)
 	PlayerNameLabel.BackgroundTransparency = 1
-	PlayerNameLabel.Text = LocalPlayer.Name
-	PlayerNameLabel.TextColor3 = W11.TextSecondary
-	PlayerNameLabel.Font = Font
-	PlayerNameLabel.TextSize = 9
+	PlayerNameLabel.Text = LocalPlayer.DisplayName
+	PlayerNameLabel.TextColor3 = W11.Text
+	PlayerNameLabel.Font = FontBold
+	PlayerNameLabel.TextSize = 11
 	PlayerNameLabel.TextXAlignment = Enum.TextXAlignment.Center
 	PlayerNameLabel.TextTruncate = Enum.TextTruncate.AtEnd
 	PlayerNameLabel.ZIndex = 4
 	PlayerNameLabel.Parent = AvatarContainer
+
+	local PlayerAtLabel = Instance.new("TextLabel")
+	PlayerAtLabel.Name = "PlayerAt"
+	PlayerAtLabel.Size = UDim2.new(1, -8, 0, 12)
+	PlayerAtLabel.Position = UDim2.new(0, 4, 0, 104)
+	PlayerAtLabel.BackgroundTransparency = 1
+	PlayerAtLabel.Text = "@" .. LocalPlayer.Name
+	PlayerAtLabel.TextColor3 = W11.TextMuted
+	PlayerAtLabel.Font = Font
+	PlayerAtLabel.TextSize = 9
+	PlayerAtLabel.TextXAlignment = Enum.TextXAlignment.Center
+	PlayerAtLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	PlayerAtLabel.ZIndex = 4
+	PlayerAtLabel.Parent = AvatarContainer
 
 	-- Load player thumbnail
 	task.spawn(function()
@@ -574,7 +595,7 @@ end)
 			return Players:GetUserThumbnailAsync(
 				LocalPlayer.UserId,
 				Enum.ThumbnailType.HeadShot,
-				Enum.ThumbnailSize.Size100x100
+				Enum.ThumbnailSize.Size150x150
 			)
 		end)
 		if success and thumbContent and thumbContent ~= "" then
