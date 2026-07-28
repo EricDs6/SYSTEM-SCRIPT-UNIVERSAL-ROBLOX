@@ -17,6 +17,8 @@ local LocalPlayer = Players.LocalPlayer
 local GH = {}
 
 -- Services compartilhados
+local MarketplaceService = game:GetService("MarketplaceService")
+
 local services = {
 	Players = Players,
 	RunService = RunService,
@@ -25,6 +27,7 @@ local services = {
 	TweenService = TweenService,
 	HttpService = HttpService,
 	Lighting = Lighting,
+	MarketplaceService = MarketplaceService,
 }
 GH.Services = services
 GH.LocalPlayer = LocalPlayer
