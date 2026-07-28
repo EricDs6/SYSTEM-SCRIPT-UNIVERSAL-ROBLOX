@@ -1168,16 +1168,16 @@ function GH.Initialize()
 		arrow.ZIndex = 5
 		arrow.Parent = dropBtn
 
+		-- listFrame is parented to ScreenGui to float above ScrollingFrame clipping
 		local listFrame = Instance.new("Frame")
-		listFrame.Name = "DropdownList"
-		listFrame.Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, 0)
-		listFrame.Position = UDim2.new(0.6, 4, 0, 26)
+		listFrame.Name = "STDropdownList"
+		listFrame.Size = UDim2.new(0, 0, 0, 0)
 		listFrame.BackgroundColor3 = W11.Surface
 		listFrame.BorderSizePixel = 0
 		listFrame.ClipsDescendants = true
-		listFrame.ZIndex = 20
+		listFrame.ZIndex = 100
 		listFrame.Visible = false
-		listFrame.Parent = frame
+		listFrame.Parent = ScreenGui
 		Instance.new("UICorner", listFrame).CornerRadius = UDim.new(0, 4)
 		local listStroke = Instance.new("UIStroke")
 		listStroke.Color = W11.Border
@@ -1193,9 +1193,16 @@ function GH.Initialize()
 		listScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 		listScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 		listScroll.BorderSizePixel = 0
-		listScroll.ZIndex = 21
+		listScroll.ZIndex = 101
 		listScroll.Parent = listFrame
 		Instance.new("UIListLayout", listScroll).Padding = UDim.new(0, 1)
+
+		local function positionList()
+			local absPos = dropBtn.AbsolutePosition
+			local absSize = dropBtn.AbsoluteSize
+			listFrame.Position = UDim2.new(0, absPos.X, 0, absPos.Y + absSize.Y + 2)
+			listFrame.Size = UDim2.new(0, absSize.X, 0, 0)
+		end
 
 		for i, val in ipairs(values) do
 			local opt = Instance.new("TextButton")
@@ -1209,7 +1216,7 @@ function GH.Initialize()
 			opt.TextXAlignment = Enum.TextXAlignment.Left
 			opt.AutoButtonColor = false
 			opt.LayoutOrder = i
-			opt.ZIndex = 22
+			opt.ZIndex = 102
 			opt.Parent = listScroll
 			Instance.new("UICorner", opt).CornerRadius = UDim.new(0, 3)
 			opt.MouseEnter:Connect(function()
@@ -1231,16 +1238,11 @@ function GH.Initialize()
 				TweenService:Create(listFrame, GH.TI, { Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, 0) }):Play()
 				task.delay(0.15, function() listFrame.Visible = false end)
 			else
+				positionList()
 				listFrame.Visible = true
 				local itemCount = #values
 				local listH = math.min(itemCount * 23 + 4, 100)
 				TweenService:Create(listFrame, GH.TI, { Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, listH) }):Play()
-			end
-		end)
-
-		dropBtn:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-			if listFrame.Visible then
-				listFrame.Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, listFrame.Size.Y.Offset)
 			end
 		end)
 
