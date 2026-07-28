@@ -4,7 +4,6 @@
 -- =============================================================================
 return function(GH)
 	local RunService = GH.Services.RunService
-	local Workspace = GH.Services.Workspace
 	local LocalPlayer = GH.LocalPlayer
 
 	local climbSpeed = 25
@@ -20,7 +19,7 @@ return function(GH)
 		raycastParams.FilterType = Enum.RaycastFilterType.Exclude
 
 		-- Dispara um raio para a frente do jogador
-		local rayResult = Workspace:Raycast(
+		local rayResult = workspace:Raycast(
 			rootPart.Position,
 			rootPart.CFrame.LookVector * rayDistance,
 			raycastParams
