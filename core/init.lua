@@ -1711,161 +1711,115 @@ function GH.TweenTeleport(hrp, targetCFrame, speedOrDuration)
 end
 
 -- ==========================================
--- STATS / WEBHOOK SYSTEM
+-- STATS / FIREBASE RTDB ONLINE SYSTEM
 -- ==========================================
+local FIREBASE_URL = "https://system-script-3b72f-default-rtdb.firebaseio.com/"
+
+-- Detecta a funcao de requisicao HTTP suportada pelo executor
+local httprequest = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
+
 GH.Stats = {
-	WebhookURL = "https://discord.com/api/webhooks/1530334217723052042/NKbEN44nHaLiUwgYov5NiixxVtCPbvMOf0Gc12KHp1PI9cZYNoBRfJt4MW797h32DkhO",
 	OnlineUsers = 0,
-	DeviceID = tostring(LocalPlayer.UserId),
 	IsOnline = true,
 }
 
--- Gerar ID unico do dispositivo baseado no UserId
-function GH.Stats.GetDeviceID()
-	return "DEV_" .. tostring(LocalPlayer.UserId)
-end
+-- URLs do Firebase
+local userId = tostring(LocalPlayer.UserId)
+local userNodeUrl = FIREBASE_URL .. "online_users/" .. userId .. ".json"
+local allUsersUrl = FIREBASE_URL .. "online_users.json"
 
--- Enviar evento de injecao para o Discord webhook
-function GH.Stats.SendInjectionEvent()
+-- 1. Heartbeat - envia ping e calcula usuarios ativos
+local function PulseHeartbeat()
 	pcall(function()
-		local deviceID = GH.Stats.GetDeviceID()
-		local payload = {
-			content = nil,
-			embeds = {{
-				title = "🚀 Script Injetado",
-				description = string.format(
-					"**Jogador:** %s\n**UserID:** %s\n**DeviceID:** %s\n**Servidor:** %s\n**Horario:** %s",
-					LocalPlayer.Name,
-					LocalPlayer.UserId,
-					deviceID,
-					game.JobId ~= "" and game.JobId or "Studio",
-					os.date("%d/%m/%Y %H:%M:%S")
-				),
-				color = 3066993,
-				thumbnail = {
-					url = string.format("https://www.roblox.com/headshot-thumb/image?userId=%d&width=150&height=150&format=png", LocalPlayer.UserId)
-				},
-				footer = {
-					text = "System Script - Metrics"
-				}
-			}}
-		}
+		local currentTime = os.time()
 
-		local httpService = game:GetService("HttpService")
-		local jsonPayload = httpService:JSONEncode(payload)
-
-		-- Usar HttpService RequestAsync para enviar
-		local request = http_request or (syn and syn.request) or (http and http.request)
-		if request then
-			request({
-				Url = GH.Stats.WebhookURL,
-				Method = "POST",
-				Headers = {
-					["Content-Type"] = "application/json",
-				},
-				Body = jsonPayload,
+		-- Envia ou atualiza a sessao do jogador atual no Firebase
+		if httprequest then
+			httprequest({
+				Url = userNodeUrl,
+				Method = "PUT",
+				Headers = { ["Content-Type"] = "application/json" },
+				Body = HttpService:JSONEncode({
+					name = LocalPlayer.Name,
+					lastPing = currentTime,
+					placeId = game.PlaceId
+				})
 			})
-		else
-			-- Fallback: usar game:HttpGet (so funciona para GET, mas tentamos)
-			warn("[SystemScript] HTTP request nao disponivel para webhook")
+
+			-- Busca a lista completa de usuarios registrados no Firebase
+			local response = httprequest({
+				Url = allUsersUrl,
+				Method = "GET"
+			})
+
+			if response and response.Body then
+				local data = HttpService:JSONDecode(response.Body)
+				local activeCount = 0
+
+				if type(data) == "table" then
+					for id, userData in pairs(data) do
+						-- Considera ativo apenas quem enviou ping nos ultimos 60 segundos
+						if userData.lastPing and (currentTime - userData.lastPing) <= 60 then
+							activeCount = activeCount + 1
+						else
+							-- Limpa registros antigos/inativos
+							task.spawn(function()
+								httprequest({
+									Url = FIREBASE_URL .. "online_users/" .. id .. ".json",
+									Method = "DELETE"
+								})
+							end)
+						end
+					end
+				end
+
+				GH.Stats.OnlineUsers = activeCount
+			end
 		end
 	end)
 end
 
--- Enviar heartbeat para manter online
-function GH.Stats.SendHeartbeat()
+-- 2. Limpar registro do jogador quando sair
+local function CleanupPlayer()
 	pcall(function()
-		local deviceID = GH.Stats.GetDeviceID()
-		local payload = {
-			content = nil,
-			embeds = {{
-				title = "💓 Heartbeat",
-				description = string.format(
-					"**Jogador:** %s\n**DeviceID:** %s\n**Status:** Online\n**Horario:** %s",
-					LocalPlayer.Name,
-					deviceID,
-					os.date("%d/%m/%Y %H:%M:%S")
-				),
-				color = 3066993,
-			}}
-		}
-
-		local httpService = game:GetService("HttpService")
-		local jsonPayload = httpService:JSONEncode(payload)
-
-		local request = http_request or (syn and syn.request) or (http and http.request)
-		if request then
-			request({
-				Url = GH.Stats.WebhookURL,
-				Method = "POST",
-				Headers = {
-					["Content-Type"] = "application/json",
-				},
-				Body = jsonPayload,
+		if httprequest then
+			httprequest({
+				Url = userNodeUrl,
+				Method = "DELETE"
 			})
 		end
 	end)
 end
 
--- Enviar evento de desligamento
-function GH.Stats.SendDisconnectEvent()
-	pcall(function()
-		local deviceID = GH.Stats.GetDeviceID()
-		local payload = {
-			content = nil,
-			embeds = {{
-				title = "🔴 Script Desligado",
-				description = string.format(
-					"**Jogador:** %s\n**DeviceID:** %s\n**Horario:** %s",
-					LocalPlayer.Name,
-					deviceID,
-					os.date("%d/%m/%Y %H:%M:%S")
-				),
-				color = 15158332,
-			}}
-		}
-
-		local httpService = game:GetService("HttpService")
-		local jsonPayload = httpService:JSONEncode(payload)
-
-		local request = http_request or (syn and syn.request) or (http and http.request)
-		if request then
-			request({
-				Url = GH.Stats.WebhookURL,
-				Method = "POST",
-				Headers = {
-					["Content-Type"] = "application/json",
-				},
-				Body = jsonPayload,
-			})
-		end
-	end)
-end
-
--- Iniciar sistema de metricas
+-- 3. Iniciar sistema Firebase
 function GH.Stats.Start()
-	-- Enviar evento de injecao
-	GH.Stats.SendInjectionEvent()
+	-- Primeiro registro imediato ao injetar
+	PulseHeartbeat()
+	GH.UpdateLiveIndicators()
 
-	-- Atualizar online imediatamente
-	GH.Stats.RefreshCounts()
-
-	-- Atualizar contadores a cada 30 segundos (jogadores no servidor)
+	-- Loop do Heartbeat a cada 25 segundos
 	task.spawn(function()
 		while GH.Stats.IsOnline and not GH.Stopped do
-			task.wait(30)
+			task.wait(25)
 			if GH.Stats.IsOnline and not GH.Stopped then
-				GH.Stats.SendHeartbeat()
-				GH.Stats.RefreshCounts()
+				PulseHeartbeat()
+				GH.UpdateLiveIndicators()
 			end
 		end
 	end)
 
-	-- Enviar desligamento quando o script for destruido
+	-- Limpar registro quando o jogador sair normalmente
+	Players.PlayerRemoving:Connect(function(player)
+		if player == LocalPlayer then
+			CleanupPlayer()
+		end
+	end)
+
+	-- Limpar registro quando o script for destruido
 	if script then
 		script.Destroying:Connect(function()
 			GH.Stats.IsOnline = false
-			GH.Stats.SendDisconnectEvent()
+			CleanupPlayer()
 		end)
 	end
 end
@@ -1885,15 +1839,6 @@ function GH.UpdateLiveIndicators()
 	end)
 end
 
--- Atualizar contadores automaticamente usando dados locais
-function GH.Stats.RefreshCounts()
-	pcall(function()
-		-- Online = jogadores no servidor atual
-		GH.Stats.OnlineUsers = #Players:GetPlayers()
-		-- Atualizar UI
-		GH.UpdateLiveIndicators()
-	end)
-end
 
 -- ==========================================
 -- FULL CLEANUP
@@ -1904,10 +1849,10 @@ function GH.FullCleanup()
 	GH.isClosing = true
 	GH.Stopped = true
 
-	-- Enviar evento de desligamento
+	-- Limpar registro do Firebase
 	if GH.Stats then
 		GH.Stats.IsOnline = false
-		pcall(function() GH.Stats.SendDisconnectEvent() end)
+		pcall(CleanupPlayer)
 	end
 
 	-- ==========================================
