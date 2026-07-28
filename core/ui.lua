@@ -105,13 +105,13 @@ FPSLabel.Parent = MainFrame
 local NickLabel = Instance.new("TextLabel")
 NickLabel.Name = "NickLabel"
 NickLabel.Size = UDim2.new(0, 120, 0, 16)
-NickLabel.Position = UDim2.new(1, 40, 1, -22)
+NickLabel.Position = UDim2.new(0, 92, 1, -22)
 NickLabel.BackgroundTransparency = 1
 NickLabel.Text = "by: @FiascoPlays"
 NickLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
 NickLabel.Font = Enum.Font.GothamBold
 NickLabel.TextSize = 9
-NickLabel.TextXAlignment = Enum.TextXAlignment.Right
+NickLabel.TextXAlignment = Enum.TextXAlignment.Left
 NickLabel.ZIndex = 3
 NickLabel.Parent = MainFrame
 
