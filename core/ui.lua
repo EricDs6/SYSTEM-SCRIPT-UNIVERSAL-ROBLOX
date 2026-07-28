@@ -528,6 +528,61 @@ end)
 	end
 
 	-- ==========================================
+	-- PLAYER AVATAR (bottom of sidebar)
+	-- ==========================================
+	local AvatarContainer = Instance.new("Frame")
+	AvatarContainer.Name = "AvatarContainer"
+	AvatarContainer.Size = UDim2.new(1, -8, 0, 70)
+	AvatarContainer.BackgroundTransparency = 1
+	AvatarContainer.LayoutOrder = 9999
+	AvatarContainer.ZIndex = 3
+	AvatarContainer.Parent = Sidebar
+
+	local AvatarImage = Instance.new("ImageLabel")
+	AvatarImage.Name = "AvatarImage"
+	AvatarImage.Size = UDim2.new(0, 48, 0, 48)
+	AvatarImage.Position = UDim2.new(0.5, -24, 0, 4)
+	AvatarImage.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+	AvatarImage.BorderSizePixel = 0
+	AvatarImage.ScaleType = Enum.ScaleType.Fit
+	AvatarImage.ZIndex = 4
+	AvatarImage.Parent = AvatarContainer
+	Instance.new("UICorner", AvatarImage).CornerRadius = UDim.new(0, 24)
+	local AvatarStroke = Instance.new("UIStroke")
+	AvatarStroke.Color = W11.Accent
+	AvatarStroke.Thickness = 1.5
+	AvatarStroke.Transparency = 0.3
+	AvatarStroke.Parent = AvatarImage
+
+	local PlayerNameLabel = Instance.new("TextLabel")
+	PlayerNameLabel.Name = "PlayerName"
+	PlayerNameLabel.Size = UDim2.new(1, -4, 0, 14)
+	PlayerNameLabel.Position = UDim2.new(0, 2, 1, -16)
+	PlayerNameLabel.BackgroundTransparency = 1
+	PlayerNameLabel.Text = LocalPlayer.Name
+	PlayerNameLabel.TextColor3 = W11.TextSecondary
+	PlayerNameLabel.Font = Font
+	PlayerNameLabel.TextSize = 9
+	PlayerNameLabel.TextXAlignment = Enum.TextXAlignment.Center
+	PlayerNameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	PlayerNameLabel.ZIndex = 4
+	PlayerNameLabel.Parent = AvatarContainer
+
+	-- Load player thumbnail
+	task.spawn(function()
+		local success, thumbContent = pcall(function()
+			return Players:GetUserThumbnailAsync(
+				LocalPlayer.UserId,
+				Enum.ThumbnailType.HeadShot,
+				Enum.ThumbnailSize.Size100x100
+			)
+		end)
+		if success and thumbContent and thumbContent ~= "" then
+			AvatarImage.Image = thumbContent
+		end
+	end)
+
+	-- ==========================================
 	-- SEARCH BAR
 	-- ==========================================
 	local SearchBar = Instance.new("TextBox")
@@ -1481,6 +1536,7 @@ end)
 			Content.Visible = false
 			FPSLabel.Visible = false
 			NickLabel.Visible = false
+			AvatarContainer.Visible = false
 			LiveContainer.Visible = false
 			for _, c in pairs(TabContainers) do c.Visible = false end
 			TitleLabel.Size = UDim2.new(0, MiniW - BTN_SIZE * 2 - 30, 1, 0)
@@ -1495,6 +1551,7 @@ end)
 			Content.Visible = true
 			FPSLabel.Visible = true
 			NickLabel.Visible = true
+			AvatarContainer.Visible = true
 			LiveContainer.Visible = true
 				if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = true end
 			end)
