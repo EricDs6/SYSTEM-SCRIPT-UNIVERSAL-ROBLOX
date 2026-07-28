@@ -333,7 +333,7 @@ function GH.Initialize()
 				game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
 			end)
 		end)
-		GH.ShowToast("Reiniciando servidor...", W11.Accent, 3)
+		GH.ShowToast(GH.T("toast_reloading") or "Reiniciando servidor...", W11.Accent, 3)
 	end)
 
 	-- ==========================================
@@ -507,7 +507,7 @@ function GH.Initialize()
 	SearchBar.Size = UDim2.new(1, -32, 0, 28)
 	SearchBar.Position = UDim2.new(0, 0, 0, 0)
 	SearchBar.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
-	SearchBar.PlaceholderText = "Procurar comando..."
+	SearchBar.PlaceholderText = GH.T("search_placeholder") or "Search command..."
 	SearchBar.PlaceholderColor3 = Color3.fromRGB(90, 90, 105)
 	SearchBar.Text = ""
 	SearchBar.TextColor3 = W11.Text
@@ -1105,6 +1105,7 @@ function GH.Initialize()
 	local function stSection(text)
 		stOrder += 1
 		local s = Instance.new("TextLabel")
+		s.Name = "STSection_" .. stOrder
 		s.Size = UDim2.new(1, 0, 0, 14)
 		s.BackgroundTransparency = 1
 		s.Text = "── " .. text .. " ──"
@@ -1115,6 +1116,139 @@ function GH.Initialize()
 		s.ZIndex = 3
 		s.Parent = SettingsContainer
 		stOrder += 1
+		return s
+	end
+
+	local function stDropdown(label, values, default, cb)
+		stOrder += 1
+		local frame = Instance.new("Frame")
+		frame.Name = "STDropdown_" .. stOrder
+		frame.Size = UDim2.new(1, 0, 0, 26)
+		frame.BackgroundColor3 = W11.Surface
+		frame.BorderSizePixel = 0
+		frame.LayoutOrder = stOrder
+		frame.ZIndex = 3
+		frame.Parent = SettingsContainer
+		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 4)
+
+		local lbl = Instance.new("TextLabel")
+		lbl.Size = UDim2.new(0.55, 0, 1, 0)
+		lbl.Position = UDim2.new(0, 8, 0, 0)
+		lbl.BackgroundTransparency = 1
+		lbl.Text = label
+		lbl.TextColor3 = W11.Off
+		lbl.Font = Font
+		lbl.TextSize = 10
+		lbl.TextXAlignment = Enum.TextXAlignment.Left
+		lbl.ZIndex = 4
+		lbl.Parent = frame
+
+		local dropBtn = Instance.new("TextButton")
+		dropBtn.Size = UDim2.new(0.38, -6, 0, 18)
+		dropBtn.Position = UDim2.new(0.6, 4, 0.5, -9)
+		dropBtn.BackgroundColor3 = W11.OffBG
+		dropBtn.Text = "  " .. tostring(default)
+		dropBtn.TextColor3 = W11.Text
+		dropBtn.Font = Font
+		dropBtn.TextSize = 10
+		dropBtn.TextXAlignment = Enum.TextXAlignment.Left
+		dropBtn.AutoButtonColor = false
+		dropBtn.ZIndex = 4
+		dropBtn.Parent = frame
+		Instance.new("UICorner", dropBtn).CornerRadius = UDim.new(0, 3)
+
+		local arrow = Instance.new("TextLabel")
+		arrow.Size = UDim2.new(0, 14, 1, 0)
+		arrow.Position = UDim2.new(1, -16, 0, 0)
+		arrow.BackgroundTransparency = 1
+		arrow.Text = "▼"
+		arrow.TextColor3 = W11.TextMuted
+		arrow.Font = Font
+		arrow.TextSize = 8
+		arrow.ZIndex = 5
+		arrow.Parent = dropBtn
+
+		local listFrame = Instance.new("Frame")
+		listFrame.Name = "DropdownList"
+		listFrame.Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, 0)
+		listFrame.Position = UDim2.new(0.6, 4, 0, 26)
+		listFrame.BackgroundColor3 = W11.Surface
+		listFrame.BorderSizePixel = 0
+		listFrame.ClipsDescendants = true
+		listFrame.ZIndex = 20
+		listFrame.Visible = false
+		listFrame.Parent = frame
+		Instance.new("UICorner", listFrame).CornerRadius = UDim.new(0, 4)
+		local listStroke = Instance.new("UIStroke")
+		listStroke.Color = W11.Border
+		listStroke.Thickness = 1
+		listStroke.Parent = listFrame
+
+		local listScroll = Instance.new("ScrollingFrame")
+		listScroll.Size = UDim2.new(1, -4, 1, -4)
+		listScroll.Position = UDim2.new(0, 2, 0, 2)
+		listScroll.BackgroundTransparency = 1
+		listScroll.ScrollBarThickness = 2
+		listScroll.ScrollBarImageColor3 = W11.Accent
+		listScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+		listScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+		listScroll.BorderSizePixel = 0
+		listScroll.ZIndex = 21
+		listScroll.Parent = listFrame
+		Instance.new("UIListLayout", listScroll).Padding = UDim.new(0, 1)
+
+		for i, val in ipairs(values) do
+			local opt = Instance.new("TextButton")
+			opt.Name = tostring(val)
+			opt.Size = UDim2.new(1, 0, 0, 22)
+			opt.BackgroundColor3 = (val == default) and W11.OnBG or W11.Surface
+			opt.Text = "  " .. tostring(val)
+			opt.TextColor3 = (val == default) and W11.Accent or W11.TextSecondary
+			opt.Font = Font
+			opt.TextSize = 10
+			opt.TextXAlignment = Enum.TextXAlignment.Left
+			opt.AutoButtonColor = false
+			opt.LayoutOrder = i
+			opt.ZIndex = 22
+			opt.Parent = listScroll
+			Instance.new("UICorner", opt).CornerRadius = UDim.new(0, 3)
+			opt.MouseEnter:Connect(function()
+				TweenService:Create(opt, GH.TI, { BackgroundColor3 = W11.SurfaceHover }):Play()
+			end)
+			opt.MouseLeave:Connect(function()
+				TweenService:Create(opt, GH.TI, { BackgroundColor3 = (opt.TextColor3 == W11.Accent) and W11.OnBG or W11.Surface }):Play()
+			end)
+			opt.MouseButton1Click:Connect(function()
+				dropBtn.Text = "  " .. tostring(val)
+				TweenService:Create(listFrame, GH.TI, { Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, 0) }):Play()
+				task.delay(0.15, function() listFrame.Visible = false end)
+				if cb then pcall(cb, val) end
+			end)
+		end
+
+		dropBtn.MouseButton1Click:Connect(function()
+			if listFrame.Visible then
+				TweenService:Create(listFrame, GH.TI, { Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, 0) }):Play()
+				task.delay(0.15, function() listFrame.Visible = false end)
+			else
+				listFrame.Visible = true
+				local itemCount = #values
+				local listH = math.min(itemCount * 23 + 4, 100)
+				TweenService:Create(listFrame, GH.TI, { Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, listH) }):Play()
+			end
+		end)
+
+		dropBtn:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+			if listFrame.Visible then
+				listFrame.Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, listFrame.Size.Y.Offset)
+			end
+		end)
+
+		local obj = {}
+		function obj:SetValue(v)
+			dropBtn.Text = "  " .. tostring(v)
+		end
+		return obj
 	end
 
 	local function stToggle(label, default, cb)
@@ -1256,19 +1390,31 @@ function GH.Initialize()
 	-- ==========================================
 	-- MONTAR SETTINGS
 	-- ==========================================
-	stSection("GERAL")
-	stSlider("Velocidade Fly", 5, 200, 20, function(v) GH.FlySpeed = v end)
-	stSlider("Raio NoClip", 1, 20, 3.8, function(v) GH.Settings.NoClipRadius = v end)
+	stSection(GH.T("settings_language") .. " / LANGUAGE")
+	local langMap = {en = "English", pt = "Portugues", es = "Espanol"}
+	local langKeys = {"en", "pt", "es"}
+	local langDisplay = {}
+	for _, k in ipairs(langKeys) do table.insert(langDisplay, langMap[k]) end
+	local langDropdown = stDropdown(GH.T("settings_language"), langDisplay, langMap[GH.Settings.Language] or "English", function(v)
+		for k, name in pairs(langMap) do
+			if name == v then GH.Settings.Language = k break end
+		end
+		GH.RefreshUI()
+	end)
+
+	stSection(GH.T("settings_config"))
+	stSlider(GH.T("settings_fly_speed"), 5, 200, 20, function(v) GH.FlySpeed = v end)
+	stSlider(GH.T("settings_noclip_radius"), 1, 20, 3.8, function(v) GH.Settings.NoClipRadius = v end)
 
 	stSection("HITBOX")
-	stSlider("Tamanho Hitbox", 5, 50, 15, function(v) GH.Settings.HitboxSize = v end)
+	stSlider(GH.T("settings_hitbox_size"), 5, 50, 15, function(v) GH.Settings.HitboxSize = v end)
 
 	stSection("ESP")
-	stToggle("Mostrar Tag", true, function(v) GH.Settings.ESPShowTag = v end)
-	stToggle("Mostrar Nome", true, function(v) GH.Settings.ESPShowName = v end)
-	stToggle("Mostrar Distancia", true, function(v) GH.Settings.ESPShowDistance = v end)
-	stToggle("Mostrar HP", true, function(v) GH.Settings.ESPShowHealth = v end)
-	stSlider("Distancia Max ESP", 50, 2000, 300, function(v) GH.Settings.ESPMaxDistance = v end)
+	stToggle(GH.T("settings_show_tag"), true, function(v) GH.Settings.ESPShowTag = v end)
+	stToggle(GH.T("settings_show_name"), true, function(v) GH.Settings.ESPShowName = v end)
+	stToggle(GH.T("settings_show_distance"), true, function(v) GH.Settings.ESPShowDistance = v end)
+	stToggle(GH.T("settings_show_health"), true, function(v) GH.Settings.ESPShowHealth = v end)
+	stSlider(GH.T("settings_esp_max_distance"), 50, 2000, 300, function(v) GH.Settings.ESPMaxDistance = v end)
 
 	-- ==========================================
 	-- FECHAR — Windows 11 style

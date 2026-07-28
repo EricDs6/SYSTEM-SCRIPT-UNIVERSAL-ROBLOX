@@ -7,7 +7,7 @@ return function(GH, services)
 -- SETTINGS DEFAULTS
 -- ==========================================
 GH.Settings = {
-	Language = "pt",
+	Language = "en",
 	DebugMode = false,
 	HitboxSize = 15,
 	ESPShowDistance = true,

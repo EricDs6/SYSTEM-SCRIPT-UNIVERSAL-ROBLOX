@@ -252,6 +252,8 @@ GH.Locales = {
 		toast_fpsbooster_off = "FPS Booster desativado!",
 		toast_players_frozen = "Jogadores congelados!",
 		toast_players_unfrozen = "Jogadores descongelados!",
+		toast_reloading = "Reiniciando servidor...",
+		search_placeholder = "Procurar comando...",
 		-- Loader
 		load_system_init = "SYSTEM INITIALIZING",
 		load_connecting = "Connecting to GitHub...",
@@ -508,6 +510,8 @@ GH.Locales = {
 		toast_fpsbooster_off = "FPS Booster disabled!",
 		toast_players_frozen = "Players frozen!",
 		toast_players_unfrozen = "Players unfrozen!",
+		toast_reloading = "Reloading server...",
+		search_placeholder = "Search command...",
 		-- Loader
 		load_system_init = "SYSTEM INITIALIZING",
 		load_connecting = "Connecting to GitHub...",
@@ -764,6 +768,8 @@ GH.Locales = {
 		toast_fpsbooster_off = "FPS Booster desactivado!",
 		toast_players_frozen = "Jugadores congelados!",
 		toast_players_unfrozen = "Jugadores descongelados!",
+		toast_reloading = "Reiniciando servidor...",
+		search_placeholder = "Buscar comando...",
 		-- Loader
 		load_system_init = "SYSTEM INITIALIZING",
 		load_connecting = "Connecting to GitHub...",
