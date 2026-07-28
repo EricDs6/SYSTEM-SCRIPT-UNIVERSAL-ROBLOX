@@ -100,7 +100,7 @@ FPSLabel.ZIndex = 3
 FPSLabel.Parent = MainFrame
 
 -- ==========================================
--- NICKNAME (Rainbow) - by @FiascoPlays
+-- NICKNAME - by @FiascoPlays (same style as FPS)
 -- ==========================================
 local NickLabel = Instance.new("TextLabel")
 NickLabel.Name = "NickLabel"
@@ -108,24 +108,12 @@ NickLabel.Size = UDim2.new(0, 120, 0, 16)
 NickLabel.Position = UDim2.new(0, 50, 1, -22)
 NickLabel.BackgroundTransparency = 1
 NickLabel.Text = "by: @FiascoPlays"
-NickLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-NickLabel.Font = Enum.Font.GothamBold
+NickLabel.TextColor3 = Color3.fromRGB(100, 100, 115)
+NickLabel.Font = Enum.Font.RobotoMono
 NickLabel.TextSize = 9
 NickLabel.TextXAlignment = Enum.TextXAlignment.Left
 NickLabel.ZIndex = 3
 NickLabel.Parent = MainFrame
-
--- Rainbow color cycle for nickname
-local nickHue = 0
-task.spawn(function()
-	while not GH.Stopped and not GH.isClosing do
-		nickHue = nickHue + 0.008
-		if nickHue > 1 then nickHue = nickHue - 1 end
-		local color = Color3.fromHSV(nickHue, 0.85, 1)
-		NickLabel.TextColor3 = color
-		task.wait(0.03)
-	end
-end)
 
 local fpsFrames = 0
 local fpsLastUpdate = os.clock()
