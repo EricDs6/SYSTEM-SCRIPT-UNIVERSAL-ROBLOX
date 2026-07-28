@@ -1480,6 +1480,7 @@ end)
 			Sidebar.Visible = false
 			Content.Visible = false
 			FPSLabel.Visible = false
+			NickLabel.Visible = false
 			LiveContainer.Visible = false
 			for _, c in pairs(TabContainers) do c.Visible = false end
 			TitleLabel.Size = UDim2.new(0, MiniW - BTN_SIZE * 2 - 30, 1, 0)
@@ -1490,10 +1491,11 @@ end)
 			TitleLabel.TextTruncate = Enum.TextTruncate.None
 			TweenService:Create(MainFrame, GH.TI_Slow, { Size = UDim2.new(0, NormalW, 0, NormalH) }):Play()
 			task.delay(0.15, function()
-				Sidebar.Visible = true
-				Content.Visible = true
-				FPSLabel.Visible = true
-				LiveContainer.Visible = true
+			Sidebar.Visible = true
+			Content.Visible = true
+			FPSLabel.Visible = true
+			NickLabel.Visible = true
+			LiveContainer.Visible = true
 				if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = true end
 			end)
 		end
