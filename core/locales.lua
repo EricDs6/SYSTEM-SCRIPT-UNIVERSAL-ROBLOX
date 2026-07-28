@@ -112,6 +112,7 @@ GH.Locales = {
 		toggle_freeze = "Freeze All",
 		toggle_pushall = "Push All",
 		toggle_mirror = "Mirror",
+		toggle_animplayer = "Animation Player",
 		-- Toggle descriptions
 		desc_hitbox = "Expande a hitbox dos inimigos para acertar mais facil",
 		desc_esp = "Mostra nomes, vida e distancia dos jogadores atraves de paredes",
@@ -183,6 +184,7 @@ GH.Locales = {
 		desc_freeze = "Congela todos os jogadores no servidor",
 		desc_pushall = "Empurra todos os jogadores proximos com forca",
 		desc_mirror = "Espelha o movimento de outro jogador",
+		desc_animplayer = "Toca animacoes do Roblox via ID ou link. Comando: !anim <id>",
 		-- Dropdown titles
 		dropdown_select_player = "Selecionar Player",
 		dropdown_select_target = "Selecionar Alvo",
@@ -197,6 +199,19 @@ GH.Locales = {
 		dropdown_mirror_title = "Mirror - Selecionar Jogador",
 		input_gotopart_title = "Goto Part - Nome da Parte",
 		input_gotopart_placeholder = "Digite o nome...",
+		input_animplayer_title = "Animation Player - ID ou Link",
+		input_animplayer_placeholder = "Cole o ID ou link da animacao...",
+		-- Toasts (anim)
+		toast_animplayer_playing = "Tocando animacao %s!",
+		toast_animplayer_stopped = "Animacao parada!",
+		toast_animplayer_paused = "Animacao pausada!",
+		toast_animplayer_resumed = "Animacao retomada!",
+		toast_animplayer_speed = "Velocidade: %sx",
+		toast_animplayer_invalid_id = "ID ou Link de animacao invalido!",
+		toast_animplayer_no_char = "Personagem nao encontrado!",
+		toast_animplayer_no_humanoid = "Humanoid nao encontrado!",
+		toast_animplayer_failed_load = "Falha ao carregar animacao!",
+		toast_animplayer_no_track = "Nenhuma animacao tocando!",
 		-- Coords section
 		section_coords = "Coordenadas",
 		coords_current = "Posicao Atual",
@@ -353,6 +368,7 @@ GH.Locales = {
 		toggle_freeze = "Freeze All",
 		toggle_pushall = "Push All",
 		toggle_mirror = "Mirror",
+		toggle_animplayer = "Animation Player",
 		-- Toggle descriptions
 		desc_hitbox = "Expands enemy hitbox for easier hits",
 		desc_esp = "Shows names, health and distance through walls",
@@ -424,6 +440,7 @@ GH.Locales = {
 		desc_freeze = "Freezes all players in the server",
 		desc_pushall = "Pushes all nearby players away with force",
 		desc_mirror = "Mirrors another player's movement",
+		desc_animplayer = "Plays Roblox animations via ID or link. Command: !anim <id>",
 		-- Dropdown titles
 		dropdown_select_player = "Select Player",
 		dropdown_select_target = "Select Target",
@@ -438,6 +455,19 @@ GH.Locales = {
 		dropdown_mirror_title = "Mirror - Select Player",
 		input_gotopart_title = "Goto Part - Part Name",
 		input_gotopart_placeholder = "Type the name...",
+		input_animplayer_title = "Animation Player - ID or Link",
+		input_animplayer_placeholder = "Paste animation ID or link...",
+		-- Toasts (anim)
+		toast_animplayer_playing = "Playing animation %s!",
+		toast_animplayer_stopped = "Animation stopped!",
+		toast_animplayer_paused = "Animation paused!",
+		toast_animplayer_resumed = "Animation resumed!",
+		toast_animplayer_speed = "Speed: %sx",
+		toast_animplayer_invalid_id = "Invalid animation ID or link!",
+		toast_animplayer_no_char = "Character not found!",
+		toast_animplayer_no_humanoid = "Humanoid not found!",
+		toast_animplayer_failed_load = "Failed to load animation!",
+		toast_animplayer_no_track = "No animation playing!",
 		-- Coords section
 		section_coords = "Coordinates",
 		coords_current = "Current Position",
@@ -594,6 +624,7 @@ GH.Locales = {
 		toggle_freeze = "Freeze All",
 		toggle_pushall = "Push All",
 		toggle_mirror = "Mirror",
+		toggle_animplayer = "Animation Player",
 		-- Toggle descriptions
 		desc_hitbox = "Expande la hitbox de los enemigos para acertar mas facil",
 		desc_esp = "Muestra nombres, vida y distancia de los jugadores a traves de paredes",
@@ -665,6 +696,7 @@ GH.Locales = {
 		desc_freeze = "Congela a todos los jugadores en el servidor",
 		desc_pushall = "Empuja a todos los jugadores cercanos con fuerza",
 		desc_mirror = "Refleja el movimiento de otro jugador",
+		desc_animplayer = "Reproduce animaciones de Roblox via ID o enlace. Comando: !anim <id>",
 		-- Dropdown titles
 		dropdown_select_player = "Seleccionar Jugador",
 		dropdown_select_target = "Seleccionar Objetivo",
@@ -679,6 +711,19 @@ GH.Locales = {
 		dropdown_mirror_title = "Mirror - Seleccionar Jugador",
 		input_gotopart_title = "Goto Part - Nombre de Parte",
 		input_gotopart_placeholder = "Escribe el nombre...",
+		input_animplayer_title = "Animation Player - ID o Enlace",
+		input_animplayer_placeholder = "Pega el ID o enlace de la animacion...",
+		-- Toasts (anim)
+		toast_animplayer_playing = "Reproduciendo animacion %s!",
+		toast_animplayer_stopped = "Animacion detenida!",
+		toast_animplayer_paused = "Animacion pausada!",
+		toast_animplayer_resumed = "Animacion reanudada!",
+		toast_animplayer_speed = "Velocidad: %sx",
+		toast_animplayer_invalid_id = "ID o enlace de animacion invalido!",
+		toast_animplayer_no_char = "Personaje no encontrado!",
+		toast_animplayer_no_humanoid = "Humanoid no encontrado!",
+		toast_animplayer_failed_load = "Error al cargar animacion!",
+		toast_animplayer_no_track = "Ninguna animacion reproduciendose!",
 		-- Coords section
 		section_coords = "Coordenadas",
 		coords_current = "Posicion Actual",
