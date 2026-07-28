@@ -4,10 +4,34 @@
 return function(GH, services)
 
 -- ==========================================
+-- AUTO-DETECT LANGUAGE
+-- ==========================================
+local LocalizationService = game:GetService("LocalizationService")
+
+local function DetectLanguage()
+	local detectedLang = "en" -- Default for international users
+
+	pcall(function()
+		local robloxLocale = LocalizationService.RobloxLocaleId:lower()
+		local systemLocale = LocalizationService.SystemLocaleId:lower()
+
+		-- Portuguese (BR, PT)
+		if robloxLocale:sub(1, 2) == "pt" or systemLocale:sub(1, 2) == "pt" then
+			detectedLang = "pt"
+		-- Spanish (ES, MX, etc.)
+		elseif robloxLocale:sub(1, 2) == "es" or systemLocale:sub(1, 2) == "es" then
+			detectedLang = "es"
+		end
+	end)
+
+	return detectedLang
+end
+
+-- ==========================================
 -- SETTINGS DEFAULTS
 -- ==========================================
 GH.Settings = {
-	Language = "en",
+	Language = DetectLanguage(),
 	DebugMode = false,
 	HitboxSize = 15,
 	ESPShowDistance = true,
