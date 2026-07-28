@@ -12,6 +12,41 @@ local FIREBASE_URL = "https://system-script-3b72f-default-rtdb.firebaseio.com/"
 -- Detecta a funcao de requisicao HTTP suportada pelo executor
 local httprequest = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 
+-- ==========================================
+-- COUNTRY DETECTION (ip-api.com)
+-- ==========================================
+local function CountryToFlag(countryCode)
+	if not countryCode or #countryCode ~= 2 then return "\xF0\x9F\x8C\x8D" end
+	countryCode = countryCode:upper()
+	local first = string.byte(countryCode, 1) + 127397
+	local second = string.byte(countryCode, 2) + 127397
+	return utf8.char(first, second)
+end
+
+local function GetPlayerCountry()
+	local countryName = "Desconhecido"
+	local countryFlag = "\xF0\x9F\x8C\x8D"
+
+	if not httprequest then return countryName, countryFlag end
+
+	pcall(function()
+		local response = httprequest({
+			Url = "http://ip-api.com/json/?fields=country,countryCode,status",
+			Method = "GET"
+		})
+
+		if response and response.Body then
+			local data = HttpService:JSONDecode(response.Body)
+			if data and data.status == "success" then
+				countryName = data.country
+				countryFlag = CountryToFlag(data.countryCode)
+			end
+		end
+	end)
+
+	return countryName, countryFlag
+end
+
 GH.Stats = {
 	OnlineUsers = 0,
 	IsOnline = true,
@@ -23,12 +58,14 @@ GH.Stats = {
 local DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1530334217723052042/NKbEN44nHaLiUwgYov5NiixxVtCPbvMOf0Gc12KHp1PI9cZYNoBRfJt4MW797h32DkhO"
 
 local gameName = "Desconhecido"
-local gameIcon = ""
 pcall(function()
 	local productInfo = MarketplaceService:GetProductInfo(game.PlaceId)
 	gameName = productInfo.Name
-	gameIcon = "https://www.roblox.com/asset-thumbnail/image?assetId=" .. tostring(game.PlaceId) .. "&width=420&height=420&format=png"
 end)
+
+-- Cache do pais do jogador (buscado uma vez no startup)
+local cachedCountryName = "Desconhecido"
+local cachedCountryFlag = "\xF0\x9F\x8C\x8D"
 
 local function SendDiscordLog(eventType, color)
 	if not httprequest or DISCORD_WEBHOOK_URL == "" then return end
@@ -42,29 +79,38 @@ local function SendDiscordLog(eventType, color)
 		titleText = "\xF0\x9F\x94\x84 Trocando de Experiencia / Servidor"
 	end
 
+	-- Usa o pais cached do jogador
+	local countryName = cachedCountryName
+	local countryFlag = cachedCountryFlag
+
 	local embedData = {
 		["embeds"] = {{
 			["title"] = titleText,
 			["color"] = color,
-			["thumbnail"] = { ["url"] = gameIcon },
+			["thumbnail"] = { ["url"] = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. tostring(LocalPlayer.UserId) .. "&width=150&height=150&format=png" },
 			["fields"] = {
 				{
 					["name"] = "\xF0\x9F\x91\xA4 Jogador",
-					["value"] = LocalPlayer.Name .. " (@" .. LocalPlayer.DisplayName .. ")\nID: `" .. tostring(LocalPlayer.UserId) .. "`",
+					["value"] = string.format("**%s** (`%d`)", LocalPlayer.Name, LocalPlayer.UserId),
+					["inline"] = true
+				},
+				{
+					["name"] = "\xF0\x9F\x8C\x8E Pais de Origem",
+					["value"] = string.format("%s **%s**", countryFlag, countryName),
 					["inline"] = true
 				},
 				{
 					["name"] = "\xF0\x9F\x8E\xAE Experiencia",
-					["value"] = gameName .. "\nPlace ID: `" .. tostring(game.PlaceId) .. "`",
-					["inline"] = true
+					["value"] = string.format("**%s**\n(PlaceID: `%d`)", gameName, game.PlaceId),
+					["inline"] = false
 				},
 				{
-					["name"] = "\xF0\x9F\x92\xBB Servidor (JobId)",
-					["value"] = "`" .. tostring(game.JobId) .. "`",
+					["name"] = "\xF0\x9F\x92\xBB Job ID",
+					["value"] = string.format("```%s```", tostring(game.JobId)),
 					["inline"] = false
 				}
 			},
-			["footer"] = { ["text"] = "System Script v14.0 \xE2\x80\xA2 Presence Tracker" },
+			["footer"] = { ["text"] = "System Script v14.0 \xE2\x80\xA2 Geo & Presence Logger" },
 			["timestamp"] = DateTime.now():ToIsoDate()
 		}}
 	}
@@ -154,6 +200,11 @@ GH._CleanupPlayer = CleanupPlayer
 
 -- 3. Iniciar sistema Firebase
 function GH.Stats.Start()
+	-- Busca o pais do jogador uma vez
+	local countryName, countryFlag = GetPlayerCountry()
+	cachedCountryName = countryName
+	cachedCountryFlag = countryFlag
+
 	-- Discord: Log de Entrada (JOIN) - Verde
 	SendDiscordLog("JOIN", 3066993)
 

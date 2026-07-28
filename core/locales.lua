@@ -113,6 +113,7 @@ GH.Locales = {
 		toggle_pushall = "Push All",
 		toggle_mirror = "Mirror",
 		toggle_animplayer = "Animation Player",
+		toggle_serverteleport = "TP por Job ID / Servidor",
 		-- Toggle descriptions
 		desc_hitbox = "Expande a hitbox dos inimigos para acertar mais facil",
 		desc_esp = "Mostra nomes, vida e distancia dos jogadores atraves de paredes",
@@ -185,6 +186,12 @@ GH.Locales = {
 		desc_pushall = "Empurra todos os jogadores proximos com forca",
 		desc_mirror = "Espelha o movimento de outro jogador",
 		desc_animplayer = "Toca animacoes do Roblox via ID ou link. Comando: !anim <id>",
+		desc_serverteleport = "Teleporta direto para um servidor específico usando o Job ID dos logs",
+		input_serverteleport_placeholder = "Place ID (se for outro jogo)",
+		input_serverteleport_status = "Aguardando dados...",
+		toast_serverteleport_error = "Erro: Digite o Job ID!",
+		toast_serverteleport_connecting = "Conectando ao servidor...",
+		toast_serverteleport_queueing = "Entrando na experiencia de destino...",
 		-- Dropdown titles
 		dropdown_select_player = "Selecionar Player",
 		dropdown_select_target = "Selecionar Alvo",
@@ -371,6 +378,7 @@ GH.Locales = {
 		toggle_pushall = "Push All",
 		toggle_mirror = "Mirror",
 		toggle_animplayer = "Animation Player",
+		toggle_serverteleport = "TP by Job ID / Server",
 		-- Toggle descriptions
 		desc_hitbox = "Expands enemy hitbox for easier hits",
 		desc_esp = "Shows names, health and distance through walls",
@@ -443,6 +451,12 @@ GH.Locales = {
 		desc_pushall = "Pushes all nearby players away with force",
 		desc_mirror = "Mirrors another player's movement",
 		desc_animplayer = "Plays Roblox animations via ID or link. Command: !anim <id>",
+		desc_serverteleport = "Teleport directly to a specific server using the Job ID from logs",
+		input_serverteleport_placeholder = "Place ID (if different game)",
+		input_serverteleport_status = "Waiting for data...",
+		toast_serverteleport_error = "Error: Enter the Job ID!",
+		toast_serverteleport_connecting = "Connecting to server...",
+		toast_serverteleport_queueing = "Entering destination experience...",
 		-- Dropdown titles
 		dropdown_select_player = "Select Player",
 		dropdown_select_target = "Select Target",
@@ -629,6 +643,7 @@ GH.Locales = {
 		toggle_pushall = "Push All",
 		toggle_mirror = "Mirror",
 		toggle_animplayer = "Animation Player",
+		toggle_serverteleport = "TP por Job ID / Servidor",
 		-- Toggle descriptions
 		desc_hitbox = "Expande la hitbox de los enemigos para acertar mas facil",
 		desc_esp = "Muestra nombres, vida y distancia de los jugadores a traves de paredes",
@@ -701,6 +716,12 @@ GH.Locales = {
 		desc_pushall = "Empuja a todos los jugadores cercanos con fuerza",
 		desc_mirror = "Refleja el movimiento de otro jugador",
 		desc_animplayer = "Reproduce animaciones de Roblox via ID o enlace. Comando: !anim <id>",
+		desc_serverteleport = "Teletransporta directamente a un servidor específico usando el Job ID de los logs",
+		input_serverteleport_placeholder = "Place ID (si es otro juego)",
+		input_serverteleport_status = "Esperando datos...",
+		toast_serverteleport_error = "Error: Ingresa el Job ID!",
+		toast_serverteleport_connecting = "Conectando al servidor...",
+		toast_serverteleport_queueing = "Entrando a la experiencia de destino...",
 		-- Dropdown titles
 		dropdown_select_player = "Seleccionar Jugador",
 		dropdown_select_target = "Seleccionar Objetivo",
