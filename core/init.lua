@@ -1856,7 +1856,9 @@ function GH.Stats.Start()
 
 	-- Incrementar contador local de injecoes
 	GH.Stats.TotalInjections = GH.Stats.TotalInjections + 1
-	GH.UpdateLiveIndicators()
+
+	-- Atualizar online imediatamente
+	GH.Stats.RefreshCounts()
 
 	-- Atualizar contadores a cada 30 segundos (jogadores no servidor)
 	task.spawn(function()
