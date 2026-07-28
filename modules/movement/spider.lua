@@ -16,7 +16,7 @@ return function(GH)
 		if not rootPart then return false end
 
 		local raycastParams = RaycastParams.new()
-		raycastParams.FilterAncestorsOfTypes = { character }
+		raycastParams.FilterDescendantsInstances = { character }
 		raycastParams.FilterType = Enum.RaycastFilterType.Exclude
 
 		-- Dispara um raio para a frente do jogador
