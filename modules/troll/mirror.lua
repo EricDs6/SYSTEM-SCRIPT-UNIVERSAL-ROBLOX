@@ -1,12 +1,11 @@
 -- =============================================================================
--- COMMAND: MIRROR - Espelha o movimento e rotação de um jogador
+-- COMMAND: MIRROR - Clone que segue e copia os movimentos do alvo
 -- =============================================================================
 return function(GH)
 	local Players = GH.Services.Players
 	local LocalPlayer = GH.LocalPlayer
 
 	GH.Cache.MirrorTarget = nil
-	GH.Cache.MirrorCenter = nil
 	GH.Cache.MirrorDied = nil
 	GH.Cache.MirrorBodyPos = nil
 	GH.Cache.MirrorBodyGyro = nil
@@ -48,7 +47,6 @@ return function(GH)
 		end)
 
 		GH.Cache.MirrorTarget = nil
-		GH.Cache.MirrorCenter = nil
 		GH.Cache.MirrorBodyPos = nil
 		GH.Cache.MirrorBodyGyro = nil
 	end
@@ -75,11 +73,14 @@ return function(GH)
 				if targetRoot and myRoot and myHum then
 					myHum.AutoRotate = false
 
-					-- Salva alvo e o ponto central do espelho
+					-- Salva o alvo
 					GH.Cache.MirrorTarget = player
-					GH.Cache.MirrorCenter = (myRoot.Position + targetRoot.Position) / 2
 
-					-- BodyPosition para movimento suave
+					-- Posiciona o clone atrás do alvo (usando CFrame relativo)
+					local behindCF = targetRoot.CFrame * CFrame.new(0, 0, 3)
+					myRoot.CFrame = CFrame.new(behindCF.Position, behindCF.Position + targetRoot.CFrame.LookVector)
+
+					-- BodyPosition para movimento suave do clone
 					local bp = Instance.new("BodyPosition")
 					bp.Name = "GH_MirrorBP"
 					bp.MaxForce = Vector3.new(1e6, 1e6, 1e6)
@@ -89,7 +90,7 @@ return function(GH)
 					bp.Parent = myRoot
 					GH.Cache.MirrorBodyPos = bp
 
-					-- BodyGyro para rotação espelhada
+					-- BodyGyro para fazer o clone olhar na mesma direção
 					local bg = Instance.new("BodyGyro")
 					bg.Name = "GH_MirrorBG"
 					bg.MaxTorque = Vector3.new(1e6, 1e6, 1e6)
@@ -113,14 +114,14 @@ return function(GH)
 					end)
 
 					if GH.ShowToast then
-						GH.ShowToast(string.format("Espelhando %s", name), GH.Theme.Accent or GH.Theme.On, 2)
+						GH.ShowToast(string.format("Clonando %s", name), GH.Theme.Accent or GH.Theme.On, 2)
 					end
 				end
 			end
 		end)
 		GH.Objects.MirrorPicker = picker
 
-		-- Loop principal de atualização
+		-- Loop principal: copia os movimentos do alvo (mesma direção, mesmos passos)
 		GH.RegisterMasterLoop("Mirror", "Render", function()
 			if GH.isClosing or not GH.States.Mirror then
 				CleanupMirror()
@@ -128,11 +129,10 @@ return function(GH)
 			end
 
 			local target = GH.Cache.MirrorTarget
-			local center = GH.Cache.MirrorCenter
 			local bp = GH.Cache.MirrorBodyPos
 			local bg = GH.Cache.MirrorBodyGyro
 
-			if not target or not target.Character or not center or not bp or not bp.Parent then return end
+			if not target or not target.Character or not bp or not bp.Parent then return end
 
 			local targetRoot = target.Character:FindFirstChild("HumanoidRootPart")
 			local myChar = LocalPlayer.Character
@@ -140,29 +140,22 @@ return function(GH)
 
 			if not targetRoot or not myRoot then return end
 
-			-- Desativa colisões continuamente no loop para animações não resetarem
-			for _, child in pairs(myChar:GetDescendants()) do
-				if child:IsA("BasePart") then
-					child.CanCollide = false
-					if child ~= myRoot then
-						child.Massless = true
+			-- Desativa colisões continuamente para não travar em objetos
+			pcall(function()
+				for _, child in pairs(myChar:GetDescendants()) do
+					if child:IsA("BasePart") then
+						child.CanCollide = false
+						if child ~= myRoot then
+							child.Massless = true
+						end
 					end
 				end
-			end
+			end)
 
-			-- Calcula a posição espelhada: (2 * Centro) - Posição do Alvo
-			local mirroredPos = Vector3.new(
-				2 * center.X - targetRoot.Position.X,
-				targetRoot.Position.Y,
-				2 * center.Z - targetRoot.Position.Z
-			)
-
-			-- Calcula a rotação espelhada do corpo
-			local targetLook = targetRoot.CFrame.LookVector
-			local mirroredLook = Vector3.new(-targetLook.X, targetLook.Y, -targetLook.Z)
-
-			bp.Position = mirroredPos
-			bg.CFrame = CFrame.new(myRoot.Position, myRoot.Position + mirroredLook)
+			-- Mantém o clone sempre 3 studs atrás do alvo (acompanha a mesma trajetória)
+			local behindCF = targetRoot.CFrame * CFrame.new(0, 0, 3)
+			bp.Position = behindCF.Position
+			bg.CFrame = CFrame.new(myRoot.Position, myRoot.Position + targetRoot.CFrame.LookVector)
 		end)
 	end
 
