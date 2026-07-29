@@ -1653,6 +1653,24 @@ end)
 	GH.SilentRestore = false
 
 	-- ==========================================
+	-- PENDING TEXT BOXES (usando api:AddInput existente)
+	-- ==========================================
+	for _, pending in ipairs(GH.PendingTextBoxes) do
+		local api = TabAPIs[pending.category]
+		if api and api.AddInput then
+			pcall(function()
+				api:AddInput(pending.name, {
+					Title = pending.titleKey and GH.T(pending.titleKey) or pending.name,
+					Placeholder = pending.placeholderKey and GH.T(pending.placeholderKey) or "",
+					Callback = pending.callback,
+				})
+			end)
+		else
+			warn("[SYSTEM] Categoria nao encontrada para textbox '" .. tostring(pending.name) .. "': " .. tostring(pending.category))
+		end
+	end
+
+	-- ==========================================
 	-- CHARACTER ADDED: Reset + Restore
 	-- ==========================================
 	GH.TrackGlobalConnection("CharacterAdded", GH.LocalPlayer.CharacterAdded:Connect(function(char)

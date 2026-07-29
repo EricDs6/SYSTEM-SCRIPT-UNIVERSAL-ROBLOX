@@ -264,6 +264,8 @@ GH.Locales = {
 		toast_reloading = "Reiniciando servidor...",
 		toast_spider_active = "Spider: Escalar paredes ativo!",
 		search_placeholder = "Procurar comando...",
+		placeholder_headsit = "Digite o nome do jogador...",
+		desc_headsit_input = "HeadSit - Jogador Alvo",
 		-- Loader
 		load_system_init = "SYSTEM INITIALIZING",
 		load_connecting = "Connecting to GitHub...",
@@ -532,6 +534,8 @@ GH.Locales = {
 		toast_reloading = "Reloading server...",
 		toast_spider_active = "Spider: Wall climb active!",
 		search_placeholder = "Search command...",
+		placeholder_headsit = "Type the player name...",
+		desc_headsit_input = "HeadSit - Target Player",
 		-- Loader
 		load_system_init = "SYSTEM INITIALIZING",
 		load_connecting = "Connecting to GitHub...",
@@ -800,6 +804,8 @@ GH.Locales = {
 		toast_reloading = "Reiniciando servidor...",
 		toast_spider_active = "Spider: Escalar paredes activo!",
 		search_placeholder = "Buscar comando...",
+		placeholder_headsit = "Escribe el nombre del jugador...",
+		desc_headsit_input = "HeadSit - Jugador Objetivo",
 		-- Loader
 		load_system_init = "SYSTEM INITIALIZING",
 		load_connecting = "Connecting to GitHub...",

@@ -79,6 +79,15 @@ function GH.RegisterToggleButton(name, localeKey, callback, category, descKey)
 end
 
 -- ==========================================
+-- PENDING TEXT BOXES (modulos registram antes do Initialize)
+-- ==========================================
+GH.PendingTextBoxes = {} -- { {name, placeholderKey, callback, category, titleKey}, ... }
+
+function GH.RegisterTextBox(name, placeholderKey, callback, category, titleKey)
+	table.insert(GH.PendingTextBoxes, {name = name, placeholderKey = placeholderKey, callback = callback, category = category, titleKey = titleKey})
+end
+
+-- ==========================================
 -- REFRESH UI (atualiza todos os botoes registrados)
 -- ==========================================
 function GH.RefreshUI()
