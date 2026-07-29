@@ -28,11 +28,11 @@ return function(GH)
 			if char then
 				local hum = char:FindFirstChildOfClass("Humanoid")
 				if hum and hum.SeatPart then
-					local vehicleModel = hum.SeatPart.Parent
-					if vehicleModel and vehicleModel:IsA("Model") then
-						local primary = vehicleModel.PrimaryPart or hum.SeatPart
-						local bv = primary:FindFirstChild("GH_VFlyBV")
-						local bg = primary:FindFirstChild("GH_VFlyBG")
+					-- Usar seat.AssemblyRootPart para ser consistente com a criação dos objetos
+					local targetPart = hum.SeatPart.AssemblyRootPart or hum.SeatPart
+					if targetPart then
+						local bv = targetPart:FindFirstChild("GH_VFlyBV")
+						local bg = targetPart:FindFirstChild("GH_VFlyBG")
 						if bv then bv:Destroy() end
 						if bg then bg:Destroy() end
 					end
