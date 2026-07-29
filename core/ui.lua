@@ -1807,21 +1807,26 @@ end)
 					"https://api.github.com/repos/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/commits/main?_=" .. tostring(os.clock()):gsub("%.", ""),
 					true
 				)
-				if resp then
-					local data = HttpService:JSONDecode(resp)
-					if data and data.sha then
-						local latestHash = string.sub(data.sha, 1, 7)
-						if latestHash ~= currentHash then
-							GH.ShowToast(
-								GH.T("toast_new_update") .. " (v" .. latestHash .. ")",
-								Color3.fromRGB(255, 180, 0),
-								nil,
-								true
-							)
-							return true
+			if resp then
+				local data = HttpService:JSONDecode(resp)
+				if data and data.sha then
+					local latestHash = string.sub(data.sha, 1, 7)
+					if latestHash ~= currentHash then
+						local msg = GH.T("toast_new_update") .. " (v" .. latestHash .. ")"
+						if data.commit and data.commit.message then
+							local commitMsg = data.commit.message:match("([^\n]+)") or data.commit.message
+							msg = msg .. " - " .. commitMsg
 						end
+						GH.ShowToast(
+							msg,
+							Color3.fromRGB(255, 180, 0),
+							nil,
+							true
+						)
+						return true
 					end
 				end
+			end
 				return false
 			end)
 			if ok and result == true then break end
