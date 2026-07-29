@@ -1,13 +1,13 @@
 -- =============================================================================
--- COMMAND: VEHICLE FLY
--- Voar dirigindo veiculos. WASD+QE+Scroll
+-- COMMAND: VEHICLE FLY (Orientado à Câmera e Sem Travar)
+-- Voar dirigindo veículos. WASD + E/Q (Subir/Descer) + +/- Velocidade
 -- =============================================================================
 return function(GH)
 	local UserInputService = GH.Services.UserInputService
 	local RunService = GH.Services.RunService
 	local LocalPlayer = GH.LocalPlayer
 
-	local keys = { W = false, A = false, S = false, D = false, E = false, Q = false }
+	local keys = { W = false, A = false, S = false, D = false, E = false, Q = false, LeftShift = false }
 
 	function Cheats_ToggleVehicleFly(state, btn)
 		GH.Disconnect("VFly_Stepped")
@@ -15,52 +15,44 @@ return function(GH)
 		GH.Disconnect("VFly_InputEnded")
 		GH.Disconnect("VFly_Scroll")
 
-		-- Limpar objetos antigos
-		local char = LocalPlayer.Character
-		local hrp = char and char:FindFirstChild("HumanoidRootPart")
-		if hrp then
-			pcall(function() hrp:FindFirstChild("GH_VFlyLV"):Destroy() end)
-			pcall(function() hrp:FindFirstChild("GH_VFlyAV"):Destroy() end)
+		local function clearVehiclePhysics()
+			local char = LocalPlayer.Character
+			if char then
+				local hum = char:FindFirstChildOfClass("Humanoid")
+				if hum and hum.SeatPart then
+					local vehicleModel = hum.SeatPart.Parent
+					if vehicleModel:IsA("Model") then
+						local primary = vehicleModel.PrimaryPart or hum.SeatPart
+						local bv = primary:FindFirstChild("GH_VFlyBV")
+						if bv then bv:Destroy() end
+					end
+				end
+			end
 		end
 
-		if not state then return end
-
-		local hum = char and char:FindFirstChildOfClass("Humanoid")
-		if not hum or not hrp then return end
+		if not state then
+			clearVehiclePhysics()
+			for k in pairs(keys) do keys[k] = false end
+			return
+		end
 
 		for k in pairs(keys) do keys[k] = false end
 
-		hum.PlatformStand = false
-
-		-- LinearVelocity
-		local lv = Instance.new("LinearVelocity")
-		lv.Name = "GH_VFlyLV"
-		lv.MaxForce = math.huge
-		lv.Attachment0 = hrp:FindFirstChildOfClass("Attachment") or Instance.new("Attachment", hrp)
-		lv.VectorVelocity = Vector3.zero
-		lv.VelocityConstraintMode = Enum.VelocityConstraintMode.Vector
-		lv.Parent = hrp
-
-		-- AngularVelocity
-		local av = Instance.new("AngularVelocity")
-		av.Name = "GH_VFlyAV"
-		av.MaxTorque = math.huge
-		av.Attachment0 = lv.Attachment0
-		av.AngularVelocity = Vector3.zero
-		av.Parent = hrp
-
-		-- Input
+		-- InputBegan
 		GH.Connections.VFly_InputBegan = UserInputService.InputBegan:Connect(function(input, gpe)
 			if gpe then return end
 			if not GH.States.VehicleFly then return end
-			if keys[input.KeyCode.Name] ~= nil then
-				keys[input.KeyCode.Name] = true
+			local name = input.KeyCode.Name
+			if keys[name] ~= nil then
+				keys[name] = true
 			end
 		end)
 
+		-- InputEnded
 		GH.Connections.VFly_InputEnded = UserInputService.InputEnded:Connect(function(input)
-			if keys[input.KeyCode.Name] ~= nil then
-				keys[input.KeyCode.Name] = false
+			local name = input.KeyCode.Name
+			if keys[name] ~= nil then
+				keys[name] = false
 			end
 		end)
 
@@ -69,67 +61,84 @@ return function(GH)
 			if gpe then return end
 			if not GH.States.VehicleFly then return end
 			if input.KeyCode == Enum.KeyCode.Equals or input.KeyCode == Enum.KeyCode.KeypadPlus then
-				GH.FlySpeed = math.clamp((GH.FlySpeed or 20) + 5, 5, 200)
-				GH.ShowToast("Vehicle Fly Speed: " .. GH.FlySpeed, GH.Theme.Accent, 1)
+				GH.FlySpeed = math.clamp((GH.FlySpeed or 50) + 10, 10, 300)
+				if GH.ShowToast then GH.ShowToast("Vehicle Fly Speed: " .. GH.FlySpeed, GH.Theme.Accent, 1) end
 			elseif input.KeyCode == Enum.KeyCode.Minus or input.KeyCode == Enum.KeyCode.KeypadMinus then
-				GH.FlySpeed = math.clamp((GH.FlySpeed or 20) - 5, 5, 200)
-				GH.ShowToast("Vehicle Fly Speed: " .. GH.FlySpeed, GH.Theme.Accent, 1)
+				GH.FlySpeed = math.clamp((GH.FlySpeed or 50) - 10, 10, 300)
+				if GH.ShowToast then GH.ShowToast("Vehicle Fly Speed: " .. GH.FlySpeed, GH.Theme.Accent, 1) end
 			end
 		end)
 
-		-- Loop principal
+		-- Loop principal (RenderStepped)
 		GH.Connections.VFly_Stepped = RunService.RenderStepped:Connect(function(dt)
 			if GH.isClosing or not GH.States.VehicleFly then
+				clearVehiclePhysics()
 				GH.Disconnect("VFly_Stepped")
 				GH.Disconnect("VFly_InputBegan")
 				GH.Disconnect("VFly_InputEnded")
 				GH.Disconnect("VFly_Scroll")
-				pcall(function()
-					local r = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-					if r then
-						pcall(function() r:FindFirstChild("GH_VFlyLV"):Destroy() end)
-						pcall(function() r:FindFirstChild("GH_VFlyAV"):Destroy() end)
-					end
-				end)
 				return
 			end
 
-			local c = LocalPlayer.Character
-			local h = c and c:FindFirstChildOfClass("Humanoid")
-			local r = c and c:FindFirstChild("HumanoidRootPart")
+			local char = LocalPlayer.Character
+			local hum = char and char:FindFirstChildOfClass("Humanoid")
+			local seat = hum and hum.SeatPart
+
+			-- Se o jogador não estiver sentado em um veículo
+			if not hum or not seat then return end
+
+			-- Localiza a parte principal da física do veículo
+			local targetPart = seat.AssemblyRootPart or seat
+			if not targetPart then return end
+
 			local cam = workspace.CurrentCamera
-			if not c or not r or not h or not cam then return end
-
-			h.PlatformStand = false
-			av.AngularVelocity = Vector3.zero
-
-			local flySpeed = GH.FlySpeed or 20
-
-			-- Camera vectors
+			if not cam then return end
 			local camCF = cam.CFrame
-			local lookVec = camCF.LookVector
-			local rightVec = camCF.RightVector
 
-			-- Movimento
+			-- Garante que o BodyVelocity exista na parte raiz do veículo
+			local bv = targetPart:FindFirstChild("GH_VFlyBV")
+			if not bv then
+				bv = Instance.new("BodyVelocity")
+				bv.Name = "GH_VFlyBV"
+				bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+				bv.Velocity = Vector3.zero
+				bv.Parent = targetPart
+			end
+
+			-- Velocidade base + Boost
+			local speed = GH.FlySpeed or 50
+			if keys.LeftShift then
+				speed = speed * 2
+			end
+
+			-- Vetores de direção tridimensional baseados na Câmera
 			local moveDir = Vector3.zero
-			moveDir = moveDir + lookVec * ((keys.W and 1 or 0) + (keys.S and -1 or 0))
-			moveDir = moveDir + rightVec * ((keys.D and 1 or 0) + (keys.A and -1 or 0))
 
-			local vert = 0
-			if keys.E then
-				vert = flySpeed
-			elseif keys.Q then
-				vert = -flySpeed
-			end
+			if keys.W then moveDir = moveDir + camCF.LookVector end
+			if keys.S then moveDir = moveDir - camCF.LookVector end
+			if keys.D then moveDir = moveDir + camCF.RightVector end
+			if keys.A then moveDir = moveDir - camCF.RightVector end
+			if keys.E then moveDir = moveDir + Vector3.new(0, 1, 0) end
+			if keys.Q then moveDir = moveDir - Vector3.new(0, 1, 0) end
 
+			-- Aplica movimento ou trava o veículo no ar sem perder altura
 			if moveDir.Magnitude > 0 then
-				moveDir = moveDir.Unit * flySpeed
+				bv.Velocity = moveDir.Unit * speed
+			else
+				bv.Velocity = Vector3.zero
 			end
 
-			lv.VectorVelocity = Vector3.new(moveDir.X, vert, moveDir.Z)
+			-- Zera desaceleração natural para não afundar
+			targetPart.AssemblyLinearVelocity = Vector3.zero
+			targetPart.AssemblyAngularVelocity = Vector3.zero
+
+			-- GIRA O VEÍCULO PARA ACOMPANHAR A DIREÇÃO DA CÂMERA
+			targetPart.CFrame = CFrame.new(targetPart.Position, targetPart.Position + camCF.LookVector)
 		end)
 
-		GH.ShowToast("Vehicle Fly: WASD+QE | Scroll=velocidade (" .. (GH.FlySpeed or 20) .. ")", GH.Theme.On, 3)
+		if GH.ShowToast then
+			GH.ShowToast("Vehicle Fly: WASD+EQ | Shift=Boost | +/- Speed (" .. (GH.FlySpeed or 50) .. ")", GH.Theme.On, 3)
+		end
 	end
 
 	GH.RegisterToggleButton("VehicleFly", "toggle_vehiclefly", Cheats_ToggleVehicleFly, "Movement", "desc_vehiclefly")
