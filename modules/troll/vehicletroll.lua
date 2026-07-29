@@ -48,10 +48,12 @@ return function(GH)
 			if bv then bv:Destroy() end
 			if bg then bg:Destroy() end
 			-- Resetar velocity do root para evitar que o veiculo voe
-			if cachedRoot:IsA("BasePart") then
-				cachedRoot.AssemblyVelocity = Vector3.zero
-				cachedRoot.AssemblyAngularVelocity = Vector3.zero
-			end
+			pcall(function()
+				if cachedRoot:IsA("BasePart") then
+					cachedRoot.AssemblyLinearVelocity = Vector3.zero
+					cachedRoot.AssemblyAngularVelocity = Vector3.zero
+				end
+			end)
 		end
 		cachedRoot = nil
 
@@ -221,7 +223,7 @@ return function(GH)
 			lastTargetPos = targetPos
 
 			-- Zera controle angular
-			root.AssemblyAngularVelocity = Vector3.zero
+			pcall(function() root.AssemblyAngularVelocity = Vector3.zero end)
 
 			-- Ativar modo caos a cada N rams
 			if ramCount > 0 and ramCount % CHAOS_INTERVAL == 0 and not chaosMode then
@@ -243,7 +245,7 @@ return function(GH)
 			-- Modo caos: girar e atacar em todas as direcoes
 			if chaosMode then
 				local chaosForce = applyChaosForces(root, bg, dt)
-				bv.Velocity = chaosForce + Vector3.new(0, 30, 0)
+				bv.Velocity = chaosForce + Vector3.new(0, 15, 0)
 
 				-- Girar o veiculo rapidamente
 				local spinCFrame = root.CFrame * CFrame.Angles(0, math.rad(SPIN_SPEED * 360 * dt), 0)
@@ -262,7 +264,9 @@ return function(GH)
 				-- VOAR em direcao ao alvo em velocidade absurda
 				local speed = math.min(APPROACH_SPEED, dist * 3 + 150)
 				local lookDir, perturbX, perturbZ = getAggressiveDirection(dir, dist, root, dt)
-				bv.Velocity = Vector3.new(dir.X * speed + perturbX, speed * 0.1 + 10, dir.Z * speed + perturbZ)
+				-- Usar dir.Y para vertical: segue o alvo em altura ao inves de sempre subir
+				local verticalVel = math.clamp(dir.Y * speed * 0.5, -50, 50)
+				bv.Velocity = Vector3.new(dir.X * speed + perturbX, verticalVel, dir.Z * speed + perturbZ)
 
 				-- Orientar veiculo na direcao do alvo com inclinacao
 				local pitchAngle = math.asin(math.clamp(dir.Y, -1, 1))
@@ -277,7 +281,8 @@ return function(GH)
 			elseif phase == "ram" then
 				-- EMPURRAR com forca MAXIMA! Mais rapido e imprevisivel
 				local lookDir, perturbX, perturbZ = getAggressiveDirection(dir, dist, root, dt)
-				bv.Velocity = Vector3.new(dir.X * RAM_SPEED + perturbX, -20, dir.Z * RAM_SPEED + perturbZ)
+				local verticalRam = math.clamp(dir.Y * RAM_SPEED * 0.3, -40, 40)
+				bv.Velocity = Vector3.new(dir.X * RAM_SPEED + perturbX, verticalRam, dir.Z * RAM_SPEED + perturbZ)
 
 				-- Adicionar girada durante o impacto para mais caos
 				spinAngle = spinAngle + dt * 4
@@ -296,7 +301,8 @@ return function(GH)
 				local retreatDir = -dir
 				local speed = math.min(RETREAT_SPEED * 1.5, RETREAT_DISTANCE * 2)
 				local lookDir, perturbX, perturbZ = getAggressiveDirection(-dir, dist, root, dt)
-				bv.Velocity = Vector3.new(retreatDir.X * speed + perturbX * 2, 25, retreatDir.Z * speed + perturbZ * 2)
+				local verticalRetreat = math.clamp(-dir.Y * speed * 0.3, -30, 30)
+				bv.Velocity = Vector3.new(retreatDir.X * speed + perturbX * 2, verticalRetreat, retreatDir.Z * speed + perturbZ * 2)
 
 				-- Sempre olhar para o alvo mesmo recuando
 				local pitchAngle = math.asin(math.clamp(dir.Y, -1, 1))
