@@ -8,9 +8,13 @@ return function(GH)
 	local LocalPlayer = GH.LocalPlayer
 
 	local activeTarget = nil
+	local lastPos = nil
+	local stuckTime = 0
 
 	local function cleanupGoto()
 		activeTarget = nil
+		lastPos = nil
+		stuckTime = 0
 		GH.Disconnect("VGoto_Stepped")
 		-- Limpa instâncias de força no veículo
 		local char = LocalPlayer.Character
@@ -108,10 +112,68 @@ return function(GH)
 				return
 			end
 
+			-- Detectar se está travado em obstáculo
+			local moved = 0
+			if lastPos then
+				moved = (myPos - lastPos).Magnitude
+			end
+			lastPos = myPos
+
+			if moved < 0.5 then
+				stuckTime = stuckTime + dt
+			else
+				stuckTime = math.max(0, stuckTime - dt * 2) -- reduz suavemente
+			end
+
 			-- Velocidade proporcional à distância (desacelera suavemente)
 			local speed = math.min(flySpeed, dist * 3 + 50)
 			local dir = diff.Unit
-			bv.Velocity = dir * speed
+
+			-- Raycast para detectar obstáculos à frente
+			local rayOrigin = myPos + Vector3.new(0, 3, 0) -- levemente acima do centro
+			local rayDir = dir * 40
+			local rayParams = RaycastParams.new()
+			rayParams.FilterType = Enum.RaycastFilterType.Exclude
+			-- Exclui personagem E o veículo
+			local filterList = {LocalPlayer.Character}
+			local vehicleModel = seat:FindFirstAncestorWhichIsA("Model")
+			if vehicleModel then table.insert(filterList, vehicleModel) end
+			rayParams.FilterDescendantsInstances = filterList
+			local rayResult = workspace:Raycast(rayOrigin, rayDir, rayParams)
+
+			-- Se travado ou obstáculo detectado, desviar
+			local finalDir = dir
+			local isDodging = rayResult or stuckTime > 0.5
+			if isDodging then
+				-- Tentar subir primeiro (mais espaço)
+				local upRay = workspace:Raycast(myPos, Vector3.new(0, 50, 0), rayParams)
+				if not upRay then
+					finalDir = Vector3.new(dir.X * 0.2, 1, dir.Z * 0.2).Unit
+				else
+					-- Tentar ir pro lado com inclinação pra frente
+					local rightDir = Vector3.new(dir.Z, 0.4, -dir.X).Unit
+					local leftDir = Vector3.new(-dir.Z, 0.4, dir.X).Unit
+					local rightRay = workspace:Raycast(myPos, rightDir * 30, rayParams)
+					local leftRay = workspace:Raycast(myPos, leftDir * 30, rayParams)
+					if not rightRay and not leftRay then
+						-- Ambos livres, escolhe aleatório
+						if math.random() > 0.5 then
+							finalDir = rightDir
+						else
+							finalDir = leftDir
+						end
+					elseif not rightRay then
+						finalDir = rightDir
+					elseif not leftRay then
+						finalDir = leftDir
+					else
+						-- Todas bloqueadas, subir com força
+						finalDir = Vector3.new(dir.X * 0.1, 1, dir.Z * 0.1).Unit
+					end
+				end
+			end
+
+			bv.Velocity = finalDir * speed
 
 			-- Zera rotação natural
 			root.AssemblyAngularVelocity = Vector3.zero
