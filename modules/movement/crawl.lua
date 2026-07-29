@@ -1,48 +1,66 @@
 -- =============================================================================
--- COMMAND: CRAWL (Rastejar)
--- Faz o personagem rastejar no chao
+-- COMMAND: CRAWL (Rastejar) - CORRIGIDO
 -- =============================================================================
 return function(GH)
-	local RunService = GH.Services.RunService
 	local LocalPlayer = GH.LocalPlayer
 
 	GH.Cache.OrigHipHeight = nil
+	GH.Cache.OrigWalkSpeed = nil
 
-	function Cheats_ToggleCrawl(state, btn)
+	local function CleanupCrawl()
 		GH.UnregisterMasterLoop("Crawl")
 
-		-- Restaurar ao desativar
-		if not state then
-			local char = LocalPlayer.Character
-			if char then
-				local hum = char:FindFirstChildOfClass("Humanoid")
-				if hum and GH.Cache.OrigHipHeight then
+		local char = LocalPlayer.Character
+		if char then
+			local hum = char:FindFirstChildOfClass("Humanoid")
+			local hrp = char:FindFirstChild("HumanoidRootPart")
+
+			if hum then
+				hum.AutoRotate = true
+				if GH.Cache.OrigHipHeight then
 					hum.HipHeight = GH.Cache.OrigHipHeight
 					GH.Cache.OrigHipHeight = nil
 				end
-				-- Restaurar CFrame em pe
-				local hrp = char:FindFirstChild("HumanoidRootPart")
-				if hrp then
-					hrp.CFrame = CFrame.new(hrp.Position) * CFrame.Angles(0, math.atan2(-hrp.CFrame.LookVector.X, -hrp.CFrame.LookVector.Z), 0)
+				if GH.Cache.OrigWalkSpeed then
+					hum.WalkSpeed = GH.Cache.OrigWalkSpeed
+					GH.Cache.OrigWalkSpeed = nil
 				end
 				pcall(function() hum:ChangeState(Enum.HumanoidStateType.GettingUp) end)
 			end
-			return
+
+			if hrp then
+				-- Restaura o alinhamento em pé
+				local look = hrp.CFrame.LookVector
+				local flatLook = Vector3.new(look.X, 0, look.Z)
+				if flatLook.Magnitude > 0.1 then
+					hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + flatLook)
+				end
+			end
 		end
+	end
+
+	function Cheats_ToggleCrawl(state, btn)
+		CleanupCrawl()
+
+		if not state then return end
 
 		local char = LocalPlayer.Character
 		if not char then return end
+
 		local hrp = char:FindFirstChild("HumanoidRootPart")
 		local hum = char:FindFirstChildOfClass("Humanoid")
 		if not hrp or not hum then return end
 
-		-- Salvar valor original
+		-- Salva os valores originais
 		GH.Cache.OrigHipHeight = hum.HipHeight
-		local originalSpeed = hum.WalkSpeed
+		GH.Cache.OrigWalkSpeed = hum.WalkSpeed
 
-		GH.RegisterMasterLoop("Crawl", "PreSim", function()
+		-- Desativa rotação padrão do Humanoide
+		hum.AutoRotate = false
+
+		GH.RegisterMasterLoop("Crawl", "Render", function()
 			if GH.isClosing or not GH.States.Crawl then
-				GH.UnregisterMasterLoop("Crawl")
+				CleanupCrawl()
 				return
 			end
 
@@ -51,33 +69,29 @@ return function(GH)
 			local hm = c and c:FindFirstChildOfClass("Humanoid")
 			if not c or not h or not hm then return end
 
-			-- Reduzir hip height para ficar baixo
-			hm.HipHeight = -1.8
-
-			-- Velocidade reduzida
-			hm.WalkSpeed = originalSpeed * 0.5
-
-			-- Forcar velocidade Y para 0 (nao cair nem subir)
-			local vel = h.AssemblyLinearVelocity
-			h.AssemblyLinearVelocity = Vector3.new(vel.X, 0, vel.Z)
-
-			-- Pegar direcao do movimento
-			local flatVel = Vector3.new(vel.X, 0, vel.Z)
-			local lookDir
-			if flatVel.Magnitude > 0.5 then
-				lookDir = flatVel.Unit
-			else
-				lookDir = h.CFrame.LookVector
+			-- Mantém o HipHeight em um valor baixo, mas seguro para não atravessar o chão
+			hm.HipHeight = 0.2
+			
+			-- Ajusta a velocidade de rastejar
+			if GH.Cache.OrigWalkSpeed then
+				hm.WalkSpeed = GH.Cache.OrigWalkSpeed * 0.4
 			end
 
-			-- Rotacionar para ficar deitado (pe para tras, cabeca para frente)
-			local yaw = math.atan2(-lookDir.X, -lookDir.Z)
-			local targetCFrame = CFrame.new(h.Position)
-				* CFrame.Angles(0, yaw, 0)
-				* CFrame.Angles(math.rad(-75), 0, 0)
+			-- Direção de movimento baseada nos inputs ou na rotação atual
+			local moveDir = hm.MoveDirection
+			local lookVector = h.CFrame.LookVector
 
-			-- Aplicar suavemente
-			h.CFrame = h.CFrame:Lerp(targetCFrame, 0.25)
+			if moveDir.Magnitude > 0.1 then
+				lookVector = moveDir.Unit
+			else
+				lookVector = Vector3.new(lookVector.X, 0, lookVector.Z).Unit
+			end
+
+			-- Monta o CFrame deitado em relação ao chão (Inclinado -90° no eixo X)
+			local targetCFrame = CFrame.new(h.Position, h.Position + lookVector) * CFrame.Angles(math.rad(-90), 0, 0)
+
+			-- Suaviza a rotação para evitar o efeito "pula-pula"
+			h.CFrame = h.CFrame:Lerp(targetCFrame, 0.3)
 		end)
 	end
 
