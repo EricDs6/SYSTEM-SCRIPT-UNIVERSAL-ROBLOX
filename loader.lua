@@ -302,7 +302,7 @@ local categories = {
 		"breakvelocity", "invisibleparts", "anchor", "voiceaudio", "tptovehicle", "tpspawn", "noplayercollide", "forcepush", "animationplayer"
 	}},
 	{ name = "Troll", files = {
-		"trollfling", "targetfling", "walkfling", "autofling", "spasms", "naked", "freeze", "pushall", "mirror"
+		"trollfling", "targetfling", "walkfling", "autofling", "spasms", "naked", "freeze", "pushall", "mirror", "screwdriver"
 	}}
 }
 
