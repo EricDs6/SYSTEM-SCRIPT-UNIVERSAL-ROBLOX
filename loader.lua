@@ -221,9 +221,8 @@ local LatestCommitMessage = ""
 			local httpOk, data = pcall(function()
 				return game:GetService("HttpService"):JSONDecode(result)
 			end)
-			if httpOk and data and data.sha then
+			if httpOk and type(data) == "table" and data.sha then
 				LatestCommitHash = string.sub(data.sha, 1, 7)
-				-- Extrair a mensagem do commit (primeira linha apenas)
 				if data.commit and data.commit.message then
 					LatestCommitMessage = data.commit.message:match("([^\n]+)") or data.commit.message
 				end
@@ -233,11 +232,7 @@ local LatestCommitMessage = ""
 					LatestCommitDate = string.format("%s/%s/%s %s:%s", day, month, year, hour, min)
 				end
 				UpdateStatus("v" .. LatestCommitHash)
-			else
-				warn("[SYSTEM] Falha ao decodificar resposta do GitHub:", httpOk, data)
 			end
-		else
-			warn("[SYSTEM] Falha ao buscar commit do GitHub:", ok, result)
 		end
 	end
 

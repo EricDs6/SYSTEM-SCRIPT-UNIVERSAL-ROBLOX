@@ -107,11 +107,11 @@ return function(GH)
 		return Vector3.new(chaosX, chaosY, chaosZ)
 	end
 
-	-- Funcao para pegar direcao agressiva
+	-- Funcao para pegar direcao agressiva (horizontal para atropelar)
 	local function getAggressiveDirection(dir, dist, root, dt)
 		-- Adicionar perturbacao para ser imprevisivel
-		local perturbX = (math.random() - 0.5) * 40
-		local perturbZ = (math.random() - 0.5) * 40
+		local perturbX = (math.random() - 0.5) * 30
+		local perturbZ = (math.random() - 0.5) * 30
 
 		local lookDir = Vector3.new(dir.X, 0, dir.Z)
 		if lookDir.Magnitude > 0.01 then
@@ -120,15 +120,7 @@ return function(GH)
 			lookDir = root.CFrame.LookVector
 		end
 
-		-- Inclinar para cima ou para baixo baseado na posicao
-		local verticalBias = 0
-		if dir.Y > 0.3 then
-			verticalBias = 20 -- voar para cima se alvo esta alto
-		elseif dir.Y < -0.3 then
-			verticalBias = -20 -- voar para baixo se alvo esta baixo
-		end
-
-		return lookDir, verticalBias + perturbX, perturbZ
+		return lookDir, perturbX, perturbZ
 	end
 
 	local function startVehicleTroll(targetPlayer, targetName)
@@ -245,7 +237,10 @@ return function(GH)
 			-- Modo caos: girar e atacar em todas as direcoes
 			if chaosMode then
 				local chaosForce = applyChaosForces(root, bg, dt)
-				bv.Velocity = chaosForce + Vector3.new(0, 15, 0)
+				local targetY = targetRoot.Position.Y
+				local myY = root.Position.Y
+				local verticalChaos = math.clamp((targetY - myY) * 0.3, -10, 10)
+				bv.Velocity = Vector3.new(chaosForce.X, verticalChaos, chaosForce.Z)
 
 				-- Girar o veiculo rapidamente
 				local spinCFrame = root.CFrame * CFrame.Angles(0, math.rad(SPIN_SPEED * 360 * dt), 0)
@@ -264,12 +259,14 @@ return function(GH)
 				-- VOAR em direcao ao alvo em velocidade absurda
 				local speed = math.min(APPROACH_SPEED, dist * 3 + 150)
 				local lookDir, perturbX, perturbZ = getAggressiveDirection(dir, dist, root, dt)
-				-- Usar dir.Y para vertical: segue o alvo em altura ao inves de sempre subir
-				local verticalVel = math.clamp(dir.Y * speed * 0.5, -50, 50)
+				-- Correcao vertical SUAVE e LIMITADA - evita sobrevoar
+				local targetY = targetRoot.Position.Y
+				local myY = root.Position.Y
+				local verticalVel = math.clamp((targetY - myY) * 0.5, -15, 15)
 				bv.Velocity = Vector3.new(dir.X * speed + perturbX, verticalVel, dir.Z * speed + perturbZ)
 
-				-- Orientar veiculo na direcao do alvo com inclinacao
-				local pitchAngle = math.asin(math.clamp(dir.Y, -1, 1))
+				-- Orientar veiculo HORIZONTALMENTE - sem inclinacao para cima
+				local pitchAngle = math.clamp(dir.Y * 0.1, -0.05, 0.05)
 				bg.CFrame = CFrame.new(root.Position) * CFrame.lookAt(Vector3.zero, lookDir) * CFrame.Angles(pitchAngle, 0, 0)
 
 				-- Atacar mais rapidamente
@@ -279,9 +276,12 @@ return function(GH)
 				end
 
 			elseif phase == "ram" then
-				-- EMPURRAR com forca MAXIMA! Mais rapido e imprevisivel
+				-- EMPURRAR com forca MAXIMA! Atropelar de verdade!
 				local lookDir, perturbX, perturbZ = getAggressiveDirection(dir, dist, root, dt)
-				local verticalRam = math.clamp(dir.Y * RAM_SPEED * 0.3, -40, 40)
+				-- Ram HORIZONTAL puro - manter nivel para bater de frente
+				local targetY = targetRoot.Position.Y
+				local myY = root.Position.Y
+				local verticalRam = math.clamp((targetY - myY) * 0.3, -5, 5)
 				bv.Velocity = Vector3.new(dir.X * RAM_SPEED + perturbX, verticalRam, dir.Z * RAM_SPEED + perturbZ)
 
 				-- Adicionar girada durante o impacto para mais caos
@@ -301,11 +301,13 @@ return function(GH)
 				local retreatDir = -dir
 				local speed = math.min(RETREAT_SPEED * 1.5, RETREAT_DISTANCE * 2)
 				local lookDir, perturbX, perturbZ = getAggressiveDirection(-dir, dist, root, dt)
-				local verticalRetreat = math.clamp(-dir.Y * speed * 0.3, -30, 30)
+				local targetY = targetRoot.Position.Y
+				local myY = root.Position.Y
+				local verticalRetreat = math.clamp((targetY - myY) * 0.3, -10, 10)
 				bv.Velocity = Vector3.new(retreatDir.X * speed + perturbX * 2, verticalRetreat, retreatDir.Z * speed + perturbZ * 2)
 
-				-- Sempre olhar para o alvo mesmo recuando
-				local pitchAngle = math.asin(math.clamp(dir.Y, -1, 1))
+				-- Sempre olhar para o alvo - NAO inclinar o veiculo
+				local pitchAngle = math.clamp(dir.Y * 0.1, -0.05, 0.05)
 				bg.CFrame = CFrame.new(root.Position) * CFrame.lookAt(Vector3.zero, lookDir) * CFrame.Angles(pitchAngle, 0, 0)
 
 				-- Voltar a atacar mais rapidamente

@@ -1888,7 +1888,7 @@ end)
 		local v = GH.Version and GH.Version.Hash or ""
 		local m = GH.Version and GH.Version.Message or ""
 		local msg = GH.T("toast_script_loaded")
-		if v and v ~= "unknown" then
+		if v and v ~= "" and v ~= "unknown" then
 			msg = msg .. " (v" .. v .. ")"
 			if m and m ~= "" then
 				msg = msg .. " - " .. m
@@ -1908,26 +1908,43 @@ end)
 	task.spawn(function()
 		task.wait(30)
 		local currentHash = GH.Version and GH.Version.Hash or "unknown"
-		if currentHash == "unknown" then return end
 
 		while not GH.Stopped do
-			task.wait(60)
+			task.wait(currentHash == "unknown" and 10 or 60)
 			if GH.Stopped then break end
 			if not GH.ScreenGui or not GH.ScreenGui.Parent then break end
 
 			local ok, result = pcall(function()
-				local resp = game:HttpGet(
+				return game:HttpGet(
 					"https://api.github.com/repos/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/commits/main?_=" .. tostring(os.clock()):gsub("%.", ""),
 					true
 				)
-			if resp then
-				local data = HttpService:JSONDecode(resp)
-				if data and data.sha then
+			end)
+			if ok and result then
+				local httpOk, data = pcall(function()
+					return HttpService:JSONDecode(result)
+				end)
+				if httpOk and data and data.sha then
 					local latestHash = string.sub(data.sha, 1, 7)
-					if latestHash ~= currentHash then
+					local commitMsg = ""
+					if data.commit and data.commit.message then
+						commitMsg = data.commit.message:match("([^\n]+)") or data.commit.message
+					end
+					-- Se nao tinha hash antes, agora temos
+					if currentHash == "unknown" or currentHash == "" then
+						currentHash = latestHash
+						GH.Version.Hash = latestHash
+						if commitMsg ~= "" then
+							GH.Version.Message = commitMsg
+						end
+						local msg = GH.T("toast_script_loaded") .. " (v" .. latestHash .. ")"
+						if commitMsg ~= "" then
+							msg = msg .. " - " .. commitMsg
+						end
+						GH.ShowToast(msg, GH.Theme.On, 5)
+					elseif latestHash ~= currentHash then
 						local msg = GH.T("toast_new_update") .. " (v" .. latestHash .. ")"
-						if data.commit and data.commit.message then
-							local commitMsg = data.commit.message:match("([^\n]+)") or data.commit.message
+						if commitMsg ~= "" then
 							msg = msg .. " - " .. commitMsg
 						end
 						GH.ShowToast(
