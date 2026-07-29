@@ -1586,6 +1586,7 @@ end)
 			NickLabel.Visible = false
 			AvatarContainer.Visible = false
 			LiveContainer.Visible = false
+			BindBtn.Visible = false
 			for _, c in pairs(TabContainers) do c.Visible = false end
 			TitleLabel.Size = UDim2.new(0, MiniW - BTN_SIZE * 2 - 30, 1, 0)
 			TitleLabel.TextTruncate = Enum.TextTruncate.AtEnd
@@ -1593,6 +1594,7 @@ end)
 		else
 			TitleLabel.Size = UDim2.new(1, -360, 1, 0)
 			TitleLabel.TextTruncate = Enum.TextTruncate.None
+			BindBtn.Visible = true
 			TweenService:Create(MainFrame, GH.TI_Slow, { Size = UDim2.new(0, NormalW, 0, NormalH) }):Play()
 			task.delay(0.15, function()
 				Sidebar.Visible = true
