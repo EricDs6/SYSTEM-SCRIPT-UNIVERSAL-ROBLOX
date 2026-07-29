@@ -1538,7 +1538,7 @@ end)
 	local NormalW, NormalH = PanelW, PanelH
 	local MiniW, MiniH = 200, TopbarH
 
-	MinBtn.MouseButton1Click:Connect(function()
+	local function ToggleMinimize()
 		minimized = not minimized
 		if minimized then
 			Sidebar.Visible = false
@@ -1556,15 +1556,21 @@ end)
 			TitleLabel.TextTruncate = Enum.TextTruncate.None
 			TweenService:Create(MainFrame, GH.TI_Slow, { Size = UDim2.new(0, NormalW, 0, NormalH) }):Play()
 			task.delay(0.15, function()
-			Sidebar.Visible = true
-			Content.Visible = true
-			FPSLabel.Visible = true
-			NickLabel.Visible = true
-			AvatarContainer.Visible = true
-			LiveContainer.Visible = true
+				Sidebar.Visible = true
+				Content.Visible = true
+				FPSLabel.Visible = true
+				NickLabel.Visible = true
+				AvatarContainer.Visible = true
+				LiveContainer.Visible = true
 				if TabContainers[ActiveTab] then TabContainers[ActiveTab].Visible = true end
 			end)
 		end
+	end
+
+	GH.ToggleMinimize = ToggleMinimize
+
+	MinBtn.MouseButton1Click:Connect(function()
+		ToggleMinimize()
 	end)
 
 	-- ==========================================
@@ -1615,12 +1621,17 @@ end)
 	end))
 
 	-- ==========================================
-	-- TOGGLE HOTKEY (RightCtrl)
+	-- TOGGLE HOTKEY (RightCtrl) + MINIMIZE BIND (Insert)
 	-- ==========================================
 	local panelVisible = true
 	GH.InputManager.Bind(Enum.KeyCode.RightControl, function()
 		panelVisible = not panelVisible
 		MainFrame.Visible = panelVisible
+	end)
+
+	-- Bind Insert para minimizar/maximizar
+	GH.InputManager.Bind(Enum.KeyCode.Insert, function()
+		ToggleMinimize()
 	end)
 
 	-- ==========================================
@@ -1787,6 +1798,11 @@ end)
 			end
 		end
 		GH.ShowToast(msg, W11.On, 5)
+	end)
+
+	-- Toast com info do bind Insert
+	task.delay(2, function()
+		GH.ShowToast(GH.T("toast_bind_info"), W11.Accent, 4)
 	end)
 
 	-- ==========================================
