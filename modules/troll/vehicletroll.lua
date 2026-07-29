@@ -9,18 +9,26 @@ return function(GH)
 	local LocalPlayer = GH.LocalPlayer
 
 	local activeTarget = nil
-	local phase = "approach" -- "approach" | "ram" | "retreat"
+	local phase = "approach"
 	local phaseTimer = 0
 	local ramCount = 0
 	local lastTargetPos = nil
+	local spinAngle = 0
+	local chaosMode = false
+	local chaosTimer = 0
+	local cachedRoot = nil -- armazena o root do veiculo para cleanup mesmo apos sair do seat
 
-	local APPROACH_SPEED = 180
-	local RAM_SPEED = 280
-	local RETREAT_SPEED = 120
-	local RAM_DISTANCE = 6
-	local RETREAT_DISTANCE = 25
-	local RAM_DURATION = 0.4
-	local RETREAT_DURATION = 0.6
+	-- Configuracoes agressivas
+	local APPROACH_SPEED = 350
+	local RAM_SPEED = 450
+	local RETREAT_SPEED = 200
+	local SPIN_SPEED = 8 -- rotacoes por segundo
+	local RAM_DISTANCE = 5
+	local RETREAT_DISTANCE = 18
+	local RAM_DURATION = 0.2 -- mais rapido
+	local RETREAT_DURATION = 0.3 -- mais rapido
+	local CHAOS_INTERVAL = 30 -- a cada 30 rams, ativa caos total
+	local CHAOS_DURATION = 2.0
 
 	local function cleanupVehicleTroll()
 		activeTarget = nil
@@ -28,26 +36,97 @@ return function(GH)
 		phaseTimer = 0
 		ramCount = 0
 		lastTargetPos = nil
+		spinAngle = 0
+		chaosMode = false
+		chaosTimer = 0
 		GH.Disconnect("VTroll_Stepped")
 
-		-- Limpar forcas do veiculo
+		-- Limpar forcas usando o root armazenado (funciona mesmo apos sair do seat)
+		if cachedRoot then
+			local bv = cachedRoot:FindFirstChild("GH_VTrollBV")
+			local bg = cachedRoot:FindFirstChild("GH_VTrollBG")
+			if bv then bv:Destroy() end
+			if bg then bg:Destroy() end
+			-- Resetar velocity do root para evitar que o veiculo voe
+			if cachedRoot:IsA("BasePart") then
+				cachedRoot.AssemblyVelocity = Vector3.zero
+				cachedRoot.AssemblyAngularVelocity = Vector3.zero
+			end
+		end
+		cachedRoot = nil
+
+		-- Tentar limpar seat tambem (caso ainda esteja sentado)
 		local char = LocalPlayer.Character
 		if char then
 			local hum = char:FindFirstChildOfClass("Humanoid")
 			if hum and hum.SeatPart then
-				local root = hum.SeatPart.AssemblyRootPart or hum.SeatPart
-				if root then
-					local bv = root:FindFirstChild("GH_VTrollBV")
-					local bg = root:FindFirstChild("GH_VTrollBG")
-					if bv then bv:Destroy() end
-					if bg then bg:Destroy() end
-				end
 				if hum.SeatPart:IsA("VehicleSeat") then
 					hum.SeatPart.Throttle = 0
 					hum.SeatPart.Steer = 0
 				end
 			end
 		end
+	end
+
+	-- Funcao para encontrar o alvo mais proximo se o alvo atual sumiu
+	local function findNearestPlayer()
+		local char = LocalPlayer.Character
+		local myRoot = char and char:FindFirstChild("HumanoidRootPart")
+		if not myRoot then return nil end
+
+		local nearest = nil
+		local minDist = 200
+
+		for _, player in ipairs(Players:GetPlayers()) do
+			if player ~= LocalPlayer and player.Character then
+				local root = player.Character:FindFirstChild("HumanoidRootPart")
+				if root then
+					local dist = (root.Position - myRoot.Position).Magnitude
+					if dist < minDist then
+						minDist = dist
+						nearest = player
+					end
+				end
+			end
+		end
+
+		return nearest
+	end
+
+	-- Funcao para aplicar forca caotica ao veiculo
+	local function applyChaosForces(root, bg, dt)
+		spinAngle = spinAngle + SPIN_SPEED * dt * math.pi * 2
+
+		-- Movimento circular caotico
+		local chaosX = math.cos(spinAngle * 1.3) * 100
+		local chaosZ = math.sin(spinAngle * 0.7) * 100
+		local chaosY = math.sin(spinAngle * 2) * 50
+
+		return Vector3.new(chaosX, chaosY, chaosZ)
+	end
+
+	-- Funcao para pegar direcao agressiva
+	local function getAggressiveDirection(dir, dist, root, dt)
+		-- Adicionar perturbacao para ser imprevisivel
+		local perturbX = (math.random() - 0.5) * 40
+		local perturbZ = (math.random() - 0.5) * 40
+
+		local lookDir = Vector3.new(dir.X, 0, dir.Z)
+		if lookDir.Magnitude > 0.01 then
+			lookDir = lookDir.Unit
+		else
+			lookDir = root.CFrame.LookVector
+		end
+
+		-- Inclinar para cima ou para baixo baseado na posicao
+		local verticalBias = 0
+		if dir.Y > 0.3 then
+			verticalBias = 20 -- voar para cima se alvo esta alto
+		elseif dir.Y < -0.3 then
+			verticalBias = -20 -- voar para baixo se alvo esta baixo
+		end
+
+		return lookDir, verticalBias + perturbX, perturbZ
 	end
 
 	local function startVehicleTroll(targetPlayer, targetName)
@@ -57,6 +136,9 @@ return function(GH)
 		phaseTimer = 0
 		ramCount = 0
 		lastTargetPos = nil
+		spinAngle = 0
+		chaosMode = false
+		chaosTimer = 0
 
 		GH.Connections.VTroll_Stepped = RunService.RenderStepped:Connect(function(dt)
 			if GH.isClosing or not GH.States.VehicleTroll or not activeTarget or not activeTarget.Parent then
@@ -74,21 +156,37 @@ return function(GH)
 				return
 			end
 
+			-- Verificar se ainda esta no mesmo veiculo
+			if not seat:IsA("VehicleSeat") then
+				cleanupVehicleTroll()
+				GH.ShowToast("Precisa ser VehicleSeat!", GH.Theme.Red, 2)
+				return
+			end
+
 			local targetChar = activeTarget.Character
 			local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
+
+			-- Se o alvo morreu/respawnou, procurar novo alvo ou limpar
 			if not targetRoot then
-				-- Alvo pode ter morrido/respawnou, tentar pegar novo character
-				return
+				local newTarget = findNearestPlayer()
+				if newTarget and newTarget.Character then
+					activeTarget = newTarget
+					targetRoot = newTarget.Character:FindFirstChild("HumanoidRootPart")
+				end
+				if not targetRoot then
+					return
+				end
 			end
 
 			local root = seat.AssemblyRootPart or seat
 			if not root then return end
 
-			-- Desativa controle padrao
-			if seat:IsA("VehicleSeat") then
-				seat.Throttle = 0
-				seat.Steer = 0
-			end
+			-- Armazenar root para cleanup posterior
+			cachedRoot = root
+
+			-- Desativar controle padrao
+			seat.Throttle = 0
+			seat.Steer = 0
 
 			-- BodyVelocity
 			local bv = root:FindFirstChild("GH_VTrollBV")
@@ -106,8 +204,8 @@ return function(GH)
 				bg = Instance.new("BodyGyro")
 				bg.Name = "GH_VTrollBG"
 				bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-				bg.P = 8000
-				bg.D = 500
+				bg.P = 10000 -- mais rigido
+				bg.D = 800 -- mais responsivo
 				bg.CFrame = root.CFrame
 				bg.Parent = root
 			end
@@ -119,50 +217,74 @@ return function(GH)
 			local dist = diff.Magnitude
 			local dir = diff.Unit
 
-			-- Atualizar posicao do alvo para calculo de retreat
+			-- Atualizar posicao do alvo
 			lastTargetPos = targetPos
 
 			-- Zera controle angular
 			root.AssemblyAngularVelocity = Vector3.zero
 
-			-- Maquina de estados: approach -> ram -> retreat -> approach...
+			-- Ativar modo caos a cada N rams
+			if ramCount > 0 and ramCount % CHAOS_INTERVAL == 0 and not chaosMode then
+				chaosMode = true
+				chaosTimer = 0
+				GH.ShowToast("MODO CAOS ATIVADO!", GH.Theme.Red, 2)
+			end
+
+			-- Timer do caos
+			if chaosMode then
+				chaosTimer = chaosTimer + dt
+				if chaosTimer > CHAOS_DURATION then
+					chaosMode = false
+				end
+			end
+
 			phaseTimer = phaseTimer + dt
 
-			if phase == "approach" then
-				-- VOAR em direcao ao alvo em alta velocidade
-				local speed = math.min(APPROACH_SPEED, dist * 2 + 80)
-				bv.Velocity = dir * speed + Vector3.new(0, 5, 0)
+			-- Modo caos: girar e atacar em todas as direcoes
+			if chaosMode then
+				local chaosForce = applyChaosForces(root, bg, dt)
+				bv.Velocity = chaosForce + Vector3.new(0, 30, 0)
 
-				-- Orientar veiculo na direcao do alvo
-				local lookDir = Vector3.new(dir.X, 0, dir.Z)
-				if lookDir.Magnitude > 0.01 then
-					lookDir = lookDir.Unit
-				else
-					lookDir = root.CFrame.LookVector
+				-- Girar o veiculo rapidamente
+				local spinCFrame = root.CFrame * CFrame.Angles(0, math.rad(SPIN_SPEED * 360 * dt), 0)
+				bg.CFrame = spinCFrame
+
+				-- Mesmo no caos, manter perto do alvo
+				if dist > 30 then
+					bv.Velocity = dir * APPROACH_SPEED * 1.5 + chaosForce * 0.3
 				end
+
+				return
+			end
+
+			-- Maquina de estados mais agressiva
+			if phase == "approach" then
+				-- VOAR em direcao ao alvo em velocidade absurda
+				local speed = math.min(APPROACH_SPEED, dist * 3 + 150)
+				local lookDir, perturbX, perturbZ = getAggressiveDirection(dir, dist, root, dt)
+				bv.Velocity = Vector3.new(dir.X * speed + perturbX, speed * 0.1 + 10, dir.Z * speed + perturbZ)
+
+				-- Orientar veiculo na direcao do alvo com inclinacao
 				local pitchAngle = math.asin(math.clamp(dir.Y, -1, 1))
 				bg.CFrame = CFrame.new(root.Position) * CFrame.lookAt(Vector3.zero, lookDir) * CFrame.Angles(pitchAngle, 0, 0)
 
-				-- Se chegou perto o suficiente, atacar!
-				if dist < RAM_DISTANCE + 5 then
+				-- Atacar mais rapidamente
+				if dist < RAM_DISTANCE + 3 then
 					phase = "ram"
 					phaseTimer = 0
 				end
 
 			elseif phase == "ram" then
-				-- EMPURRAR com forca maxima! Velocidade absurda para causar o bug
-				bv.Velocity = dir * RAM_SPEED + Vector3.new(0, -10, 0)
+				-- EMPURRAR com forca MAXIMA! Mais rapido e imprevisivel
+				local lookDir, perturbX, perturbZ = getAggressiveDirection(dir, dist, root, dt)
+				bv.Velocity = Vector3.new(dir.X * RAM_SPEED + perturbX, -20, dir.Z * RAM_SPEED + perturbZ)
 
-				-- Manter orientacao no alvo
-				local lookDir = Vector3.new(dir.X, 0, dir.Z)
-				if lookDir.Magnitude > 0.01 then
-					lookDir = lookDir.Unit
-				else
-					lookDir = root.CFrame.LookVector
-				end
-				bg.CFrame = CFrame.new(root.Position) * CFrame.lookAt(Vector3.zero, lookDir)
+				-- Adicionar girada durante o impacto para mais caos
+				spinAngle = spinAngle + dt * 4
+				local spinOffset = math.sin(spinAngle) * 0.3
+				bg.CFrame = CFrame.new(root.Position) * CFrame.lookAt(Vector3.zero, lookDir) * CFrame.Angles(spinOffset, 0, 0)
 
-				-- Depois de um tempo curto, recuar para bater de novo
+				-- Impacto mais curto e mais violento
 				if phaseTimer > RAM_DURATION then
 					ramCount = ramCount + 1
 					phase = "retreat"
@@ -170,30 +292,26 @@ return function(GH)
 				end
 
 			elseif phase == "retreat" then
-				-- Recuar um pouco para ganhar espaco
+				-- Recuar muito rapido para ganhar espaco
 				local retreatDir = -dir
-				local speed = math.min(RETREAT_SPEED, RETREAT_DISTANCE)
-				bv.Velocity = retreatDir * speed + Vector3.new(0, 15, 0)
+				local speed = math.min(RETREAT_SPEED * 1.5, RETREAT_DISTANCE * 2)
+				local lookDir, perturbX, perturbZ = getAggressiveDirection(-dir, dist, root, dt)
+				bv.Velocity = Vector3.new(retreatDir.X * speed + perturbX * 2, 25, retreatDir.Z * speed + perturbZ * 2)
 
-				-- Olhar na direcao do alvo mesmo recuando
-				local lookDir = Vector3.new(dir.X, 0, dir.Z)
-				if lookDir.Magnitude > 0.01 then
-					lookDir = lookDir.Unit
-				else
-					lookDir = root.CFrame.LookVector
-				end
-				bg.CFrame = CFrame.new(root.Position) * CFrame.lookAt(Vector3.zero, lookDir)
+				-- Sempre olhar para o alvo mesmo recuando
+				local pitchAngle = math.asin(math.clamp(dir.Y, -1, 1))
+				bg.CFrame = CFrame.new(root.Position) * CFrame.lookAt(Vector3.zero, lookDir) * CFrame.Angles(pitchAngle, 0, 0)
 
-				-- Depois de recuar o suficiente, atacar de novo
+				-- Voltar a atacar mais rapidamente
 				if phaseTimer > RETREAT_DURATION or dist > RETREAT_DISTANCE then
 					phase = "approach"
 					phaseTimer = 0
 
-					-- Feedback visual a cada 5 colisoes
-					if ramCount > 0 and ramCount % 5 == 0 then
+					-- Feedback visual mais frequente
+					if ramCount > 0 and ramCount % 3 == 0 then
 						GH.ShowToast(
 							string.format("%s atingido %dx!", activeTarget.Name, ramCount),
-							GH.Theme.Red, 1.5
+							GH.Theme.Red, 1.0
 						)
 					end
 				end
