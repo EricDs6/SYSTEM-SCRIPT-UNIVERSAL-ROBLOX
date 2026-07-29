@@ -1,7 +1,6 @@
 -- =============================================================================
--- COMMAND: VEHICLE TROLL (Atropelo Infinito)
--- Voa o veiculo repetidamente contra um jogador alvo causando bug de colisao
--- Ciclo agressivo: approach → ram contínuo → reposiciona rápido → ram de novo
+-- COMMAND: VEHICLE TROLL (Atropelo Brutal / Caos Contínuo)
+-- Entra direto na posição do alvo com velocidade e massa extrema para colisão.
 -- =============================================================================
 return function(GH)
 	local RunService = GH.Services.RunService
@@ -9,41 +8,12 @@ return function(GH)
 	local LocalPlayer = GH.LocalPlayer
 
 	local activeTarget = nil
-	local phase = "approach"
-	local phaseTimer = 0
-	local ramCount = 0
-	local lastTargetPos = nil
-	local spinAngle = 0
-	local chaosMode = false
-	local chaosTimer = 0
 	local cachedRoot = nil
-
-	-- ==========================================
-	-- CONFIGS AGRESSIVAS
-	-- ==========================================
-	local APPROACH_SPEED = 500      -- velocidade maxima para chegar no alvo
-	local RAM_SPEED = 600           -- velocidade do atropelamento (brutal)
-	local REPOSITION_SPEED = 350    -- velocidade do reposicionamento rapido
-	local SPIN_SPEED = 12           -- rotacoes por segundo durante impacto
-	local RAM_DISTANCE = 6          -- distancia para comecar o ram
-	local REPOSITION_DISTANCE = 10  -- distancia minima antes de re-ram
-	local RAM_DURATION = 0.35       -- duracao do empurrao
-	local REPOSITION_DURATION = 0.12 -- reposicionamento super rapido
-	local CHAOS_INTERVAL = 15       -- a cada N rams, ativa caos total
-	local CHAOS_DURATION = 3.0      -- caos dura mais
 
 	local function cleanupVehicleTroll()
 		activeTarget = nil
-		phase = "approach"
-		phaseTimer = 0
-		ramCount = 0
-		lastTargetPos = nil
-		spinAngle = 0
-		chaosMode = false
-		chaosTimer = 0
 		GH.Disconnect("VTroll_Stepped")
 
-		-- Limpar forcas usando o root armazenado
 		if cachedRoot then
 			local bv = cachedRoot:FindFirstChild("GH_VTrollBV")
 			local bg = cachedRoot:FindFirstChild("GH_VTrollBG")
@@ -70,64 +40,9 @@ return function(GH)
 		end
 	end
 
-	local function findNearestPlayer()
-		local char = LocalPlayer.Character
-		local myRoot = char and char:FindFirstChild("HumanoidRootPart")
-		if not myRoot then return nil end
-
-		local nearest = nil
-		local minDist = 300
-
-		for _, player in ipairs(Players:GetPlayers()) do
-			if player ~= LocalPlayer and player.Character then
-				local root = player.Character:FindFirstChild("HumanoidRootPart")
-				if root then
-					local dist = (root.Position - myRoot.Position).Magnitude
-					if dist < minDist then
-						minDist = dist
-						nearest = player
-					end
-				end
-			end
-		end
-
-		return nearest
-	end
-
-	local function applyChaosForces(root, bg, dt)
-		spinAngle = spinAngle + SPIN_SPEED * dt * math.pi * 2
-
-		local chaosX = math.cos(spinAngle * 1.3) * 150
-		local chaosZ = math.sin(spinAngle * 0.7) * 150
-		local chaosY = math.sin(spinAngle * 2) * 80
-
-		return Vector3.new(chaosX, chaosY, chaosZ)
-	end
-
-	local function getAggressiveDirection(dir, dist, root, dt)
-		local perturbX = (math.random() - 0.5) * 40
-		local perturbZ = (math.random() - 0.5) * 40
-
-		local lookDir = Vector3.new(dir.X, 0, dir.Z)
-		if lookDir.Magnitude > 0.01 then
-			lookDir = lookDir.Unit
-		else
-			lookDir = root.CFrame.LookVector
-		end
-
-		return lookDir, perturbX, perturbZ
-	end
-
 	local function startVehicleTroll(targetPlayer, targetName)
 		cleanupVehicleTroll()
 		activeTarget = targetPlayer
-		phase = "approach"
-		phaseTimer = 0
-		ramCount = 0
-		lastTargetPos = nil
-		spinAngle = 0
-		chaosMode = false
-		chaosTimer = 0
 
 		GH.Connections.VTroll_Stepped = RunService.RenderStepped:Connect(function(dt)
 			if GH.isClosing or not GH.States.VehicleTroll or not activeTarget or not activeTarget.Parent then
@@ -139,212 +54,77 @@ return function(GH)
 			local hum = char and char:FindFirstChildOfClass("Humanoid")
 			local seat = hum and hum.SeatPart
 
-			if not hum or not seat then
+			if not hum or not seat or not seat:IsA("VehicleSeat") then
 				cleanupVehicleTroll()
-				GH.ShowToast("Saiu do veiculo!", GH.Theme.Red, 2)
-				return
-			end
-
-			if not seat:IsA("VehicleSeat") then
-				cleanupVehicleTroll()
-				GH.ShowToast("Precisa ser VehicleSeat!", GH.Theme.Red, 2)
+				if GH.ShowToast then GH.ShowToast("Saiu do veículo!", GH.Theme.Red, 2) end
 				return
 			end
 
 			local targetChar = activeTarget.Character
 			local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
+			local targetHum = targetChar and targetChar:FindFirstChildOfClass("Humanoid")
 
-			if not targetRoot then
-				local newTarget = findNearestPlayer()
-				if newTarget and newTarget.Character then
-					activeTarget = newTarget
-					targetRoot = newTarget.Character:FindFirstChild("HumanoidRootPart")
-				end
-				if not targetRoot then return end
+			if not targetRoot or not targetHum or targetHum.Health <= 0 then
+				cleanupVehicleTroll()
+				if GH.ShowToast then GH.ShowToast("Alvo fora de alcance ou morto!", GH.Theme.Red, 2) end
+				return
 			end
 
 			local root = seat.AssemblyRootPart or seat
 			if not root then return end
-
 			cachedRoot = root
 
-			-- Desativar controle padrao
+			-- Desativa o controle nativo do assento
 			seat.Throttle = 0
 			seat.Steer = 0
 
-			-- BodyVelocity
+			-- Garante física pesada para o veículo passar por cima com impacto
+			pcall(function()
+				root.CustomPhysicalProperties = PhysicalProperties.new(100, 1, 1, 1, 1)
+			end)
+
+			-- Instâncias de força física bruta
 			local bv = root:FindFirstChild("GH_VTrollBV")
 			if not bv then
 				bv = Instance.new("BodyVelocity")
 				bv.Name = "GH_VTrollBV"
 				bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-				bv.Velocity = Vector3.zero
 				bv.Parent = root
 			end
 
-			-- BodyGyro
 			local bg = root:FindFirstChild("GH_VTrollBG")
 			if not bg then
 				bg = Instance.new("BodyGyro")
 				bg.Name = "GH_VTrollBG"
 				bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-				bg.P = 50000   -- rigidez extrema
-				bg.D = 2000    -- resposta instantanea
-				bg.CFrame = root.CFrame
+				bg.P = 100000
+				bg.D = 500
 				bg.Parent = root
 			end
 
-			-- Direcao e distancia ao alvo
-			local myPos = root.Position
+			-- Posição do Alvo (Mira exata no torso/chão dele)
 			local targetPos = targetRoot.Position
+			local myPos = root.Position
 			local diff = targetPos - myPos
 			local dist = diff.Magnitude
-			local dir = diff.Unit
 
-			lastTargetPos = targetPos
+			-- Modo Agressivo: Direção em velocidade cega (800 studs/s)
+			local attackSpeed = 800
+			local dir = (dist > 0.1) and diff.Unit or root.CFrame.LookVector
 
-			-- Zera controle angular
-			pcall(function() root.AssemblyAngularVelocity = Vector3.zero end)
-
-			-- ==========================================
-			-- MODO CAOS (a cada N rams)
-			-- ==========================================
-			if ramCount > 0 and ramCount % CHAOS_INTERVAL == 0 and not chaosMode then
-				chaosMode = true
-				chaosTimer = 0
-				GH.ShowToast("MODO CAOS ATIVADO!", GH.Theme.Red, 2)
+			-- Se estiver muito perto ou passando por dentro, força o veículo na exata posição e projeta a física
+			if dist < 8 then
+				-- Atravessa e arremessa
+				bv.Velocity = dir * attackSpeed + Vector3.new(math.random(-50, 50), math.random(-20, 50), math.random(-50, 50))
+				root.CFrame = CFrame.new(targetPos) * CFrame.Angles(math.rad(math.random(-180, 180)), math.rad(math.random(-180, 180)), 0)
+			else
+				-- Avanço direto sem curvas/flutuação na cabeça
+				bv.Velocity = dir * attackSpeed
+				bg.CFrame = CFrame.new(myPos, targetPos)
 			end
 
-			if chaosMode then
-				chaosTimer = chaosTimer + dt
-				if chaosTimer > CHAOS_DURATION then
-					chaosMode = false
-				end
-			end
-
-			phaseTimer = phaseTimer + dt
-
-			-- ==========================================
-			-- MODO CAOS: girar e atacar em todas as direcoes
-			-- ==========================================
-			if chaosMode then
-				local chaosForce = applyChaosForces(root, bg, dt)
-				local targetY = targetRoot.Position.Y
-				local myY = root.Position.Y
-				local verticalChaos = math.clamp((targetY - myY) * 0.5, -20, 20)
-
-				-- Manter perto do alvo mesmo no caos
-				if dist > 15 then
-					bv.Velocity = dir * APPROACH_SPEED * 1.8 + chaosForce * 0.4
-				else
-					bv.Velocity = chaosForce + Vector3.new(0, verticalChaos, 0)
-				end
-
-				-- Girar o veiculo brutalmente
-				local spinCFrame = root.CFrame * CFrame.Angles(
-					math.rad(SPIN_SPEED * 360 * dt),
-					math.rad(SPIN_SPEED * 540 * dt),
-					math.rad(SPIN_SPEED * 270 * dt)
-				)
-				bg.CFrame = spinCFrame
-
-				return
-			end
-
-			-- ==========================================
-			-- MAQUINA DE ESTADOS AGRESSIVA
-			-- ==========================================
-			if phase == "approach" then
-				-- VOAR em direcao ao alvo em velocidade brutal
-				local speed = math.min(APPROACH_SPEED, dist * 4 + 250)
-				local lookDir, perturbX, perturbZ = getAggressiveDirection(dir, dist, root, dt)
-
-				-- Correcao vertical - manter nivelado
-				local targetY = targetRoot.Position.Y
-				local myY = root.Position.Y
-				local verticalVel = math.clamp((targetY - myY) * 0.6, -20, 20)
-
-				bv.Velocity = Vector3.new(dir.X * speed + perturbX, verticalVel, dir.Z * speed + perturbZ)
-
-				-- Orientar veiculo para o alvo
-				local pitchAngle = math.clamp(dir.Y * 0.15, -0.08, 0.08)
-				bg.CFrame = CFrame.new(root.Position) * CFrame.lookAt(Vector3.zero, lookDir) * CFrame.Angles(pitchAngle, 0, 0)
-
-				-- Muito perto = BATER!
-				if dist < RAM_DISTANCE + 5 then
-					phase = "ram"
-					phaseTimer = 0
-				end
-
-			elseif phase == "ram" then
-				-- ==========================================
-				-- EMPURRAR com forca MAXIMA - ATROPELAR!
-				-- ==========================================
-				local lookDir, perturbX, perturbZ = getAggressiveDirection(dir, dist, root, dt)
-
-				-- Forca vertical para JOGAR o alvo pra cima
-				local targetY = targetRoot.Position.Y
-				local myY = root.Position.Y
-				local verticalRam = math.clamp((targetY - myY) * 0.4 + 15, -5, 25)
-
-				-- Ram com forca ABSURDA
-				bv.Velocity = Vector3.new(
-					dir.X * RAM_SPEED + perturbX,
-					verticalRam,
-					dir.Z * RAM_SPEED + perturbZ
-				)
-
-				-- Girar o veiculo VIOLENTAMENTE durante o impacto
-				spinAngle = spinAngle + dt * SPIN_SPEED * math.pi * 2
-				local spinX = math.sin(spinAngle) * 0.5
-				local spinZ = math.cos(spinAngle * 0.7) * 0.4
-				local spinY = math.sin(spinAngle * 1.5) * 0.6
-				bg.CFrame = CFrame.new(root.Position) * CFrame.lookAt(Vector3.zero, lookDir) * CFrame.Angles(spinX, spinY, spinZ)
-
-				-- Continuar empurrando por mais tempo
-				if phaseTimer > RAM_DURATION then
-					ramCount = ramCount + 1
-					-- Em vez de recuar, reposiciona RAPIDO e bate de novo
-					phase = "reposition"
-					phaseTimer = 0
-
-					if ramCount > 0 and ramCount % 3 == 0 then
-						GH.ShowToast(
-							string.format("%s atingido %dx!", activeTarget.Name, ramCount),
-							GH.Theme.Red, 1.0
-						)
-					end
-				end
-
-			elseif phase == "reposition" then
-				-- ==========================================
-				-- REPOSICIONAR: recuar minimamente e bater de novo
-				-- NAO recua longe - so o necessario para ganhar impulso
-				-- ==========================================
-				local lookDir, perturbX, perturbZ = getAggressiveDirection(-dir, dist, root, dt)
-
-				-- Recuo MINIMO - so o necessario para impulso
-				local repositionSpeed = math.min(REPOSITION_SPEED, REPOSITION_DISTANCE * 3)
-				local targetY = targetRoot.Position.Y
-				local myY = root.Position.Y
-				local verticalRepo = math.clamp((targetY - myY) * 0.3, -10, 10)
-
-				bv.Velocity = Vector3.new(
-					-dir.X * repositionSpeed * 0.4 + perturbX,
-					verticalRepo,
-					-dir.Z * repositionSpeed * 0.4 + perturbZ
-				)
-
-				-- Manter olhando para o alvo
-				local pitchAngle = math.clamp(dir.Y * 0.1, -0.05, 0.05)
-				bg.CFrame = CFrame.new(root.Position) * CFrame.lookAt(Vector3.zero, lookDir) * CFrame.Angles(pitchAngle, 0, 0)
-
-				-- Reposicionamento MUITO curto - voltar a bater rapido
-				if phaseTimer > REPOSITION_DURATION or dist > REPOSITION_DISTANCE then
-					phase = "approach"
-					phaseTimer = 0
-				end
-			end
+			-- Zera forças angulares de torção física
+			root.AssemblyAngularVelocity = Vector3.new(math.random(-500, 500), math.random(-500, 500), math.random(-500, 500))
 		end)
 	end
 
@@ -369,12 +149,11 @@ return function(GH)
 					local seat = myHum and myHum.SeatPart
 					if seat then
 						startVehicleTroll(player, name)
-						GH.ShowToast(
-							string.format(GH.T("toast_vehicletroll_start") or "Atropelando %s!", name),
-							GH.Theme.Red, 2
-						)
+						if GH.ShowToast then
+							GH.ShowToast(string.format(GH.T("toast_vehicletroll_start") or "Atropelando %s!", name), GH.Theme.Red, 2)
+						end
 					else
-						GH.ShowToast("Entre em um veiculo primeiro!", GH.Theme.Red, 2)
+						if GH.ShowToast then GH.ShowToast("Entre em um veículo primeiro!", GH.Theme.Red, 2) end
 					end
 				end
 			end
