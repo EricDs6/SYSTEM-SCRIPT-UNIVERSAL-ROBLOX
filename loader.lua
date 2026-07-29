@@ -213,28 +213,33 @@ local BASE_URL = "https://raw.githubusercontent.com/EricDs6/SYSTEM-SCRIPT-UNIVER
 local LatestCommitHash = "unknown"
 local LatestCommitDate = "unknown"
 local LatestCommitMessage = ""
-do
-	local ok, result = pcall(function()
-		return game:HttpGet("https://api.github.com/repos/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/commits/main?_=" .. tostring(os.clock()):gsub("%.", ""), true)
-	end)
-	if ok and result then
-		local HttpService = game:GetService("HttpService")
-		local data = HttpService:JSONDecode(result)
-		if data and data.sha then
-			LatestCommitHash = string.sub(data.sha, 1, 7)
-			-- Extrair a mensagem do commit (primeira linha apenas)
-			if data.commit and data.commit.message then
-				LatestCommitMessage = data.commit.message:match("([^\n]+)") or data.commit.message
+	do
+		local ok, result = pcall(function()
+			return game:HttpGet("https://api.github.com/repos/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/commits/main?_=" .. tostring(os.clock()):gsub("%.", ""), true)
+		end)
+		if ok and result and result ~= "" then
+			local httpOk, data = pcall(function()
+				return game:GetService("HttpService"):JSONDecode(result)
+			end)
+			if httpOk and data and data.sha then
+				LatestCommitHash = string.sub(data.sha, 1, 7)
+				-- Extrair a mensagem do commit (primeira linha apenas)
+				if data.commit and data.commit.message then
+					LatestCommitMessage = data.commit.message:match("([^\n]+)") or data.commit.message
+				end
+				local dateRaw = data.commit and data.commit.author and data.commit.author.date or ""
+				local year, month, day, hour, min = dateRaw:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+)")
+				if year then
+					LatestCommitDate = string.format("%s/%s/%s %s:%s", day, month, year, hour, min)
+				end
+				UpdateStatus("v" .. LatestCommitHash)
+			else
+				warn("[SYSTEM] Falha ao decodificar resposta do GitHub:", httpOk, data)
 			end
-			local dateRaw = data.commit and data.commit.author and data.commit.author.date or ""
-			local year, month, day, hour, min = dateRaw:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+)")
-			if year then
-				LatestCommitDate = string.format("%s/%s/%s %s:%s", day, month, year, hour, min)
-			end
-			UpdateStatus("v" .. LatestCommitHash)
+		else
+			warn("[SYSTEM] Falha ao buscar commit do GitHub:", ok, result)
 		end
 	end
-end
 
 -- Usar commit hash como cache bust para forcar download fresco
 local CACHE_BUST = LatestCommitHash ~= "unknown" and LatestCommitHash or tostring(os.clock()):gsub("%.", "") .. "_" .. tostring(math.random(100000, 999999))

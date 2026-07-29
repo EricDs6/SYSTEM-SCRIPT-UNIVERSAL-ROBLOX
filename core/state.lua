@@ -17,7 +17,7 @@ GH.Objects = {}
 GH.isClosing = false
 GH.SilentRestore = false
 GH.Stopped = false
-GH.Version = { Hash = "unknown", Date = "unknown" }
+GH.Version = { Hash = "unknown", Date = "unknown", Message = "" }
 
 -- ==========================================
 -- CONNECTION MANAGEMENT
