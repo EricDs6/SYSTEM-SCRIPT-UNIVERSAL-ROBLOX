@@ -1957,8 +1957,6 @@ end)
 					end
 				end
 			end
-				return false
-			end)
 			if ok and result == true then break end
 		end
 	end)
