@@ -189,6 +189,7 @@ local BASE_URL = "https://raw.githubusercontent.com/EricDs6/SYSTEM-SCRIPT-UNIVER
 -- Verificar versao mais recente do GitHub (forca fetch sem cache)
 local LatestCommitHash = "unknown"
 local LatestCommitDate = "unknown"
+local LatestCommitMessage = ""
 do
 	local ok, result = pcall(function()
 		return game:HttpGet("https://api.github.com/repos/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/commits/main?_=" .. tostring(os.clock()):gsub("%.", ""), true)
@@ -198,6 +199,10 @@ do
 		local data = HttpService:JSONDecode(result)
 		if data and data.sha then
 			LatestCommitHash = string.sub(data.sha, 1, 7)
+			-- Extrair a mensagem do commit (primeira linha apenas)
+			if data.commit and data.commit.message then
+				LatestCommitMessage = data.commit.message:match("([^\n]+)") or data.commit.message
+			end
 			local dateRaw = data.commit and data.commit.author and data.commit.author.date or ""
 			local year, month, day, hour, min = dateRaw:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+)")
 			if year then
@@ -372,6 +377,6 @@ animateOut()
 task.wait(0.1)
 
 -- Passar versao para o Core
-Core.Version = { Hash = LatestCommitHash, Date = LatestCommitDate }
+Core.Version = { Hash = LatestCommitHash, Date = LatestCommitDate, Message = LatestCommitMessage }
 
 Core.Initialize()

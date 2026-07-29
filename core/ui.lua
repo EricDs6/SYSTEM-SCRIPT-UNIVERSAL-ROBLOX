@@ -1778,8 +1778,14 @@ end)
 	-- ==========================================
 	task.delay(0.5, function()
 		local v = GH.Version and GH.Version.Hash or ""
+		local m = GH.Version and GH.Version.Message or ""
 		local msg = GH.T("toast_script_loaded")
-		if v and v ~= "unknown" then msg = msg .. " (v" .. v .. ")" end
+		if v and v ~= "unknown" then
+			msg = msg .. " (v" .. v .. ")"
+			if m and m ~= "" then
+				msg = msg .. " - " .. m
+			end
+		end
 		GH.ShowToast(msg, W11.On, 5)
 	end)
 
