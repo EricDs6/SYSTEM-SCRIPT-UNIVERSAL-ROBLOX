@@ -357,17 +357,16 @@ end)
 	-- ==========================================
 	local currentMinimizeKey = Enum.KeyCode.Insert
 
-	local function KeyToShortName(kc)
+	local function KeyToFullName(kc)
 		local s = tostring(kc)
 		s = s:gsub("Enum.KeyCode.", "")
-		if #s <= 3 then return s end
-		return string.sub(s, 1, 3)
+		return s
 	end
 
 	local BindBtn = Instance.new("TextButton")
 	BindBtn.Name = "Bind"
-	BindBtn.Size = UDim2.new(0, BTN_SIZE, 0, BTN_SIZE)
-	BindBtn.Position = UDim2.new(1, -BTN_SIZE * 4 - 26, 0.5, -BTN_SIZE / 2)
+	BindBtn.Size = UDim2.new(0, 50, 0, BTN_SIZE)
+	BindBtn.Position = UDim2.new(1, -BTN_SIZE * 3 - 20 - 56, 0.5, -BTN_SIZE / 2)
 	BindBtn.BackgroundColor3 = W11.Surface
 	BindBtn.Text = ""
 	BindBtn.AutoButtonColor = false
@@ -375,12 +374,15 @@ end)
 	BindBtn.Parent = Topbar
 	Instance.new("UICorner", BindBtn).CornerRadius = UDim.new(0, 4)
 	local BindBtnLabel = Instance.new("TextLabel")
-	BindBtnLabel.Size = UDim2.new(1, 0, 1, 0)
+	BindBtnLabel.Size = UDim2.new(1, -6, 1, 0)
+	BindBtnLabel.Position = UDim2.new(0, 3, 0, 0)
 	BindBtnLabel.BackgroundTransparency = 1
-	BindBtnLabel.Text = KeyToShortName(currentMinimizeKey)
+	BindBtnLabel.Text = KeyToFullName(currentMinimizeKey)
 	BindBtnLabel.TextColor3 = W11.Accent
 	BindBtnLabel.Font = Enum.Font.GothamBold
 	BindBtnLabel.TextSize = 8
+	BindBtnLabel.TextXAlignment = Enum.TextXAlignment.Center
+	BindBtnLabel.TextTruncate = Enum.TextTruncate.AtEnd
 	BindBtnLabel.ZIndex = 5
 	BindBtnLabel.Parent = BindBtn
 
@@ -1680,7 +1682,7 @@ end)
 	local listeningConn = nil
 
 	local function updateBindBtnText()
-		BindBtnLabel.Text = KeyToShortName(currentMinimizeKey)
+		BindBtnLabel.Text = KeyToFullName(currentMinimizeKey)
 	end
 
 	BindBtn.MouseButton1Click:Connect(function()
@@ -1717,7 +1719,7 @@ end)
 					ToggleMinimize()
 				end)
 				updateBindBtnText()
-				GH.ShowToast(string.format(GH.T("toast_bind_changed"), KeyToShortName(currentMinimizeKey)), W11.On, 3)
+				GH.ShowToast(string.format(GH.T("toast_bind_changed"), KeyToFullName(currentMinimizeKey)), W11.On, 3)
 			end
 
 			-- Restaura visual
