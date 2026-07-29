@@ -1,8 +1,7 @@
 -- =============================================================================
--- COMMAND: BRING
--- Puxa um jogador ate voce usando colisao fisica direcional (funciona no FE)
--- Metodo: voa ATRAS do alvo e colide com ele usando SUA velocidade
--- Voce so controla o SEU personagem (Network Ownership) - o servidor processa a colisao
+-- COMMAND: BRING (Metodo Seat - funciona no FE)
+-- Metodo: cria um Seat perto do alvo, faz ele sentar, e move o Seat ate voce
+-- Network Ownership do Seat e transferido para voce quando o alvo senta
 -- =============================================================================
 return function(GH)
 	local Players = GH.Services.Players
@@ -13,41 +12,72 @@ return function(GH)
 	local bringTarget = nil
 	local bringConn = nil
 	local bringDied = nil
+	local bringSeat = nil
 
-	local FLY_SPEED = 250
-	local BEHIND_DIST = 5  -- distancia "atras" do alvo para empurrar
+	local BRING_SPEED = 200
+	local ARRIVAL_DIST = 8
 
 	local function cleanupBring()
 		bringActive = false
 		bringTarget = nil
 		if bringConn then bringConn:Disconnect() bringConn = nil end
 		if bringDied then bringDied:Disconnect() bringDied = nil end
-
-		local char = LocalPlayer.Character
-		if char then
-			local hrp = char:FindFirstChild("HumanoidRootPart")
-			local hum = char:FindFirstChildOfClass("Humanoid")
-			if hrp then
-				hrp:SetAttribute("BringSetup", nil)
-				hrp.AssemblyAngularVelocity = Vector3.zero
-				hrp.AssemblyLinearVelocity = Vector3.zero
-			end
-			if hum then hum.AutoRotate = true end
-			-- Restaurar fisica normal
-			for _, child in pairs(char:GetDescendants()) do
-				if child:IsA("BasePart") then
-					child.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)
-					child.Massless = false
-					child.CanCollide = true
+		if bringSeat and bringSeat.Parent then
+			-- Se o alvo ainda esta sentado, desenterrar
+			local targetChar = bringTarget and bringTarget.Character
+			if targetChar then
+				local targetHum = targetChar:FindFirstChildOfClass("Humanoid")
+				if targetHum and targetHum.Sit then
+					targetHum.Sit = false
 				end
 			end
+			bringSeat:Destroy()
+			bringSeat = nil
 		end
+	end
+
+	local function createSeat(targetChar)
+		-- Criar Seat fisico
+		local seat = Instance.new("Seat")
+		seat.Name = "GH_BringSeat"
+		seat.Size = Vector3.new(4, 1, 4)
+		seat.Material = Enum.Material.ForceField
+		seat.BrickColor = BrickColor.new("Bright blue")
+		seat.Transparency = 0.5
+		seat.Anchored = false
+		seat.CanCollide = false
+		seat.Massless = true
+
+		-- Posicionar no alvo
+		local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
+		if targetRoot then
+			seat.CFrame = targetRoot.CFrame * CFrame.new(0, -3, 0)
+		end
+
+		seat.Parent = workspace
+		return seat
 	end
 
 	local function startBring(targetPlayer, targetName)
 		cleanupBring()
 		bringActive = true
 		bringTarget = targetPlayer
+
+		local targetChar = targetPlayer.Character
+		if not targetChar then
+			GH.ShowToast("Alvo nao encontrado!", GH.Theme.Red, 2)
+			cleanupBring()
+			return
+		end
+
+		-- Criar Seat perto do alvo
+		bringSeat = createSeat(targetChar)
+
+		-- Forcar o alvo a sentar no Seat
+		local targetHum = targetChar:FindFirstChildOfClass("Humanoid")
+		if targetHum then
+			bringSeat:Sit(targetHum)
+		end
 
 		bringConn = RunService.Heartbeat:Connect(function()
 			if not bringActive or not GH.States.Bring then
@@ -56,13 +86,14 @@ return function(GH)
 			end
 
 			local myChar = LocalPlayer.Character
-			local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
 			local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+			local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
 			if not myRoot or not myHum or myHum.Health <= 0 then
 				cleanupBring()
 				return
 			end
 
+			-- Verificar se o alvo ainda existe e esta sentado
 			local targetChar = bringTarget and bringTarget.Character
 			local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
 			local targetHum = targetChar and targetChar:FindFirstChildOfClass("Humanoid")
@@ -72,64 +103,77 @@ return function(GH)
 				return
 			end
 
-			-- Setup fisica: massa alta + CanCollide = true para colisao eficiente
-			if not myRoot:GetAttribute("BringSetup") then
-				for _, child in pairs(myChar:GetDescendants()) do
-					if child:IsA("BasePart") then
-						child.CustomPhysicalProperties = PhysicalProperties.new(80, 0.3, 0.5)
-						child.Massless = false
-						child.CanCollide = true  -- COLISAO ativa para empurrar
-					end
-				end
-				myRoot:SetAttribute("BringSetup", true)
-				myHum.AutoRotate = false
-
-				bringDied = myHum.Died:Connect(function()
-					if bringActive then cleanupBring() end
-				end)
+			-- Verificar se o Seat ainda existe
+			if not bringSeat or not bringSeat.Parent then
+				GH.ShowToast("Seat destruido!", GH.Theme.Red, 2)
+				cleanupBring()
+				return
 			end
 
-			-- Distancia ao alvo
-			local diff = targetRoot.Position - myRoot.Position
+			-- Se o alvo saiu do Seat, sentar de novo
+			if not targetHum.Sit then
+				bringSeat:Sit(targetHum)
+			end
+
+			-- Mover o Seat ate voce
+			local seatPos = bringSeat.Position
+			local myPos = myRoot.Position
+			local diff = myPos - seatPos
 			local dist = diff.Magnitude
-			local dir = diff.Unit
 
-			-- Posicao "atras" do alvo (onde eu quero ficar para empurra-lo pra tras)
-			-- "Atras" = mesma direcao que ele olha pra mim, mas do outro lado
-			local behindPos = targetRoot.Position + dir * BEHIND_DIST + Vector3.new(0, 3, 0)
-			local toBehind = behindPos - myRoot.Position
-			local distBehind = toBehind.Magnitude
+			if dist > ARRIVAL_DIST then
+				-- Mover Seat ate perto de voce
+				local dir = diff.Unit
+				local speed = math.min(BRING_SPEED, dist * 3 + 80)
 
-			if dist > BEHIND_DIST + 5 then
-				-- LONGE: Voar rapido ate ficar atras do alvo
-				local speed = math.min(FLY_SPEED, dist * 2 + 100)
-				myRoot.AssemblyLinearVelocity = toBehind.Unit * speed + Vector3.new(0, 20, 0)
+				-- Usar BodyVelocity para movimento suave
+				local bv = bringSeat:FindFirstChild("GH_BringBV")
+				if not bv then
+					bv = Instance.new("BodyVelocity")
+					bv.Name = "GH_BringBV"
+					bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+					bv.Velocity = Vector3.zero
+					bv.Parent = bringSeat
+				end
+				bv.Velocity = dir * speed + Vector3.new(0, 20, 0)
 
-			elseif distBehind > 2 then
-				-- PERTO MAS NAO ATRAS: Posicionar rapidamente atras
-				myRoot.AssemblyLinearVelocity = toBehind.Unit * FLY_SPEED * 0.8 + Vector3.new(0, 15, 0)
+				-- BodyGyro para orientacao
+				local bg = bringSeat:FindFirstChild("GH_BringBG")
+				if not bg then
+					bg = Instance.new("BodyGyro")
+					bg.Name = "GH_BringBG"
+					bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+					bg.P = 8000
+					bg.D = 500
+					bg.CFrame = bringSeat.CFrame
+					bg.Parent = bringSeat
+				end
 
+				-- Olhar na direcao do alvo
+				local lookDir = Vector3.new(dir.X, 0, dir.Z)
+				if lookDir.Magnitude > 0.01 then
+					bg.CFrame = CFrame.new(seatPos) * CFrame.lookAt(Vector3.zero, lookDir.Unit)
+				end
 			else
-				-- ATRAS DO ALVO: Voar RAPIDO NA DIRECAO DELE (colisao continua!)
-				-- Isso e o que empurra - SUA velocidade colidindo com ele
-				local pushTarget = targetRoot.Position
-				local toTarget = pushTarget - myRoot.Position
+				-- Chegou perto - parar e desenterrar o alvo
+				local bv = bringSeat:FindFirstChild("GH_BringBV")
+				if bv then bv:Destroy() end
+				local bg = bringSeat:FindFirstChild("GH_BringBG")
+				if bg then bg:Destroy() end
 
-				-- Voar com forca maxima ENTRANDO no alvo
-				-- A colisao fisica entre SEU personagem (que voce controla) e o dele empurra ele
-				myRoot.AssemblyLinearVelocity = toTarget.Unit * FLY_SPEED + Vector3.new(0, 25, 0)
+				-- Desenterrar o alvo
+				targetHum.Sit = false
 
-				-- Manter massa alta e colisao ativa
-				myRoot.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-			end
+				-- Destruir o Seat
+				bringSeat:Destroy()
+				bringSeat = nil
 
-			-- Olhar na direcao do alvo
-			local flatDir = Vector3.new(dir.X, 0, dir.Z)
-			if flatDir.Magnitude > 0.01 then
-				myRoot.CFrame = myRoot.CFrame:Lerp(
-					CFrame.new(myRoot.Position) * CFrame.lookAt(Vector3.zero, flatDir.Unit),
-					0.2
-				)
+				-- Toast de sucesso
+				GH.ShowToast(string.format(GH.T("toast_bring_to") or "Puxando %s!", targetName), GH.Theme.On, 2)
+
+				-- Parar o bring
+				bringActive = false
+				if bringConn then bringConn:Disconnect() bringConn = nil end
 			end
 		end)
 	end
@@ -152,7 +196,6 @@ return function(GH)
 				local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
 				if targetRoot and myRoot then
 					startBring(player, name)
-					GH.ShowToast(string.format(GH.T("toast_bring_to") or "Puxando %s!", name), GH.Theme.On, 2)
 				end
 			end
 		end)
