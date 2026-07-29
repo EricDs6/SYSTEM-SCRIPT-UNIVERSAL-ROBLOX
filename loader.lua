@@ -3,6 +3,29 @@
 -- Execute este script no executor para carregar tudo via loadstring
 -- =============================================================================
 --!nonstrict
+
+-- =============================================================================
+-- AUTO-REEXECUÇÃO EM TELEPORT / RELOAD
+-- =============================================================================
+local function SetupAutoExec()
+	local queueOnTeleport = queue_on_teleport
+		or (syn and syn.queue_on_teleport)
+		or (fluxus and fluxus.queue_on_teleport)
+
+	if queueOnTeleport then
+		local scriptURL = "https://raw.githubusercontent.com/EricDs6/SYSTEM-SCRIPT-UNIVERSAL-ROBLOX/main/loader.lua?v=2"
+		queueOnTeleport(string.format([[
+			repeat task.wait() until game:IsLoaded()
+			loadstring(game:HttpGet("%s", true))()
+		]], scriptURL))
+	end
+end
+
+pcall(SetupAutoExec)
+
+-- ==========================================
+-- SERVICES
+-- ==========================================
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
