@@ -151,8 +151,9 @@ return function(GH)
 				local myChar = LocalPlayer.Character
 				local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
 				if targetRoot and myRoot then
-					-- Check if seated in vehicle
-					local seat = myRoot.Parent:FindFirstChildWhichIsA("VehicleSeat") or myRoot.Parent:FindFirstChildWhichIsA("Seat")
+					-- Check if seated in vehicle using Humanoid.SeatPart
+					local myHum = myChar:FindFirstChildOfClass("Humanoid")
+					local seat = myHum and myHum.SeatPart
 					if seat then
 						startGoto(player, name)
 						GH.ShowToast(string.format(GH.T("toast_vehicle_to") or "Indo até %s!", name), GH.Theme.On, 2)
