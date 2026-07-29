@@ -1,6 +1,6 @@
 -- =============================================================================
--- COMMAND: VEHICLE FLY (Orientado à Câmera e Sem Travar)
--- Voar dirigindo veículos. WASD + E/Q (Subir/Descer) + +/- Velocidade
+-- COMMAND: VEHICLE FLY (Estabilizado e Orientado à Câmera)
+-- Voar dirigindo veículos com travamento anti-giro. WASD + E/Q + +/- Velocidade
 -- =============================================================================
 return function(GH)
 	local UserInputService = GH.Services.UserInputService
@@ -24,7 +24,9 @@ return function(GH)
 					if vehicleModel:IsA("Model") then
 						local primary = vehicleModel.PrimaryPart or hum.SeatPart
 						local bv = primary:FindFirstChild("GH_VFlyBV")
+						local bg = primary:FindFirstChild("GH_VFlyBG")
 						if bv then bv:Destroy() end
+						if bg then bg:Destroy() end
 					end
 				end
 			end
@@ -84,10 +86,8 @@ return function(GH)
 			local hum = char and char:FindFirstChildOfClass("Humanoid")
 			local seat = hum and hum.SeatPart
 
-			-- Se o jogador não estiver sentado em um veículo
 			if not hum or not seat then return end
 
-			-- Localiza a parte principal da física do veículo
 			local targetPart = seat.AssemblyRootPart or seat
 			if not targetPart then return end
 
@@ -95,7 +95,7 @@ return function(GH)
 			if not cam then return end
 			local camCF = cam.CFrame
 
-			-- Garante que o BodyVelocity exista na parte raiz do veículo
+			-- 1. Estabilizador de Posição (BodyVelocity)
 			local bv = targetPart:FindFirstChild("GH_VFlyBV")
 			if not bv then
 				bv = Instance.new("BodyVelocity")
@@ -103,6 +103,18 @@ return function(GH)
 				bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
 				bv.Velocity = Vector3.zero
 				bv.Parent = targetPart
+			end
+
+			-- 2. Estabilizador de Rotação (BodyGyro - Impede o carro de capotar ou girar)
+			local bg = targetPart:FindFirstChild("GH_VFlyBG")
+			if not bg then
+				bg = Instance.new("BodyGyro")
+				bg.Name = "GH_VFlyBG"
+				bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+				bg.P = 20000 -- Rigidez de resposta
+				bg.D = 100 -- Amortecimento para não chacoalhar
+				bg.CFrame = targetPart.CFrame
+				bg.Parent = targetPart
 			end
 
 			-- Velocidade base + Boost
@@ -121,19 +133,18 @@ return function(GH)
 			if keys.E then moveDir = moveDir + Vector3.new(0, 1, 0) end
 			if keys.Q then moveDir = moveDir - Vector3.new(0, 1, 0) end
 
-			-- Aplica movimento ou trava o veículo no ar sem perder altura
+			-- Aplica velocidade
 			if moveDir.Magnitude > 0 then
 				bv.Velocity = moveDir.Unit * speed
 			else
 				bv.Velocity = Vector3.zero
 			end
 
-			-- Zera desaceleração natural para não afundar
-			targetPart.AssemblyLinearVelocity = Vector3.zero
+			-- Anula rotações angulares residuais do motor de física do Roblox
 			targetPart.AssemblyAngularVelocity = Vector3.zero
 
-			-- GIRA O VEÍCULO PARA ACOMPANHAR A DIREÇÃO DA CÂMERA
-			targetPart.CFrame = CFrame.new(targetPart.Position, targetPart.Position + camCF.LookVector)
+			-- Força a orientação do veículo a seguir a câmera suavemente através do Gyro
+			bg.CFrame = CFrame.new(targetPart.Position, targetPart.Position + camCF.LookVector)
 		end)
 
 		if GH.ShowToast then
