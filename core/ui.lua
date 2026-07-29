@@ -353,6 +353,45 @@ end)
 	end)
 
 	-- ==========================================
+	-- BIND BUTTON (topbar - rebind minimize key)
+	-- ==========================================
+	local currentMinimizeKey = Enum.KeyCode.Insert
+
+	local function KeyToShortName(kc)
+		local s = tostring(kc)
+		s = s:gsub("Enum.KeyCode.", "")
+		if #s <= 3 then return s end
+		return string.sub(s, 1, 3)
+	end
+
+	local BindBtn = Instance.new("TextButton")
+	BindBtn.Name = "Bind"
+	BindBtn.Size = UDim2.new(0, BTN_SIZE, 0, BTN_SIZE)
+	BindBtn.Position = UDim2.new(1, -BTN_SIZE * 4 - 26, 0.5, -BTN_SIZE / 2)
+	BindBtn.BackgroundColor3 = W11.Surface
+	BindBtn.Text = ""
+	BindBtn.AutoButtonColor = false
+	BindBtn.ZIndex = 4
+	BindBtn.Parent = Topbar
+	Instance.new("UICorner", BindBtn).CornerRadius = UDim.new(0, 4)
+	local BindBtnLabel = Instance.new("TextLabel")
+	BindBtnLabel.Size = UDim2.new(1, 0, 1, 0)
+	BindBtnLabel.BackgroundTransparency = 1
+	BindBtnLabel.Text = KeyToShortName(currentMinimizeKey)
+	BindBtnLabel.TextColor3 = W11.Accent
+	BindBtnLabel.Font = Enum.Font.GothamBold
+	BindBtnLabel.TextSize = 8
+	BindBtnLabel.ZIndex = 5
+	BindBtnLabel.Parent = BindBtn
+
+	BindBtn.MouseEnter:Connect(function()
+		TweenService:Create(BindBtn, GH.TI, { BackgroundColor3 = W11.SurfaceHover }):Play()
+	end)
+	BindBtn.MouseLeave:Connect(function()
+		TweenService:Create(BindBtn, GH.TI, { BackgroundColor3 = W11.Surface }):Play()
+	end)
+
+	-- ==========================================
 	-- SIDEBAR
 	-- ==========================================
 	local Sidebar = Instance.new("Frame")
@@ -1621,7 +1660,7 @@ end)
 	end))
 
 	-- ==========================================
-	-- TOGGLE HOTKEY (RightCtrl) + MINIMIZE BIND (Insert)
+	-- TOGGLE HOTKEY (RightCtrl) + MINIMIZE BIND (dinamico)
 	-- ==========================================
 	local panelVisible = true
 	GH.InputManager.Bind(Enum.KeyCode.RightControl, function()
@@ -1629,9 +1668,63 @@ end)
 		MainFrame.Visible = panelVisible
 	end)
 
-	-- Bind Insert para minimizar/maximizar
-	GH.InputManager.Bind(Enum.KeyCode.Insert, function()
+	-- Bind dinamico para minimizar/maximizar
+	GH.InputManager.Bind(currentMinimizeKey, function()
 		ToggleMinimize()
+	end)
+
+	-- BindBtn: ao clicar, entra em modo listening
+	local isListeningForBind = false
+	local listeningConn = nil
+
+	local function updateBindBtnText()
+		BindBtnLabel.Text = KeyToShortName(currentMinimizeKey)
+	end
+
+	BindBtn.MouseButton1Click:Connect(function()
+		if isListeningForBind then return end
+		isListeningForBind = true
+		GH.ShowToast(GH.T("toast_bind_listening"), W11.Accent, 3)
+
+		-- Anima o botao para indicar listening
+		TweenService:Create(BindBtn, GH.TI, { BackgroundColor3 = W11.Accent }):Play()
+		TweenService:Create(BindBtnLabel, GH.TI, { TextColor3 = Color3.new(1, 1, 1) }):Play()
+
+		-- Pulse animation while listening
+		local pulseConn
+		local pulsing = true
+		pulseConn = RunService.RenderStepped:Connect(function()
+			if not pulsing or not isListeningForBind then return end
+			local t = (math.sin(os.clock() * 6) + 1) / 2
+			BindBtnLabel.TextTransparency = t * 0.5
+		end)
+
+		listeningConn = UserInputService.InputBegan:Connect(function(input, gpe)
+			if gpe then return end
+			if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+
+			-- Cancela com Escape
+			if input.KeyCode == Enum.KeyCode.Escape then
+				GH.ShowToast(GH.T("toast_bind_cancelled"), W11.TextSecondary, 2)
+			else
+				-- Unbind antigo
+				GH.InputManager.Unbind(currentMinimizeKey)
+				-- Bind novo
+				currentMinimizeKey = input.KeyCode
+				GH.InputManager.Bind(currentMinimizeKey, function()
+					ToggleMinimize()
+				end)
+				updateBindBtnText()
+				GH.ShowToast(string.format(GH.T("toast_bind_changed"), KeyToShortName(currentMinimizeKey)), W11.On, 3)
+			end
+
+			-- Restaura visual
+			isListeningForBind = false
+			if listeningConn then listeningConn:Disconnect(); listeningConn = nil end
+			if pulseConn then pulsing = false; pulseConn:Disconnect() end
+			TweenService:Create(BindBtn, GH.TI, { BackgroundColor3 = W11.Surface }):Play()
+			TweenService:Create(BindBtnLabel, GH.TI, { TextColor3 = W11.Accent, TextTransparency = 0 }):Play()
+		end)
 	end)
 
 	-- ==========================================
