@@ -6,10 +6,18 @@ return function(GH)
 	local RunService = GH.Services.RunService
 	local LocalPlayer = GH.LocalPlayer
 
-	local climbSpeed = 20
-	local wallStickOffset = 0.8 -- distancia do personagem para a parede
+	local climbSpeed = 16
+	local wallStickOffset = 0.8
 	local rayDistance = 3.0
-	local rotationSmoothness = 0.3 -- suavidade da rotacao (0-1)
+
+	-- Funcao para projetar um vetor na superficie da parede
+	local function ProjectOnWall(vector, wallNormal)
+		local projected = vector - wallNormal * vector:Dot(wallNormal)
+		if projected.Magnitude < 0.001 then
+			return nil
+		end
+		return projected.Unit
+	end
 
 	-- Funcao para detectar a parede e obter informacoes da superficie
 	local function GetWallInfo(character)
@@ -20,12 +28,12 @@ return function(GH)
 		raycastParams.FilterDescendantsInstances = { character }
 		raycastParams.FilterType = Enum.RaycastFilterType.Exclude
 
-		-- Dispara raios em multiplas direcoes, priorizando a frente
+		-- Dispara raios em 4 direcoes, priorizando a frente
 		local directions = {
-			rootPart.CFrame.LookVector,        -- frente (prioridade)
-			rootPart.CFrame.RightVector,       -- direita
-			-rootPart.CFrame.RightVector,      -- esquerda
-			-rootPart.CFrame.LookVector,       -- tras
+			rootPart.CFrame.LookVector,
+			rootPart.CFrame.RightVector,
+			-rootPart.CFrame.RightVector,
+			-rootPart.CFrame.LookVector,
 		}
 
 		local bestWall = nil
@@ -39,9 +47,9 @@ return function(GH)
 			)
 
 			if rayResult and rayResult.Instance then
-				-- Verifica se a normal indica uma parede (vertical ou quase)
+				-- Verifica se e parede (vertical) e nao chao/teto
 				local normalUpDot = math.abs(rayResult.Normal:Dot(Vector3.yAxis))
-				if normalUpDot < 0.7 then -- nao e chao nem teto
+				if normalUpDot < 0.7 then
 					local dist = (rayResult.Position - rootPart.Position).Magnitude
 					if dist < bestDistance then
 						bestDistance = dist
@@ -58,104 +66,117 @@ return function(GH)
 		return bestWall
 	end
 
-	-- Funcao para projetar um vetor na superficie da parede
-	local function ProjectOnWall(vector, wallNormal)
-		local projected = vector - wallNormal * vector:Dot(wallNormal)
-		if projected.Magnitude < 0.001 then
-			return nil
-		end
-		return projected.Unit
-	end
-
-	-- Funcao para calcular a CFrame do personagem na parede
+	-- Funcao para calcular CFrame na parede
 	local function CalculateWallCFrame(rootPart, wallInfo, moveDirection)
 		local wallNormal = wallInfo.normal
 		local wallPos = wallInfo.position
 
-		-- Vetor "up" do personagem aponta para fora da parede
+		-- Up do personagem aponta para fora da parede
 		local characterUp = wallNormal
 
-		-- Calcula a direcao que o personagem deve olhar na parede
+		-- Direcao que o personagem olha na parede
 		local lookAlongWall
 		if moveDirection.Magnitude > 0.1 then
 			lookAlongWall = ProjectOnWall(moveDirection, wallNormal)
 		end
-
-		-- Fallback: tenta projetar o LookVector do rootPart na parede
 		if not lookAlongWall then
 			lookAlongWall = ProjectOnWall(rootPart.CFrame.LookVector, wallNormal)
 		end
-
-		-- Fallback final: usa eixo Y global
 		if not lookAlongWall then
 			lookAlongWall = ProjectOnWall(Vector3.yAxis, wallNormal)
 		end
-
-		-- Fallback extremo: usa RightVector do rootPart
 		if not lookAlongWall then
 			lookAlongWall = ProjectOnWall(rootPart.CFrame.RightVector, wallNormal)
 		end
-
-		-- Se ainda nil (parede e chao/teto), retorna CFrame atual
 		if not lookAlongWall then
 			return rootPart.CFrame
 		end
 
-		-- Calcula o "right" do personagem
+		-- Right do personagem
 		local characterRight = lookAlongWall:Cross(characterUp)
 		if characterRight.Magnitude < 0.001 then
 			return rootPart.CFrame
 		end
 		characterRight = characterRight.Unit
 
-		-- Recalcula look para garantir ortogonalidade
+		-- Recalcula look para ortogonalidade
 		lookAlongWall = characterUp:Cross(characterRight).Unit
 
-		-- Monta a CFrame: posicao ligeiramente afastada da parede
+		-- Posicao afastada da parede
 		local targetPos = wallPos + wallNormal * wallStickOffset
 
-		-- CFrame com orientacao correta
-		local targetCFrame = CFrame.fromMatrix(
-			targetPos,
-			characterRight,
-			characterUp,
-			-lookAlongWall
-		)
-
-		return targetCFrame
+		return CFrame.fromMatrix(targetPos, characterRight, characterUp, -lookAlongWall)
 	end
 
-	-- Funcao para calcular a direcao de movimento na superficie da parede
-	local function GetWallMoveDirection(rootPart, wallNormal, humanoidMoveDir, camera)
+	-- Funcao para calcular direcao de movimento na superficie da parede
+	local function GetWallMoveDirection(wallNormal, humanoidMoveDir, camera)
 		if humanoidMoveDir.Magnitude < 0.1 then
 			return Vector3.zero
 		end
 
-		-- Pega a direcao relativa a camera
 		local camCF = camera.CFrame
-		local camForward = camCF.LookVector
-		local camRight = camCF.RightVector
+		local wallForward = ProjectOnWall(camCF.LookVector, wallNormal)
+		local wallRight = ProjectOnWall(camCF.RightVector, wallNormal)
 
-		-- Projeta as direcoes da camera na superficie da parede
-		local wallForward = ProjectOnWall(camForward, wallNormal)
-		local wallRight = ProjectOnWall(camRight, wallNormal)
-
-		-- Se projecao falhar, retorna zero
 		if not wallForward or not wallRight then
 			return Vector3.zero
 		end
 
-		-- Combina baseado no input do jogador
 		local inputX = humanoidMoveDir.X
 		local inputZ = humanoidMoveDir.Z
-
-		local moveDir = (wallForward * -inputZ + wallRight * inputX)
+		local moveDir = wallForward * -inputZ + wallRight * inputX
 
 		if moveDir.Magnitude > 0.1 then
 			return moveDir.Unit
 		end
 
 		return Vector3.zero
+	end
+
+	-- Criar constraints para controlar o personagem na parede
+	local function CreateWallConstraints(rootPart)
+		-- Remover constraints antigos se existirem
+		local oldLV = rootPart:FindFirstChild("GH_SpiderLV")
+		local oldAO = rootPart:FindFirstChild("GH_SpiderAO")
+		if oldLV then oldLV:Destroy() end
+		if oldAO then oldAO:Destroy() end
+
+		-- Attachment base
+		local attachment = rootPart:FindFirstChildOfClass("Attachment")
+		if not attachment then
+			attachment = Instance.new("Attachment")
+			attachment.Parent = rootPart
+		end
+
+		-- LinearVelocity - controla movimento
+		local lv = Instance.new("LinearVelocity")
+		lv.Name = "GH_SpiderLV"
+		lv.MaxForce = math.huge
+		lv.Attachment0 = attachment
+		lv.VectorVelocity = Vector3.zero
+		lv.VelocityConstraintMode = Enum.VelocityConstraintMode.Vector
+		lv.Parent = rootPart
+
+		-- AlignOrientation - mantem orientacao na parede
+		local ao = Instance.new("AlignOrientation")
+		ao.Name = "GH_SpiderAO"
+		ao.MaxTorque = math.huge
+		ao.Attachment0 = attachment
+		ao.Mode = Enum.OrientationAlignmentMode.OneAttachment
+		ao.Responsiveness = 30
+		ao.RigidityEnabled = false
+		ao.Parent = rootPart
+
+		return lv, ao
+	end
+
+	-- Remover constraints
+	local function RemoveWallConstraints(rootPart)
+		if not rootPart then return end
+		local lv = rootPart:FindFirstChild("GH_SpiderLV")
+		local ao = rootPart:FindFirstChild("GH_SpiderAO")
+		if lv then lv:Destroy() end
+		if ao then ao:Destroy() end
 	end
 
 	function Cheats_ToggleSpider(state, btn)
@@ -167,8 +188,11 @@ return function(GH)
 			if char then
 				local hrp = char:FindFirstChild("HumanoidRootPart")
 				local hum = char:FindFirstChildWhichIsA("Humanoid")
+
+				-- Remover constraints
+				RemoveWallConstraints(hrp)
+
 				if hrp then
-					-- Zera velocidade para nao voar ao desativar
 					hrp.AssemblyLinearVelocity = Vector3.zero
 					hrp.AssemblyAngularVelocity = Vector3.zero
 					-- Restaurar orientacao vertical
@@ -178,15 +202,36 @@ return function(GH)
 						0
 					)
 				end
+
 				if hum then
+					hum.AutoRotate = true
 					hum.PlatformStand = false
+					hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
 					pcall(function() hum:ChangeState(Enum.HumanoidStateType.GettingUp) end)
 				end
 			end
 			return
 		end
 
-		-- Ativa a verificacao a cada frame
+		local char = LocalPlayer.Character
+		if not char then return end
+		local hrp = char:FindFirstChild("HumanoidRootPart")
+		local hum = char:FindFirstChildWhichIsA("Humanoid")
+		if not hrp or not hum then return end		-- Configurar humanoid para wall-walking
+		hum.AutoRotate = false
+	hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, false)
+
+		-- Criar constraints
+		local lv, ao = CreateWallConstraints(hrp)
+
+		-- Armazenar referencias para acesso na conexao
+		local constraintsData = {
+			lv = lv,
+			ao = ao,
+			onWall = false,
+		}
+
+		-- Loop principal
 		GH.Connections.Spider_Stepped = RunService.Heartbeat:Connect(function()
 			if GH.isClosing then return end
 			if not GH.States.Spider then
@@ -201,62 +246,65 @@ return function(GH)
 			local humanoid = character:FindFirstChildWhichIsA("Humanoid")
 
 			if not rootPart or not humanoid then return end
+			if not lv or not lv.Parent then return end
+			if not ao or not ao.Parent then return end
 
-			-- Detecta parede proxima
+			-- Detectar parede
 			local wallInfo = GetWallInfo(character)
 
 			if wallInfo and humanoid.MoveDirection.Magnitude > 0 then
-				-- Jogador esta contra uma parede e se movendo
-				local camera = workspace.CurrentCamera
-
-				-- Ativa PlatformStand para evitar luta com fisica do humanoid
-				if not humanoid.PlatformStand then
+				-- Na parede - ativar wall-walking
+				if not constraintsData.onWall then
+					constraintsData.onWall = true
 					humanoid.PlatformStand = true
 				end
 
-				-- Calcula direcao de movimento na superficie da parede
+				-- Zerar rotacao residual
+				rootPart.AssemblyAngularVelocity = Vector3.zero
+
+				local camera = workspace.CurrentCamera
+
+				-- Calcular direcao na superficie
 				local wallMoveDir = GetWallMoveDirection(
-					rootPart,
 					wallInfo.normal,
 					humanoid.MoveDirection,
 					camera
 				)
 
-				-- Calcula CFrame alvo na parede
+				-- Calcular CFrame alvo
 				local targetCFrame = CalculateWallCFrame(rootPart, wallInfo, wallMoveDir)
 
-				-- Aplica rotacao suave
-				rootPart.CFrame = rootPart.CFrame:Lerp(targetCFrame, rotationSmoothness)
+				-- Aplicar orientacao via AlignOrientation
+				ao.CFrame = targetCFrame.Rotation
 
-				-- Aplica velocidade de movimento na superficie da parede
+				-- Calcular velocidade na superficie da parede
+				local velocity = Vector3.zero
 				if wallMoveDir.Magnitude > 0.1 then
-					-- Calcula velocidade baseada na direcao de movimento
-					local velocity = wallMoveDir * climbSpeed
-
-					-- Mantem o personagem grudado na parede
-					velocity = velocity + wallInfo.normal * -2
-
-					rootPart.AssemblyLinearVelocity = velocity
-				else
-					-- Apenas mantem grudado na parede quando parado
-					rootPart.AssemblyLinearVelocity = wallInfo.normal * -5
+					-- Movimento na superficie
+					velocity = wallMoveDir * climbSpeed
 				end
+
+				-- Forca para manter grudado na parede (empurra contra a parede)
+				local stickForce = wallInfo.normal * -12
+
+				-- Correcao de posicao (spring para manter distancia da parede)
+				local targetPos = wallInfo.position + wallInfo.normal * wallStickOffset
+				local posError = rootPart.Position - targetPos
+				local springForce = -posError * 15
+
+				-- Aplicar velocidade total via LinearVelocity
+				lv.VectorVelocity = velocity + stickForce + springForce
+
 			else
-				-- Nao esta contra parede
-				if humanoid.PlatformStand then
+				-- Fora da parede
+				if constraintsData.onWall then
+					constraintsData.onWall = false
 					humanoid.PlatformStand = false
 				end
 
-				-- Verifica se ainda esta na parede (pode estar subindo)
-				if rootPart.CFrame.UpVector:Dot(Vector3.new(0, 1, 0)) < 0.5 then
-					-- Esta na parede, mantem gravidade suave
-					local vel = rootPart.AssemblyLinearVelocity
-					rootPart.AssemblyLinearVelocity = Vector3.new(
-						vel.X,
-						math.max(vel.Y, -10),
-						vel.Z
-					)
-				end
+				-- Parar movimento
+				lv.VectorVelocity = Vector3.zero
+				ao.CFrame = rootPart.CFrame.Rotation
 			end
 		end)
 
@@ -267,12 +315,6 @@ return function(GH)
 	GH.Connections.Spider_CharAdded = LocalPlayer.CharacterAdded:Connect(function()
 		if GH.States.Spider then
 			task.wait(0.5)
-			-- Resetar PlatformStand antes de reativar
-			local char = LocalPlayer.Character
-			if char then
-				local hum = char:FindFirstChildWhichIsA("Humanoid")
-				if hum then hum.PlatformStand = false end
-			end
 			GH.States.Spider = false
 			Cheats_ToggleSpider(false, nil)
 			task.wait(0.5)
