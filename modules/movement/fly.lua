@@ -1,5 +1,5 @@
 -- =============================================================================
--- COMMAND: FLY (Profissional - Orientado à Câmera)
+-- COMMAND: FLY (Profissional - Orientado à Câmera com Trava de Altura)
 -- Voar livremente com WASD + Space/Ctrl. Shift = Boost | +/- = Velocidade
 -- =============================================================================
 return function(GH)
@@ -26,11 +26,17 @@ return function(GH)
 		GH.Disconnect("Fly_Scroll")
 		clearNoclip()
 
-		if not state then
-			local char = LocalPlayer.Character
-			local hrp = char and char:FindFirstChild("HumanoidRootPart")
-			local hum = char and char:FindFirstChildOfClass("Humanoid")
+		local char = LocalPlayer.Character
+		local hrp = char and char:FindFirstChild("HumanoidRootPart")
+		local hum = char and char:FindFirstChildOfClass("Humanoid")
 
+		-- Limpa instâncias de força de voo anteriores
+		if hrp then
+			local oldBv = hrp:FindFirstChild("GH_FlyBV")
+			if oldBv then oldBv:Destroy() end
+		end
+
+		if not state then
 			if hrp then
 				hrp.AssemblyLinearVelocity = Vector3.zero
 				hrp.AssemblyAngularVelocity = Vector3.zero
@@ -47,17 +53,21 @@ return function(GH)
 			return
 		end
 
-		local char = LocalPlayer.Character
-		local hum = char and char:FindFirstChildOfClass("Humanoid")
-		local hrp = char and char:FindFirstChild("HumanoidRootPart")
 		if not hum or not hrp then return end
 
 		for k in pairs(keys) do keys[k] = false end
 
 		hum.AutoRotate = false
-		hum.PlatformStand = true -- Libera a rotação do corpo nos 3 eixos sem o Roblox forçar ficar de pé
+		hum.PlatformStand = true
 
-		-- Captura de entradas
+		-- Cria um BodyVelocity para travar a gravidade e flutuar com estabilidade total
+		local bv = Instance.new("BodyVelocity")
+		bv.Name = "GH_FlyBV"
+		bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+		bv.Velocity = Vector3.zero
+		bv.Parent = hrp
+
+		-- Captura de entradas (Began)
 		GH.Connections.Fly_InputBegan = UserInputService.InputBegan:Connect(function(input, gpe)
 			if gpe then return end
 			if not GH.States.Fly then return end
@@ -67,6 +77,7 @@ return function(GH)
 			end
 		end)
 
+		-- Captura de entradas (Ended)
 		GH.Connections.Fly_InputEnded = UserInputService.InputEnded:Connect(function(input)
 			local name = input.KeyCode.Name
 			if keys[name] ~= nil then
@@ -87,7 +98,7 @@ return function(GH)
 			end
 		end)
 
-		-- Loop Principal (Orientação de Câmera e Teclado)
+		-- Loop Principal (RenderStepped)
 		GH.Connections.Fly_Stepped = RunService.RenderStepped:Connect(function(dt)
 			if GH.isClosing then return end
 
@@ -102,6 +113,16 @@ return function(GH)
 				GH.Disconnect("Fly_Scroll")
 				clearNoclip()
 				return
+			end
+
+			-- Garante que o BodyVelocity ainda está ativo na HRP
+			local currentBv = myHrp:FindFirstChild("GH_FlyBV")
+			if not currentBv then
+				currentBv = Instance.new("BodyVelocity")
+				currentBv.Name = "GH_FlyBV"
+				currentBv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+				currentBv.Velocity = Vector3.zero
+				currentBv.Parent = myHrp
 			end
 
 			myHum.PlatformStand = true
@@ -126,19 +147,23 @@ return function(GH)
 			if keys.Space then moveDir = moveDir + Vector3.new(0, 1, 0) end
 			if keys.LeftControl then moveDir = moveDir - Vector3.new(0, 1, 0) end
 
-			-- Normalização do vetor para movimento uniforme
+			-- Aplica velocidade ou congela a posição no ar
 			if moveDir.Magnitude > 0 then
 				moveDir = moveDir.Unit * currentSpeed
+				currentBv.Velocity = moveDir
+			else
+				-- Quando nenhuma tecla está apertada, anula a velocidade para flutuar sem afundar
+				currentBv.Velocity = Vector3.zero
 			end
 
-			-- Aplica velocidade e ZERA forças angulares para não derivar
-			myHrp.AssemblyLinearVelocity = moveDir
+			-- Zera velocidades da física nativa
+			myHrp.AssemblyLinearVelocity = Vector3.zero
 			myHrp.AssemblyAngularVelocity = Vector3.zero
 
-			-- GIRA O CORPO PARA SEGUIR A CÂMERA EM TEMPO REAL
+			-- Atualiza a orientação do avatar para olhar diretamente para onde a câmera aponta
 			myHrp.CFrame = CFrame.new(myHrp.Position, myHrp.Position + camCF.LookVector)
 
-			-- Sistema de Noclip dinâmico durante o voo
+			-- Sistema de Noclip durante o voo
 			for p, _ in pairs(noclipParts) do
 				if not p or not p.Parent then
 					noclipParts[p] = nil
