@@ -8,30 +8,20 @@ return function(GH)
 	local LocalPlayer = GH.LocalPlayer
 
 	local keys = { W = false, A = false, S = false, D = false, E = false, Q = false, LeftShift = false }
-	local originalCameraType = nil
 
 	-- ===== CONFIG DO MODO AVIÃO =====
-	local maxPitchDeg = 45      -- inclinação máxima do nariz pra cima/baixo
-	local maxRollDeg = 30       -- inclinação lateral máxima nas curvas
-	local turnRollFactor = 25   -- quanto de roll por unidade de giro horizontal
-	local orientLerpAlpha = 0.12 -- suavização da rotação (menor = mais suave/avião pesado)
+	local maxPitchDeg = 45       -- inclinação máxima do nariz pra cima/baixo
+	local maxRollDeg = 30        -- inclinação lateral máxima nas curvas
+	local turnRollFactor = 25    -- quanto de roll por unidade de giro horizontal
+	local orientLerpAlpha = 0.12 -- suavização da rotação (efeito avião pesado)
 
-	local currentYaw = 0   -- ângulo horizontal acumulado do veículo
-	local lastYaw = 0      -- yaw do frame anterior, pra medir a taxa de giro (-> roll)
+	local lastYaw = 0 -- yaw do frame anterior pra medir a taxa de giro (-> roll)
 
 	function Cheats_ToggleVehicleFly(state, btn)
 		GH.Disconnect("VFly_Stepped")
 		GH.Disconnect("VFly_InputBegan")
 		GH.Disconnect("VFly_InputEnded")
 		GH.Disconnect("VFly_Scroll")
-
-		local function restoreCamera()
-			local cam = workspace.CurrentCamera
-			if cam and originalCameraType then
-				cam.CameraType = originalCameraType
-				originalCameraType = nil
-			end
-		end
 
 		local function clearVehiclePhysics()
 			local char = LocalPlayer.Character
@@ -52,7 +42,6 @@ return function(GH)
 					end
 				end
 			end
-			restoreCamera()
 		end
 
 		if not state then
@@ -62,9 +51,9 @@ return function(GH)
 		end
 
 		for k in pairs(keys) do keys[k] = false end
-		currentYaw = 0
 		lastYaw = 0
 
+		-- Captura de Entradas (InputBegan)
 		GH.Connections.VFly_InputBegan = UserInputService.InputBegan:Connect(function(input, gpe)
 			if gpe then return end
 			if not GH.States.VehicleFly then return end
@@ -74,6 +63,7 @@ return function(GH)
 			end
 		end)
 
+		-- Captura de Entradas (InputEnded)
 		GH.Connections.VFly_InputEnded = UserInputService.InputEnded:Connect(function(input)
 			local name = input.KeyCode.Name
 			if keys[name] ~= nil then
@@ -81,6 +71,7 @@ return function(GH)
 			end
 		end)
 
+		-- Teclas +/-: ajustar velocidade
 		GH.Connections.VFly_Scroll = UserInputService.InputBegan:Connect(function(input, gpe)
 			if gpe then return end
 			if not GH.States.VehicleFly then return end
@@ -93,6 +84,7 @@ return function(GH)
 			end
 		end)
 
+		-- Loop Principal (RenderStepped)
 		GH.Connections.VFly_Stepped = RunService.RenderStepped:Connect(function(dt)
 			if GH.isClosing or not GH.States.VehicleFly then
 				clearVehiclePhysics()
@@ -114,21 +106,15 @@ return function(GH)
 
 			local cam = workspace.CurrentCamera
 			if not cam then return end
-
-			if cam.CameraType ~= Enum.CameraType.Scriptable then
-				if not originalCameraType then
-					originalCameraType = cam.CameraType
-				end
-				cam.CameraType = Enum.CameraType.Scriptable
-			end
-
 			local camCF = cam.CFrame
 
+			-- Desativa controle padrão das rodas enquanto voa
 			if seat:IsA("VehicleSeat") then
 				seat.Throttle = 0
 				seat.Steer = 0
 			end
 
+			-- BodyVelocity (Flutuação e Movimento)
 			local bv = targetPart:FindFirstChild("GH_VFlyBV")
 			if not bv then
 				bv = Instance.new("BodyVelocity")
@@ -138,6 +124,7 @@ return function(GH)
 				bv.Parent = targetPart
 			end
 
+			-- BodyGyro (Controle de Orientação do Avião)
 			local bg = targetPart:FindFirstChild("GH_VFlyBG")
 			if not bg then
 				bg = Instance.new("BodyGyro")
@@ -149,11 +136,13 @@ return function(GH)
 				bg.Parent = targetPart
 			end
 
+			-- Velocidade base + Boost
 			local speed = GH.FlySpeed or 50
 			if keys.LeftShift then
 				speed = speed * 2
 			end
 
+			-- Vetores de direção tridimensional baseados na Câmera
 			local moveDir = Vector3.zero
 			if keys.W then moveDir = moveDir + camCF.LookVector end
 			if keys.S then moveDir = moveDir - camCF.LookVector end
@@ -168,11 +157,12 @@ return function(GH)
 				bv.Velocity = Vector3.zero
 			end
 
+			-- Zera desaceleração natural para estabilizar
 			targetPart.AssemblyAngularVelocity = Vector3.zero
 
-			-- ===== MODO AVIÃO: pitch livre (limitado) + roll nas curvas =====
+			-- ===== MODO AVIÃO: Pitch livre + Roll nas curvas =====
 
-			-- Yaw: direção horizontal da câmera (sempre nivelada no eixo horizontal)
+			-- Yaw: Direção horizontal da câmera
 			local flatLook = Vector3.new(camCF.LookVector.X, 0, camCF.LookVector.Z)
 			if flatLook.Magnitude > 0.01 then
 				flatLook = flatLook.Unit
@@ -181,14 +171,13 @@ return function(GH)
 			end
 			local yaw = math.atan2(-flatLook.X, -flatLook.Z)
 
-			-- Pitch: inclinação vertical da câmera, limitada pra não perder controle
+			-- Pitch: Inclinação vertical limitada
 			local pitch = math.asin(math.clamp(camCF.LookVector.Y, -1, 1))
 			local maxPitchRad = math.rad(maxPitchDeg)
 			pitch = math.clamp(pitch, -maxPitchRad, maxPitchRad)
 
-			-- Roll: baseado na taxa de giro horizontal (yaw), simula inclinar nas curvas
+			-- Roll: Inclinação lateral proporcional ao giro horizontal
 			local yawDelta = yaw - lastYaw
-			-- normaliza pra evitar salto ao cruzar +-180°
 			if yawDelta > math.pi then yawDelta -= 2 * math.pi end
 			if yawDelta < -math.pi then yawDelta += 2 * math.pi end
 			local yawRate = (dt > 0) and (yawDelta / dt) or 0
@@ -196,14 +185,12 @@ return function(GH)
 
 			local rollRad = math.clamp(-yawRate * math.rad(turnRollFactor) * 0.1, -math.rad(maxRollDeg), math.rad(maxRollDeg))
 
-			-- Monta a CFrame final: yaw (Y) -> pitch (X) -> roll (Z), na ordem certa pra
-			-- parecer avião (rotação intrínseca)
+			-- Monta o CFrame Alvo com suavização Lerp
 			local targetCFrame = CFrame.new(targetPart.Position)
 				* CFrame.Angles(0, yaw, 0)
 				* CFrame.Angles(pitch, 0, 0)
 				* CFrame.Angles(0, 0, rollRad)
 
-			-- Suaviza a orientação pra não ficar travada/robótica (efeito "avião pesado")
 			bg.CFrame = bg.CFrame:Lerp(targetCFrame, orientLerpAlpha)
 		end)
 
