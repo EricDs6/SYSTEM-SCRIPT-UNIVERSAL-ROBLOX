@@ -1885,14 +1885,20 @@ end)
 	-- TOAST DE CARREGAMENTO
 	-- ==========================================
 	task.delay(0.5, function()
-		local v = GH.Version and GH.Version.Hash or ""
+		local v = GH.Version and GH.Version.Hash or "unknown"
 		local m = GH.Version and GH.Version.Message or ""
+		local d = GH.Version and GH.Version.Date or ""
 		local msg = GH.T("toast_script_loaded")
-		if v and v ~= "" and v ~= "unknown" then
+		if v and v ~= "unknown" and v ~= "" then
 			msg = msg .. " (v" .. v .. ")"
 			if m and m ~= "" then
 				msg = msg .. " - " .. m
 			end
+			if d and d ~= "unknown" and d ~= "" then
+				msg = msg .. " [" .. d .. "]"
+			end
+		else
+			msg = msg .. " (offline)"
 		end
 		GH.ShowToast(msg, W11.On, 5)
 	end)
@@ -1906,7 +1912,7 @@ end)
 	-- AUTO-UPDATE CHECKER
 	-- ==========================================
 	task.spawn(function()
-		task.wait(30)
+		task.wait(10)
 		local currentHash = GH.Version and GH.Version.Hash or "unknown"
 
 		while not GH.Stopped do
@@ -1930,6 +1936,12 @@ end)
 					if data.commit and data.commit.message then
 						commitMsg = data.commit.message:match("([^\n]+)") or data.commit.message
 					end
+					local dateRaw = data.commit and data.commit.author and data.commit.author.date or ""
+					local year, month, day, hour, min = dateRaw:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+)")
+					local dateStr = ""
+					if year then
+						dateStr = string.format(" [%s/%s/%s %s:%s]", day, month, year, hour, min)
+					end
 					-- Se nao tinha hash antes, agora temos
 					if currentHash == "unknown" or currentHash == "" then
 						currentHash = latestHash
@@ -1937,16 +1949,21 @@ end)
 						if commitMsg ~= "" then
 							GH.Version.Message = commitMsg
 						end
+						if year then
+							GH.Version.Date = string.format("%s/%s/%s %s:%s", day, month, year, hour, min)
+						end
 						local msg = GH.T("toast_script_loaded") .. " (v" .. latestHash .. ")"
 						if commitMsg ~= "" then
 							msg = msg .. " - " .. commitMsg
 						end
+						if dateStr ~= "" then msg = msg .. dateStr end
 						GH.ShowToast(msg, GH.Theme.On, 5)
 					elseif latestHash ~= currentHash then
 						local msg = GH.T("toast_new_update") .. " (v" .. latestHash .. ")"
 						if commitMsg ~= "" then
 							msg = msg .. " - " .. commitMsg
 						end
+						if dateStr ~= "" then msg = msg .. dateStr end
 						GH.ShowToast(
 							msg,
 							Color3.fromRGB(255, 180, 0),
@@ -1957,7 +1974,6 @@ end)
 					end
 				end
 			end
-			if ok and result == true then break end
 		end
 	end)
 end
