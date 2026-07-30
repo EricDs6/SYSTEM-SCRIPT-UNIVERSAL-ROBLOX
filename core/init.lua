@@ -132,6 +132,10 @@ if loadPicker then loadPicker(GH, services) end
 local loadUtils = load_module("core/utils.lua")
 if loadUtils then loadUtils(GH, services) end
 
+-- 6.1 Persistence (save/load config — precisa rodar antes dos modulos)
+local loadPersistence = load_module("core/persistence.lua")
+if loadPersistence then loadPersistence(GH, services) end
+
 -- 7. Stats/Firebase + UpdateLiveIndicators
 local loadStats = load_module("core/stats.lua")
 if loadStats then loadStats(GH, services) end

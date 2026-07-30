@@ -1216,19 +1216,21 @@ end)
 			IsA = function(_, className) return frame:IsA(className) end,
 		}
 
-		frame.MouseButton1Click:Connect(function()
-			local newState = not GH.States[name]
-			setToggle(newState)
-			if not GH.SilentRestore then
-				local toastMsg = displayName .. (newState and (" " .. GH.T("toast_activated")) or (" " .. GH.T("toast_deactivated")))
-				GH.ShowToast(toastMsg, newState and W11.On or W11.TextSecondary, 2)
-			end
-			pcall(callback, newState, proxy)
-		end)
+	frame.MouseButton1Click:Connect(function()
+		local newState = not GH.States[name]
+		setToggle(newState)
+		if not GH.SilentRestore then
+			local toastMsg = displayName .. (newState and (" " .. GH.T("toast_activated")) or (" " .. GH.T("toast_deactivated")))
+			GH.ShowToast(toastMsg, newState and W11.On or W11.TextSecondary, 2)
+		end
+		pcall(callback, newState, proxy)
+		-- Auto-save config after toggle change
+		if GH.AutoSave then GH.AutoSave() end
+	end)
 
-		GH.Buttons[name] = proxy
-		GH.Callbacks[name] = callback
-	end
+	GH.Buttons[name] = proxy
+	GH.Callbacks[name] = callback
+end
 
 	-- ==========================================
 	-- SETTINGS UI HELPERS
@@ -1538,18 +1540,92 @@ end)
 	end)
 
 	stSection(GH.T("settings_config"))
-	stSlider(GH.T("settings_fly_speed"), 5, 200, 20, function(v) GH.FlySpeed = v end)
-	stSlider(GH.T("settings_noclip_radius"), 1, 20, 3.8, function(v) GH.Settings.NoClipRadius = v end)
+	stSlider(GH.T("settings_fly_speed"), 5, 200, 20, function(v) GH.FlySpeed = v; if GH.AutoSave then GH.AutoSave() end end)
+	stSlider(GH.T("settings_noclip_radius"), 1, 20, 3.8, function(v) GH.Settings.NoClipRadius = v; if GH.AutoSave then GH.AutoSave() end end)
 
 	stSection("HITBOX")
-	stSlider(GH.T("settings_hitbox_size"), 5, 50, 15, function(v) GH.Settings.HitboxSize = v end)
+	stSlider(GH.T("settings_hitbox_size"), 5, 50, 15, function(v) GH.Settings.HitboxSize = v; if GH.AutoSave then GH.AutoSave() end end)
 
 	stSection("ESP")
-	stToggle(GH.T("settings_show_tag"), true, function(v) GH.Settings.ESPShowTag = v end)
-	stToggle(GH.T("settings_show_name"), true, function(v) GH.Settings.ESPShowName = v end)
-	stToggle(GH.T("settings_show_distance"), true, function(v) GH.Settings.ESPShowDistance = v end)
-	stToggle(GH.T("settings_show_health"), true, function(v) GH.Settings.ESPShowHealth = v end)
-	stSlider(GH.T("settings_esp_max_distance"), 50, 2000, 300, function(v) GH.Settings.ESPMaxDistance = v end)
+	stToggle(GH.T("settings_show_tag"), true, function(v) GH.Settings.ESPShowTag = v; if GH.AutoSave then GH.AutoSave() end end)
+	stToggle(GH.T("settings_show_name"), true, function(v) GH.Settings.ESPShowName = v; if GH.AutoSave then GH.AutoSave() end end)
+	stToggle(GH.T("settings_show_distance"), true, function(v) GH.Settings.ESPShowDistance = v; if GH.AutoSave then GH.AutoSave() end end)
+	stToggle(GH.T("settings_show_health"), true, function(v) GH.Settings.ESPShowHealth = v; if GH.AutoSave then GH.AutoSave() end end)
+	stSlider(GH.T("settings_esp_max_distance"), 50, 2000, 300, function(v) GH.Settings.ESPMaxDistance = v; if GH.AutoSave then GH.AutoSave() end end)
+
+	-- ==========================================
+	-- PERSISTENCE (Auto-save config)
+	-- ==========================================
+	stSection(GH.T("persistence_section") .. " / CONFIG")
+
+	-- Save Config Button
+	stOrder += 1
+	local saveFrame = Instance.new("Frame")
+	saveFrame.Name = "STPersistence_Save"
+	saveFrame.Size = UDim2.new(1, 0, 0, 26)
+	saveFrame.BackgroundColor3 = Color3.fromRGB(0, 120, 212)
+	saveFrame.LayoutOrder = stOrder
+	saveFrame.ZIndex = 3
+	saveFrame.Parent = SettingsContainer
+	Instance.new("UICorner", saveFrame).CornerRadius = UDim.new(0, 4)
+	local saveBtn = Instance.new("TextButton")
+	saveBtn.Size = UDim2.new(1, 0, 1, 0)
+	saveBtn.BackgroundTransparency = 1
+	saveBtn.Text = GH.T("persistence_save")
+	saveBtn.TextColor3 = Color3.new(1, 1, 1)
+	saveBtn.Font = FontBold
+	saveBtn.TextSize = 11
+	saveBtn.ZIndex = 4
+	saveBtn.Parent = saveFrame
+	saveBtn.MouseButton1Click:Connect(function()
+		if GH.SaveConfig then
+			local ok = GH.SaveConfig()
+			if ok then
+				GH.ShowToast(GH.T("persistence_saved"), Color3.fromRGB(80, 200, 120), 2)
+			end
+		end
+	end)
+
+	-- Reset Config Button
+	stOrder += 1
+	local resetFrame = Instance.new("Frame")
+	resetFrame.Name = "STPersistence_Reset"
+	resetFrame.Size = UDim2.new(1, 0, 0, 26)
+	resetFrame.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+	resetFrame.LayoutOrder = stOrder
+	resetFrame.ZIndex = 3
+	resetFrame.Parent = SettingsContainer
+	Instance.new("UICorner", resetFrame).CornerRadius = UDim.new(0, 4)
+	local resetBtn = Instance.new("TextButton")
+	resetBtn.Size = UDim2.new(1, 0, 1, 0)
+	resetBtn.BackgroundTransparency = 1
+	resetBtn.Text = GH.T("persistence_reset")
+	resetBtn.TextColor3 = Color3.new(1, 1, 1)
+	resetBtn.Font = FontBold
+	resetBtn.TextSize = 11
+	resetBtn.ZIndex = 4
+	resetBtn.Parent = resetFrame
+	resetBtn.MouseButton1Click:Connect(function()
+		if GH.DeleteConfig then
+			GH.DeleteConfig()
+			GH.ShowToast(GH.T("persistence_reset_done"), Color3.fromRGB(255, 80, 80), 2)
+		end
+	end)
+
+	-- Auto-save info text
+	stOrder += 1
+	local infoLabel = Instance.new("TextLabel")
+	infoLabel.Name = "STPersistence_Info"
+	infoLabel.Size = UDim2.new(1, 0, 0, 20)
+	infoLabel.BackgroundTransparency = 1
+	infoLabel.Text = GH.T("persistence_auto")
+	infoLabel.TextColor3 = Color3.fromRGB(140, 140, 155)
+	infoLabel.Font = Font
+	infoLabel.TextSize = 8
+	infoLabel.TextWrapped = true
+	infoLabel.LayoutOrder = stOrder
+	infoLabel.ZIndex = 3
+	infoLabel.Parent = SettingsContainer
 
 	-- ==========================================
 	-- FECHAR — Windows 11 style
@@ -1973,6 +2049,18 @@ end)
 						return true
 					end
 				end
+			end
+		end
+	end)
+
+	-- ==========================================
+	-- RESTORE SAVED TOGGLE STATES (persistence)
+	-- ==========================================
+	task.delay(0.5, function()
+		if GH.RestoreToggles then
+			GH.RestoreToggles()
+			if GH._ConfigLoaded then
+				GH.ShowToast(GH.T("persistence_load"), Color3.fromRGB(80, 200, 120), 3)
 			end
 		end
 	end)

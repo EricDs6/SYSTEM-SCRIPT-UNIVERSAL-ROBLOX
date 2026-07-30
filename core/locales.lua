@@ -284,6 +284,14 @@ GH.Locales = {
 		load_loading_core = "Carregando Core...",
 		load_error_core = "Erro Critico no Core!",
 		load_ready = "Tudo pronto! Iniciando...",
+		-- Persistence
+		persistence_section = "Persistencia",
+		persistence_save = "Salvar Config",
+		persistence_saved = "Config salva!",
+		persistence_load = "Configuracoes salvas restauradas!",
+		persistence_reset = "Resetar Config",
+		persistence_reset_done = "Config resetada!",
+		persistence_auto = "Auto-save: Quando voce muda qualquer configuracao, ela salva automaticamente",
 	},
 	en = {
 		-- Settings
@@ -565,6 +573,14 @@ GH.Locales = {
 		load_loading_core = "Loading Core...",
 		load_error_core = "Critical Core Error!",
 		load_ready = "All ready! Starting...",
+		-- Persistence
+		persistence_section = "Persistence",
+		persistence_save = "Save Config",
+		persistence_saved = "Config saved!",
+		persistence_load = "Saved settings restored!",
+		persistence_reset = "Reset Config",
+		persistence_reset_done = "Config reset!",
+		persistence_auto = "Auto-save: When you change any setting, it saves automatically",
 	},
 	es = {
 		-- Settings
@@ -846,6 +862,14 @@ GH.Locales = {
 		load_loading_core = "Cargando Core...",
 		load_error_core = "Error Critico en Core!",
 		load_ready = "Todo listo! Iniciando...",
+		-- Persistence
+		persistence_section = "Persistencia",
+		persistence_save = "Guardar Config",
+		persistence_saved = "Config guardada!",
+		persistence_load = "Configuraciones guardadas restauradas!",
+		persistence_reset = "Resetear Config",
+		persistence_reset_done = "Config reseteada!",
+		persistence_auto = "Auto-save: Cuando cambias cualquier configuracion, se guarda automaticamente",
 	},
 }
 
