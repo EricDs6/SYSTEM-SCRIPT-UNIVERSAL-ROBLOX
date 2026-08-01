@@ -29,6 +29,9 @@ local function scanAllPlayers()
 					local vehicleModel = hum.SeatPart:FindFirstAncestorOfClass("Model")
 					vehicleName = vehicleModel and vehicleModel.Name or nil
 				end
+							-- Time
+				local pTeam = player.Team
+				local pTeamColor = player.TeamColor
 				table.insert(result, {
 					player = player,
 					name = player.DisplayName,
@@ -37,6 +40,8 @@ local function scanAllPlayers()
 					inVehicle = inVehicle,
 					vehicleName = vehicleName,
 					position = rootPart.Position,
+					team = pTeam,
+					teamColor = pTeamColor,
 				})
 			end
 		end
@@ -171,24 +176,54 @@ local function RefreshVehList(scroll, searchText)
 		item.Parent = scroll
 		Instance.new("UICorner", item).CornerRadius = UDim.new(0, 5)
 
-		-- Icone de jogador
-		local iconLabel = Instance.new("TextLabel")
-		iconLabel.Size = UDim2.new(0, 24, 0, 24)
-		iconLabel.Position = UDim2.new(0, 6, 0, 8)
-		iconLabel.BackgroundTransparency = 1
-		iconLabel.Text = string.sub(pData.name, 1, 1)
-		iconLabel.TextColor3 = Color3.fromRGB(0, 120, 212)
-		iconLabel.Font = Enum.Font.GothamMedium
-		iconLabel.TextSize = 14
-		iconLabel.Parent = item
+		-- Detecção de time (igual ao picker)
+		local myTeam = LocalPlayer.Team
+		local pTeam = pData.team
+		local pTeamColor = pData.teamColor
+		local myTeamColor = myTeam and myTeam.TeamColor or LocalPlayer.TeamColor
+		local hasTeams = (myTeam ~= nil) or (myTeamColor and myTeamColor ~= BrickColor.new("Medium stone grey"))
+		local tag = ""
+		local nameColor = Color3.fromRGB(235, 235, 240)
+		if hasTeams then
+			if pTeam and myTeam and pTeam == myTeam then
+				tag = "[ALIADO] "
+				nameColor = pTeam.TeamColor.Color
+			elseif pTeam and myTeam and pTeam ~= myTeam then
+				tag = "[INIMIGO] "
+				nameColor = pTeam.TeamColor.Color
+			elseif pTeamColor and myTeamColor and pTeamColor == myTeamColor then
+				tag = "[ALIADO] "
+				nameColor = pTeamColor.Color
+			elseif pTeamColor and myTeamColor and pTeamColor ~= myTeamColor then
+				tag = "[INIMIGO] "
+				nameColor = pTeamColor.Color
+			else
+				tag = "[NEUTRO] "
+				nameColor = Color3.fromRGB(180, 180, 190)
+			end
+		end
+
+		-- Tag do time
+		if tag ~= "" then
+			local tagLabel = Instance.new("TextLabel")
+			tagLabel.Size = UDim2.new(0, 55, 0, 14)
+			tagLabel.Position = UDim2.new(0, 6, 0, 4)
+			tagLabel.BackgroundTransparency = 1
+			tagLabel.Text = tag
+			tagLabel.TextColor3 = nameColor
+			tagLabel.Font = Enum.Font.GothamBold
+			tagLabel.TextSize = 9
+			tagLabel.TextXAlignment = Enum.TextXAlignment.Left
+			tagLabel.Parent = item
+		end
 
 		-- Nome do player
 		local nameLabel = Instance.new("TextLabel")
 		nameLabel.Size = UDim2.new(0.55, 0, 0, 14)
-		nameLabel.Position = UDim2.new(0, 32, 0, 4)
+		nameLabel.Position = UDim2.new(0, (tag ~= "" and 62 or 32), 0, 4)
 		nameLabel.BackgroundTransparency = 1
 		nameLabel.Text = pData.name
-		nameLabel.TextColor3 = Color3.fromRGB(235, 235, 240)
+		nameLabel.TextColor3 = nameColor
 		nameLabel.Font = Enum.Font.GothamBold
 		nameLabel.TextSize = 11
 		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -198,7 +233,7 @@ local function RefreshVehList(scroll, searchText)
 		-- @username + status do veiculo
 		local subLabel = Instance.new("TextLabel")
 		subLabel.Size = UDim2.new(0.55, 0, 0, 11)
-		subLabel.Position = UDim2.new(0, 32, 0, 20)
+		subLabel.Position = UDim2.new(0, (tag ~= "" and 62 or 32), 0, 20)
 		subLabel.BackgroundTransparency = 1
 		if pData.inVehicle and pData.vehicleName then
 			subLabel.Text = "@" .. pData.userName .. " | " .. pData.vehicleName
