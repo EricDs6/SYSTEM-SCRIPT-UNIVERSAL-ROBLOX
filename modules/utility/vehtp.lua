@@ -12,30 +12,37 @@ return function(GH)
 	local CacheVehTp = { SavedPoints = {}, GUI = nil }
 	local isOpen = false
 
-	-- ==========================================
-	-- SCAN: Encontra players sentados em veiculos
-	-- ==========================================
-	local function scanPlayersInVehicles()
-		local result = {}
-		for _, player in ipairs(Players:GetPlayers()) do
-			if player ~= LocalPlayer and player.Character then
-				local hum = player.Character:FindFirstChildOfClass("Humanoid")
-				if hum and hum.SeatPart and (hum.SeatPart:IsA("VehicleSeat") or hum.SeatPart:IsA("Seat")) then
-					local seatPart = hum.SeatPart
-					local vehicleModel = seatPart:FindFirstAncestorOfClass("Model")
-					table.insert(result, {
-						player = player,
-						name = player.DisplayName,
-						userName = player.Name,
-						seat = seatPart,
-						vehicleName = vehicleModel and vehicleModel.Name or "Veiculo",
-						position = seatPart.Position,
-					})
+-- ==========================================
+-- SCAN: Encontra todos os players do servidor
+-- ==========================================
+local function scanAllPlayers()
+	local result = {}
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Character then
+			local hum = player.Character:FindFirstChildOfClass("Humanoid")
+			local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+			if hum and rootPart then
+				local inVehicle = false
+				local vehicleName = nil
+				if hum.SeatPart and (hum.SeatPart:IsA("VehicleSeat") or hum.SeatPart:IsA("Seat")) then
+					inVehicle = true
+					local vehicleModel = hum.SeatPart:FindFirstAncestorOfClass("Model")
+					vehicleName = vehicleModel and vehicleModel.Name or nil
 				end
+				table.insert(result, {
+					player = player,
+					name = player.DisplayName,
+					userName = player.Name,
+					seat = hum.SeatPart,
+					inVehicle = inVehicle,
+					vehicleName = vehicleName,
+					position = rootPart.Position,
+				})
 			end
 		end
-		return result
 	end
+	return result
+end
 
 	-- ==========================================
 	-- LIMPAR FORCAS FISICAS DO VEICULO
@@ -127,122 +134,132 @@ return function(GH)
 		return false
 	end
 
-	-- ==========================================
-	-- REFRESH LISTA (players em veiculos)
-	-- ==========================================
-	local function RefreshVehList(scroll, searchText)
-		for _, child in ipairs(scroll:GetChildren()) do
-			if child:IsA("Frame") then child:Destroy() end
-		end
+-- ==========================================
+-- REFRESH LISTA (todos os players)
+-- ==========================================
+local function RefreshVehList(scroll, searchText)
+	for _, child in ipairs(scroll:GetChildren()) do
+		if child:IsA("Frame") then child:Destroy() end
+	end
 
-		local playersData = scanPlayersInVehicles()
-		local filtered = {}
-		for _, p in ipairs(playersData) do
-			if searchText == "" or p.name:lower():find(searchText:lower(), 1, true) or p.userName:lower():find(searchText:lower(), 1, true) then
-				table.insert(filtered, p)
-			end
-		end
-
-		if #filtered == 0 then
-			local empty = Instance.new("TextLabel")
-			empty.Size = UDim2.new(1, 0, 0, 36)
-			empty.BackgroundTransparency = 1
-			empty.Text = GH.T("toast_vehtp_no_players")
-			empty.TextColor3 = Color3.fromRGB(140, 140, 155)
-			empty.Font = Enum.Font.GothamMedium
-			empty.TextSize = 11
-			empty.Parent = scroll
-			return
-		end
-
-		for i, pData in ipairs(filtered) do
-			local item = Instance.new("Frame")
-			item.Size = UDim2.new(1, 0, 0, 40)
-			item.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
-			item.BorderSizePixel = 0
-			item.LayoutOrder = i
-			item.Parent = scroll
-			Instance.new("UICorner", item).CornerRadius = UDim.new(0, 5)
-
-			-- Icone de jogador
-			local iconLabel = Instance.new("TextLabel")
-			iconLabel.Size = UDim2.new(0, 24, 0, 24)
-			iconLabel.Position = UDim2.new(0, 6, 0, 8)
-			iconLabel.BackgroundTransparency = 1
-			iconLabel.Text = string.sub(pData.name, 1, 1)
-			iconLabel.TextColor3 = Color3.fromRGB(0, 120, 212)
-			iconLabel.Font = Enum.Font.GothamMedium
-			iconLabel.TextSize = 14
-			iconLabel.Parent = item
-
-			-- Nome do player
-			local nameLabel = Instance.new("TextLabel")
-			nameLabel.Size = UDim2.new(0.55, 0, 0, 14)
-			nameLabel.Position = UDim2.new(0, 32, 0, 4)
-			nameLabel.BackgroundTransparency = 1
-			nameLabel.Text = pData.name
-			nameLabel.TextColor3 = Color3.fromRGB(235, 235, 240)
-			nameLabel.Font = Enum.Font.GothamBold
-			nameLabel.TextSize = 11
-			nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-			nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
-			nameLabel.Parent = item
-
-			-- @username + nome do veiculo
-			local subLabel = Instance.new("TextLabel")
-			subLabel.Size = UDim2.new(0.55, 0, 0, 11)
-			subLabel.Position = UDim2.new(0, 32, 0, 20)
-			subLabel.BackgroundTransparency = 1
-			subLabel.Text = "@" .. pData.userName .. " | " .. pData.vehicleName
-			subLabel.TextColor3 = Color3.fromRGB(120, 120, 135)
-			subLabel.Font = Enum.Font.RobotoMono
-			subLabel.TextSize = 8
-			subLabel.TextXAlignment = Enum.TextXAlignment.Left
-			subLabel.TextTruncate = Enum.TextTruncate.AtEnd
-			subLabel.Parent = item
-
-			-- Botao TP Instantaneo
-			local tpBtn = Instance.new("TextButton")
-			tpBtn.Size = UDim2.new(0, 34, 0, 22)
-			tpBtn.Position = UDim2.new(1, -42, 0.5, -11)
-			tpBtn.BackgroundColor3 = Color3.fromRGB(0, 140, 80)
-			tpBtn.Text = "TP"
-			tpBtn.TextColor3 = Color3.new(1, 1, 1)
-			tpBtn.Font = Enum.Font.GothamBold
-			tpBtn.TextSize = 9
-			tpBtn.AutoButtonColor = false
-			tpBtn.Parent = item
-			Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0, 4)
-
-			tpBtn.MouseEnter:Connect(function()
-				TweenService:Create(tpBtn, GH.TI, { BackgroundColor3 = Color3.fromRGB(0, 180, 100) }):Play()
-			end)
-			tpBtn.MouseLeave:Connect(function()
-				TweenService:Create(tpBtn, GH.TI, { BackgroundColor3 = Color3.fromRGB(0, 140, 80) }):Play()
-			end)
-
-			tpBtn.MouseButton1Click:Connect(function()
-				-- Verifica se o player ainda esta no servidor e sentado
-				if not pData.player or not pData.player.Parent then
-					GH.ShowToast(GH.T("toast_vehtp_player_left"), GH.Theme.Red, 2)
-					RefreshVehList(scroll, searchText)
-					return
-				end
-				if not pData.seat or not pData.seat.Parent then
-					GH.ShowToast(GH.T("toast_vehtp_player_left"), GH.Theme.Red, 2)
-					RefreshVehList(scroll, searchText)
-					return
-				end
-				local seatCFrame = pData.seat.CFrame
-				if seatCFrame then
-					local ok = instantTeleportTo(seatCFrame * CFrame.new(0, 3, 0))
-					if ok then
-						GH.ShowToast(string.format(GH.T("toast_vehtp_tp"), pData.name), GH.Theme.On, 2)
-					end
-				end
-			end)
+	local playersData = scanAllPlayers()
+	local filtered = {}
+	for _, p in ipairs(playersData) do
+		if searchText == "" or p.name:lower():find(searchText:lower(), 1, true) or p.userName:lower():find(searchText:lower(), 1, true) then
+			table.insert(filtered, p)
 		end
 	end
+
+	if #filtered == 0 then
+		local empty = Instance.new("TextLabel")
+		empty.Size = UDim2.new(1, 0, 0, 36)
+		empty.BackgroundTransparency = 1
+		empty.Text = GH.T("toast_vehtp_no_players")
+		empty.TextColor3 = Color3.fromRGB(140, 140, 155)
+		empty.Font = Enum.Font.GothamMedium
+		empty.TextSize = 11
+		empty.Parent = scroll
+		return
+	end
+
+	for i, pData in ipairs(filtered) do
+		local item = Instance.new("Frame")
+		item.Size = UDim2.new(1, 0, 0, 40)
+		item.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
+		item.BorderSizePixel = 0
+		item.LayoutOrder = i
+		item.Parent = scroll
+		Instance.new("UICorner", item).CornerRadius = UDim.new(0, 5)
+
+		-- Icone de jogador
+		local iconLabel = Instance.new("TextLabel")
+		iconLabel.Size = UDim2.new(0, 24, 0, 24)
+		iconLabel.Position = UDim2.new(0, 6, 0, 8)
+		iconLabel.BackgroundTransparency = 1
+		iconLabel.Text = string.sub(pData.name, 1, 1)
+		iconLabel.TextColor3 = Color3.fromRGB(0, 120, 212)
+		iconLabel.Font = Enum.Font.GothamMedium
+		iconLabel.TextSize = 14
+		iconLabel.Parent = item
+
+		-- Nome do player
+		local nameLabel = Instance.new("TextLabel")
+		nameLabel.Size = UDim2.new(0.55, 0, 0, 14)
+		nameLabel.Position = UDim2.new(0, 32, 0, 4)
+		nameLabel.BackgroundTransparency = 1
+		nameLabel.Text = pData.name
+		nameLabel.TextColor3 = Color3.fromRGB(235, 235, 240)
+		nameLabel.Font = Enum.Font.GothamBold
+		nameLabel.TextSize = 11
+		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+		nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+		nameLabel.Parent = item
+
+		-- @username + status do veiculo
+		local subLabel = Instance.new("TextLabel")
+		subLabel.Size = UDim2.new(0.55, 0, 0, 11)
+		subLabel.Position = UDim2.new(0, 32, 0, 20)
+		subLabel.BackgroundTransparency = 1
+		if pData.inVehicle and pData.vehicleName then
+			subLabel.Text = "@" .. pData.userName .. " | " .. pData.vehicleName
+		else
+			subLabel.Text = "@" .. pData.userName .. " | Sem veiculo"
+		end
+		subLabel.TextColor3 = Color3.fromRGB(120, 120, 135)
+		subLabel.Font = Enum.Font.RobotoMono
+		subLabel.TextSize = 8
+		subLabel.TextXAlignment = Enum.TextXAlignment.Left
+		subLabel.TextTruncate = Enum.TextTruncate.AtEnd
+		subLabel.Parent = item
+
+		-- Botao TP Instantaneo
+		local tpBtn = Instance.new("TextButton")
+		tpBtn.Size = UDim2.new(0, 34, 0, 22)
+		tpBtn.Position = UDim2.new(1, -42, 0.5, -11)
+		tpBtn.BackgroundColor3 = Color3.fromRGB(0, 140, 80)
+		tpBtn.Text = "TP"
+		tpBtn.TextColor3 = Color3.new(1, 1, 1)
+		tpBtn.Font = Enum.Font.GothamBold
+		tpBtn.TextSize = 9
+		tpBtn.AutoButtonColor = false
+		tpBtn.Parent = item
+		Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0, 4)
+
+		tpBtn.MouseEnter:Connect(function()
+			TweenService:Create(tpBtn, GH.TI, { BackgroundColor3 = Color3.fromRGB(0, 180, 100) }):Play()
+		end)
+		tpBtn.MouseLeave:Connect(function()
+			TweenService:Create(tpBtn, GH.TI, { BackgroundColor3 = Color3.fromRGB(0, 140, 80) }):Play()
+		end)
+
+		tpBtn.MouseButton1Click:Connect(function()
+			-- Verifica se o player ainda esta no servidor
+			if not pData.player or not pData.player.Parent then
+				GH.ShowToast(GH.T("toast_vehtp_player_left"), GH.Theme.Red, 2)
+				RefreshVehList(scroll, searchText)
+				return
+			end
+			-- Verifica se o character ainda existe
+			local char = pData.player.Character
+			if not char then
+				GH.ShowToast(GH.T("toast_vehtp_player_left"), GH.Theme.Red, 2)
+				RefreshVehList(scroll, searchText)
+				return
+			end
+			local rootPart = char:FindFirstChild("HumanoidRootPart")
+			if not rootPart then
+				GH.ShowToast(GH.T("toast_vehtp_player_left"), GH.Theme.Red, 2)
+				RefreshVehList(scroll, searchText)
+				return
+			end
+			local targetCFrame = rootPart.CFrame * CFrame.new(0, 3, 0)
+			local ok = instantTeleportTo(targetCFrame)
+			if ok then
+				GH.ShowToast(string.format(GH.T("toast_vehtp_tp"), pData.name), GH.Theme.On, 2)
+			end
+		end)
+	end
+end
 
 	-- ==========================================
 	-- REFRESH SAVED POINTS LIST
