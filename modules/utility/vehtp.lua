@@ -1,6 +1,6 @@
 -- =============================================================================
 -- COMMAND: VEHTP (Vehicle Teleport)
--- Lista veiculos com coordenadas, teleporta instantaneamente e salva posicoes
+-- Lista players em veiculos, teleporta instantaneamente e salva posicoes
 -- =============================================================================
 return function(GH)
 	local Players = GH.Services.Players
@@ -13,27 +13,60 @@ return function(GH)
 	local isOpen = false
 
 	-- ==========================================
-	-- SCAN: Encontra todos os veiculos no mapa
+	-- SCAN: Encontra players sentados em veiculos
 	-- ==========================================
-	local function scanVehicles()
-		local vehicles = {}
-		local seen = {}
-		for _, obj in ipairs(workspace:GetDescendants()) do
-			if obj:IsA("VehicleSeat") or obj:IsA("Seat") then
-				local model = obj:FindFirstAncestorOfClass("Model")
-				if model and not seen[model] then
-					seen[model] = true
-					local pos = obj.Position
-					table.insert(vehicles, {
-						model = model,
-						seat = obj,
-						name = model.Name,
-						position = pos,
+	local function scanPlayersInVehicles()
+		local result = {}
+		for _, player in ipairs(Players:GetPlayers()) do
+			if player ~= LocalPlayer and player.Character then
+				local hum = player.Character:FindFirstChildOfClass("Humanoid")
+				if hum and hum.SeatPart and (hum.SeatPart:IsA("VehicleSeat") or hum.SeatPart:IsA("Seat")) then
+					local seatPart = hum.SeatPart
+					local vehicleModel = seatPart:FindFirstAncestorOfClass("Model")
+					table.insert(result, {
+						player = player,
+						name = player.DisplayName,
+						userName = player.Name,
+						seat = seatPart,
+						vehicleName = vehicleModel and vehicleModel.Name or "Veiculo",
+						position = seatPart.Position,
 					})
 				end
 			end
 		end
-		return vehicles
+		return result
+	end
+
+	-- ==========================================
+	-- LIMPAR FORCAS FISICAS DO VEICULO
+	-- ==========================================
+	local function clearVehiclePhysics(vehicleModel)
+		-- Remove todos BodyVelocity, BodyGyro e BodyMover do veiculo
+		for _, obj in ipairs(vehicleModel:GetDescendants()) do
+			if obj:IsA("BodyVelocity") or obj:IsA("BodyGyro") or obj:IsA("BodyAngularVelocity") or obj:IsA("BodyForce") or obj:IsA("BodyThrust") or obj:IsA("BodyPosition") or obj:IsA("LinearVelocity") or obj:IsA("AngularVelocity") then
+				pcall(function() obj:Destroy() end)
+			end
+		end
+
+		-- Zera velocidade de todas as partes do veiculo
+		for _, part in ipairs(vehicleModel:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.AssemblyLinearVelocity = Vector3.zero
+				part.AssemblyAngularVelocity = Vector3.zero
+			end
+		end
+
+		-- Tambem zera no seat especificamente
+		local seat = vehicleModel:FindFirstChildWhichIsA("VehicleSeat") or vehicleModel:FindFirstChildWhichIsA("Seat")
+		if seat then
+			seat.AssemblyLinearVelocity = Vector3.zero
+			seat.AssemblyAngularVelocity = Vector3.zero
+			-- Reseta controle do VehicleSeat
+			if seat:IsA("VehicleSeat") then
+				seat.Throttle = 0
+				seat.Steer = 0
+			end
+		end
 	end
 
 	-- ==========================================
@@ -48,13 +81,37 @@ return function(GH)
 		if hum and hum.SeatPart then
 			local vehicleModel = hum.SeatPart:FindFirstAncestorOfClass("Model")
 			if vehicleModel then
-			-- Teleportar veiculo inteiro
-			pcall(function()
-				local pivot = vehicleModel:GetPivot()
-				local offset = pivot:ToObjectSpace(hum.SeatPart.CFrame)
-				local newPivot = targetCFrame * offset:Inverse()
-				vehicleModel:PivotTo(newPivot)
-			end)
+				-- 1. Limpa TODAS as forcas fisicas antes de teleportar
+				clearVehiclePhysics(vehicleModel)
+
+				-- 2. Anchora o veiculo inteiro para evitar luta com o physics engine
+				local anchoredStates = {}
+				for _, part in ipairs(vehicleModel:GetDescendants()) do
+					if part:IsA("BasePart") then
+						anchoredStates[part] = part.Anchored
+						part.Anchored = true
+					end
+				end
+
+				-- 3. Teleporta o veiculo inteiro
+				pcall(function()
+					local pivot = vehicleModel:GetPivot()
+					local offset = pivot:ToObjectSpace(hum.SeatPart.CFrame)
+					local newPivot = targetCFrame * offset:Inverse()
+					vehicleModel:PivotTo(newPivot)
+				end)
+
+				-- 4. Espera 1 frame, desancora e limpa novamente
+				task.wait()
+				pcall(function()
+					for part, wasAnchored in pairs(anchoredStates) do
+						if part and part.Parent then
+							part.Anchored = wasAnchored
+						end
+					end
+					clearVehiclePhysics(vehicleModel)
+				end)
+
 				return true
 			end
 		end
@@ -62,6 +119,8 @@ return function(GH)
 		-- Fallback: teleportar o player
 		local root = myChar:FindFirstChild("HumanoidRootPart")
 		if root then
+			root.AssemblyLinearVelocity = Vector3.zero
+			root.AssemblyAngularVelocity = Vector3.zero
 			root.CFrame = targetCFrame
 			return true
 		end
@@ -69,27 +128,26 @@ return function(GH)
 	end
 
 	-- ==========================================
-	-- REFRESH LISTA
+	-- REFRESH LISTA (players em veiculos)
 	-- ==========================================
 	local function RefreshVehList(scroll, searchText)
 		for _, child in ipairs(scroll:GetChildren()) do
 			if child:IsA("Frame") then child:Destroy() end
 		end
 
-		local vehicles = scanVehicles()
+		local playersData = scanPlayersInVehicles()
 		local filtered = {}
-		for _, v in ipairs(vehicles) do
-			if searchText == "" or v.name:lower():find(searchText:lower(), 1, true) then
-				table.insert(filtered, v)
+		for _, p in ipairs(playersData) do
+			if searchText == "" or p.name:lower():find(searchText:lower(), 1, true) or p.userName:lower():find(searchText:lower(), 1, true) then
+				table.insert(filtered, p)
 			end
 		end
 
-		-- Veiculos encontrados
 		if #filtered == 0 then
 			local empty = Instance.new("TextLabel")
 			empty.Size = UDim2.new(1, 0, 0, 36)
 			empty.BackgroundTransparency = 1
-			empty.Text = GH.T("toast_tptovehicle_notfound")
+			empty.Text = GH.T("toast_vehtp_no_players")
 			empty.TextColor3 = Color3.fromRGB(140, 140, 155)
 			empty.Font = Enum.Font.GothamMedium
 			empty.TextSize = 11
@@ -97,39 +155,51 @@ return function(GH)
 			return
 		end
 
-		for i, vehicle in ipairs(filtered) do
+		for i, pData in ipairs(filtered) do
 			local item = Instance.new("Frame")
-			item.Size = UDim2.new(1, 0, 0, 36)
+			item.Size = UDim2.new(1, 0, 0, 40)
 			item.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
 			item.BorderSizePixel = 0
 			item.LayoutOrder = i
 			item.Parent = scroll
 			Instance.new("UICorner", item).CornerRadius = UDim.new(0, 5)
 
-			-- Nome
+			-- Icone de jogador
+			local iconLabel = Instance.new("TextLabel")
+			iconLabel.Size = UDim2.new(0, 24, 0, 24)
+			iconLabel.Position = UDim2.new(0, 6, 0, 8)
+			iconLabel.BackgroundTransparency = 1
+			iconLabel.Text = string.sub(pData.name, 1, 1)
+			iconLabel.TextColor3 = Color3.fromRGB(0, 120, 212)
+			iconLabel.Font = Enum.Font.GothamMedium
+			iconLabel.TextSize = 14
+			iconLabel.Parent = item
+
+			-- Nome do player
 			local nameLabel = Instance.new("TextLabel")
-			nameLabel.Size = UDim2.new(0.45, 0, 0, 14)
-			nameLabel.Position = UDim2.new(0, 8, 0, 3)
+			nameLabel.Size = UDim2.new(0.55, 0, 0, 14)
+			nameLabel.Position = UDim2.new(0, 32, 0, 4)
 			nameLabel.BackgroundTransparency = 1
-			nameLabel.Text = vehicle.name
+			nameLabel.Text = pData.name
 			nameLabel.TextColor3 = Color3.fromRGB(235, 235, 240)
-			nameLabel.Font = Enum.Font.GothamMedium
-			nameLabel.TextSize = 10
+			nameLabel.Font = Enum.Font.GothamBold
+			nameLabel.TextSize = 11
 			nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 			nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
 			nameLabel.Parent = item
 
-			-- Coordenadas
-			local coordLabel = Instance.new("TextLabel")
-			coordLabel.Size = UDim2.new(0.45, 0, 0, 11)
-			coordLabel.Position = UDim2.new(0, 8, 0, 19)
-			coordLabel.BackgroundTransparency = 1
-			coordLabel.Text = string.format("X:%d Y:%d Z:%d", math.floor(vehicle.position.X), math.floor(vehicle.position.Y), math.floor(vehicle.position.Z))
-			coordLabel.TextColor3 = Color3.fromRGB(120, 120, 135)
-			coordLabel.Font = Enum.Font.RobotoMono
-			coordLabel.TextSize = 8
-			coordLabel.TextXAlignment = Enum.TextXAlignment.Left
-			coordLabel.Parent = item
+			-- @username + nome do veiculo
+			local subLabel = Instance.new("TextLabel")
+			subLabel.Size = UDim2.new(0.55, 0, 0, 11)
+			subLabel.Position = UDim2.new(0, 32, 0, 20)
+			subLabel.BackgroundTransparency = 1
+			subLabel.Text = "@" .. pData.userName .. " | " .. pData.vehicleName
+			subLabel.TextColor3 = Color3.fromRGB(120, 120, 135)
+			subLabel.Font = Enum.Font.RobotoMono
+			subLabel.TextSize = 8
+			subLabel.TextXAlignment = Enum.TextXAlignment.Left
+			subLabel.TextTruncate = Enum.TextTruncate.AtEnd
+			subLabel.Parent = item
 
 			-- Botao TP Instantaneo
 			local tpBtn = Instance.new("TextButton")
@@ -152,11 +222,22 @@ return function(GH)
 			end)
 
 			tpBtn.MouseButton1Click:Connect(function()
-				local seatCFrame = vehicle.seat and vehicle.seat.CFrame
+				-- Verifica se o player ainda esta no servidor e sentado
+				if not pData.player or not pData.player.Parent then
+					GH.ShowToast(GH.T("toast_vehtp_player_left"), GH.Theme.Red, 2)
+					RefreshVehList(scroll, searchText)
+					return
+				end
+				if not pData.seat or not pData.seat.Parent then
+					GH.ShowToast(GH.T("toast_vehtp_player_left"), GH.Theme.Red, 2)
+					RefreshVehList(scroll, searchText)
+					return
+				end
+				local seatCFrame = pData.seat.CFrame
 				if seatCFrame then
 					local ok = instantTeleportTo(seatCFrame * CFrame.new(0, 3, 0))
 					if ok then
-						GH.ShowToast(string.format(GH.T("toast_vehtp_tp"), vehicle.name), GH.Theme.On, 2)
+						GH.ShowToast(string.format(GH.T("toast_vehtp_tp"), pData.name), GH.Theme.On, 2)
 					end
 				end
 			end)
@@ -272,8 +353,8 @@ return function(GH)
 		CacheVehTp.GUI = gui
 
 		local frame = Instance.new("Frame")
-		frame.Size = UDim2.new(0, 220, 0, 340)
-		frame.Position = UDim2.new(0, 10, 0.5, -170)
+		frame.Size = UDim2.new(0, 240, 0, 360)
+		frame.Position = UDim2.new(0, 10, 0.5, -180)
 		frame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
 		frame.BorderSizePixel = 0
 		frame.Active = true
@@ -328,23 +409,23 @@ return function(GH)
 			TweenService:Create(closeBtn, GH.TI, { BackgroundColor3 = Color3.fromRGB(28, 28, 32) }):Play()
 		end)
 
-		-- Tabs: Veiculos | Salvos
+		-- Tabs: Players | Salvos
 		local tabFrame = Instance.new("Frame")
 		tabFrame.Size = UDim2.new(1, -8, 0, 24)
 		tabFrame.Position = UDim2.new(0, 4, 0, 28)
 		tabFrame.BackgroundTransparency = 1
 		tabFrame.Parent = frame
 
-		local tabVeh = Instance.new("TextButton")
-		tabVeh.Size = UDim2.new(0.5, -2, 1, 0)
-		tabVeh.BackgroundColor3 = Color3.fromRGB(0, 99, 177)
-		tabVeh.Text = GH.T("tab_vehtp_vehicles")
-		tabVeh.TextColor3 = Color3.new(1, 1, 1)
-		tabVeh.Font = Enum.Font.GothamBold
-		tabVeh.TextSize = 9
-		tabVeh.AutoButtonColor = false
-		tabVeh.Parent = tabFrame
-		Instance.new("UICorner", tabVeh).CornerRadius = UDim.new(0, 4)
+		local tabPlayers = Instance.new("TextButton")
+		tabPlayers.Size = UDim2.new(0.5, -2, 1, 0)
+		tabPlayers.BackgroundColor3 = Color3.fromRGB(0, 99, 177)
+		tabPlayers.Text = GH.T("tab_vehtp_players")
+		tabPlayers.TextColor3 = Color3.new(1, 1, 1)
+		tabPlayers.Font = Enum.Font.GothamBold
+		tabPlayers.TextSize = 9
+		tabPlayers.AutoButtonColor = false
+		tabPlayers.Parent = tabFrame
+		Instance.new("UICorner", tabPlayers).CornerRadius = UDim.new(0, 4)
 
 		local tabSaved = Instance.new("TextButton")
 		tabSaved.Size = UDim2.new(0.5, -2, 1, 0)
@@ -384,17 +465,17 @@ return function(GH)
 		contentFrame.ClipsDescendants = true
 		contentFrame.Parent = frame
 
-		-- Tab: Veiculos
-		local vehScroll = Instance.new("ScrollingFrame")
-		vehScroll.Size = UDim2.new(1, 0, 1, 0)
-		vehScroll.BackgroundTransparency = 1
-		vehScroll.ScrollBarThickness = 2
-		vehScroll.ScrollBarImageColor3 = Color3.fromRGB(0, 120, 212)
-		vehScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-		vehScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-		vehScroll.BorderSizePixel = 0
-		vehScroll.Parent = contentFrame
-		Instance.new("UIListLayout", vehScroll).Padding = UDim.new(0, 3)
+		-- Tab: Players
+		local playerScroll = Instance.new("ScrollingFrame")
+		playerScroll.Size = UDim2.new(1, 0, 1, 0)
+		playerScroll.BackgroundTransparency = 1
+		playerScroll.ScrollBarThickness = 2
+		playerScroll.ScrollBarImageColor3 = Color3.fromRGB(0, 120, 212)
+		playerScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+		playerScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+		playerScroll.BorderSizePixel = 0
+		playerScroll.Parent = contentFrame
+		Instance.new("UIListLayout", playerScroll).Padding = UDim.new(0, 3)
 
 		-- Tab: Salvos
 		local savedScroll = Instance.new("ScrollingFrame")
@@ -409,36 +490,36 @@ return function(GH)
 		savedScroll.Parent = contentFrame
 		Instance.new("UIListLayout", savedScroll).Padding = UDim.new(0, 3)
 
-		local currentTab = "vehicles"
+		local currentTab = "players"
 
 		local function switchTab(tab)
 			currentTab = tab
-			if tab == "vehicles" then
-				vehScroll.Visible = true
+			if tab == "players" then
+				playerScroll.Visible = true
 				savedScroll.Visible = false
 				searchBox.Visible = true
-				TweenService:Create(tabVeh, GH.TI, { BackgroundColor3 = Color3.fromRGB(0, 99, 177) }):Play()
-				tabVeh.TextColor3 = Color3.new(1, 1, 1)
+				TweenService:Create(tabPlayers, GH.TI, { BackgroundColor3 = Color3.fromRGB(0, 99, 177) }):Play()
+				tabPlayers.TextColor3 = Color3.new(1, 1, 1)
 				TweenService:Create(tabSaved, GH.TI, { BackgroundColor3 = Color3.fromRGB(35, 35, 40) }):Play()
 				tabSaved.TextColor3 = Color3.fromRGB(180, 180, 190)
 			else
-				vehScroll.Visible = false
+				playerScroll.Visible = false
 				savedScroll.Visible = true
 				searchBox.Visible = false
 				TweenService:Create(tabSaved, GH.TI, { BackgroundColor3 = Color3.fromRGB(0, 99, 177) }):Play()
 				tabSaved.TextColor3 = Color3.new(1, 1, 1)
-				TweenService:Create(tabVeh, GH.TI, { BackgroundColor3 = Color3.fromRGB(35, 35, 40) }):Play()
-				tabVeh.TextColor3 = Color3.fromRGB(180, 180, 190)
+				TweenService:Create(tabPlayers, GH.TI, { BackgroundColor3 = Color3.fromRGB(35, 35, 40) }):Play()
+				tabPlayers.TextColor3 = Color3.fromRGB(180, 180, 190)
 				RefreshSavedList(savedScroll)
 			end
 		end
 
-		tabVeh.MouseButton1Click:Connect(function() switchTab("vehicles") end)
+		tabPlayers.MouseButton1Click:Connect(function() switchTab("players") end)
 		tabSaved.MouseButton1Click:Connect(function() switchTab("saved") end)
 
 		-- Search filter
 		searchBox:GetPropertyChangedSignal("Text"):Connect(function()
-			RefreshVehList(vehScroll, searchBox.Text)
+			RefreshVehList(playerScroll, searchBox.Text)
 		end)
 
 		-- Bottom bar: Salvar Posicao
@@ -485,32 +566,40 @@ return function(GH)
 		end)
 
 		-- Carregar lista inicial
-		RefreshVehList(vehScroll, "")
+		RefreshVehList(playerScroll, "")
 
-		-- Auto-refresh ao adicionar/remover veiculos
-		local connAdded = workspace.DescendantAdded:Connect(function(obj)
-			if obj:IsA("VehicleSeat") or obj:IsA("Seat") then
-				if gui and gui.Parent and currentTab == "vehicles" then
-					task.defer(function()
-						RefreshVehList(vehScroll, searchBox.Text)
-					end)
-				end
+		-- Auto-refresh periodico (a cada 2 segundos) + player join/leave
+		local refreshLoop = true
+		local connPlayerAdded = Players.PlayerAdded:Connect(function()
+			if gui and gui.Parent and currentTab == "players" then
+				task.defer(function()
+					RefreshVehList(playerScroll, searchBox.Text)
+				end)
 			end
 		end)
-		local connRemoving = workspace.DescendantRemoving:Connect(function(obj)
-			if obj:IsA("VehicleSeat") or obj:IsA("Seat") then
-				if gui and gui.Parent and currentTab == "vehicles" then
-					task.defer(function()
-						RefreshVehList(vehScroll, searchBox.Text)
-					end)
+		local connPlayerRemoving = Players.PlayerRemoving:Connect(function()
+			if gui and gui.Parent and currentTab == "players" then
+				task.defer(function()
+					RefreshVehList(playerScroll, searchBox.Text)
+				end)
+			end
+		end)
+
+		-- Periodic refresh para quando players entram/saem de veiculos
+		task.spawn(function()
+			while refreshLoop and gui and gui.Parent do
+				task.wait(2)
+				if refreshLoop and gui and gui.Parent and currentTab == "players" then
+					RefreshVehList(playerScroll, searchBox.Text)
 				end
 			end
 		end)
 
 		-- Close
 		closeBtn.MouseButton1Click:Connect(function()
-			pcall(function() connAdded:Disconnect() end)
-			pcall(function() connRemoving:Disconnect() end)
+			refreshLoop = false
+			pcall(function() connPlayerAdded:Disconnect() end)
+			pcall(function() connPlayerRemoving:Disconnect() end)
 			isOpen = false
 			GH.States.VehTp = false
 			if CacheVehTp.GUI then
