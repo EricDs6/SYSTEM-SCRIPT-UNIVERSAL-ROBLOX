@@ -1,7 +1,7 @@
 -- =============================================================================
 -- COMMAND: HITBOX
 -- Expande a hitbox (HumanoidRootPart) dos jogadores para acertar mais facil
--- Abordagem: direto no Root.Size com visual colorido (estilo FE Cosmic)
+-- Abordagem: direto no Root.Size + Highlight outline (apenas borda)
 -- =============================================================================
 return function(GH)
 	local Players = GH.Services.Players
@@ -10,6 +10,7 @@ return function(GH)
 	-- Inicializa cache
 	GH.Cache = GH.Cache or {}
 	GH.Cache.OrigHRPSizes = GH.Cache.OrigHRPSizes or {}
+	GH.Cache.HitboxHighlights = GH.Cache.HitboxHighlights or {}
 
 	-- Helper pra detectar se um jogador eh inimigo (mesma logica do player picker)
 	local function IsEnemy(player)
@@ -37,6 +38,42 @@ return function(GH)
 		return true
 	end
 
+	-- Destruir highlights existentes
+	local function ClearHighlights()
+		for player, hl in pairs(GH.Cache.HitboxHighlights) do
+			pcall(function() hl:Destroy() end)
+		end
+		table.clear(GH.Cache.HitboxHighlights)
+	end
+
+	-- Criar outline (borda) no player
+	local function AddHighlight(player, root)
+		-- Remover highlight anterior se existir
+		if GH.Cache.HitboxHighlights[player] then
+			pcall(function() GH.Cache.HitboxHighlights[player]:Destroy() end)
+		end
+
+		local hl = Instance.new("Highlight")
+		hl.Name = "GH_HitboxOutline"
+		hl.FillColor = Color3.fromRGB(255, 50, 50)
+		hl.FillTransparency = 1 -- transparente (sem preenchimento)
+		hl.OutlineColor = Color3.fromRGB(255, 50, 50)
+		hl.OutlineTransparency = 0 -- borda totalmente visivel
+		hl.Adornee = root
+		hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+		hl.Parent = root
+
+		GH.Cache.HitboxHighlights[player] = hl
+	end
+
+	-- Remover highlight de um player
+	local function RemoveHighlight(player)
+		if GH.Cache.HitboxHighlights[player] then
+			pcall(function() GH.Cache.HitboxHighlights[player]:Destroy() end)
+			GH.Cache.HitboxHighlights[player] = nil
+		end
+	end
+
 	function Cheats_ToggleHitbox(state, btn)
 		-- Restaurar hitboxes originais
 		for _, player in ipairs(Players:GetPlayers()) do
@@ -52,6 +89,7 @@ return function(GH)
 			end)
 		end
 		table.clear(GH.Cache.OrigHRPSizes)
+		ClearHighlights()
 
 		if state then
 			local size = GH.Settings.HitboxSize or 20
@@ -64,9 +102,9 @@ return function(GH)
 								GH.Cache.OrigHRPSizes[player] = root.Size
 							end
 							root.Size = Vector3.new(size, size, size)
-							root.Transparency = 0.25
+							root.Transparency = 1
 							root.CanCollide = false
-							root.Color = Color3.fromRGB(255, 50, 50)
+							AddHighlight(player, root)
 						end
 					end)
 				end
@@ -89,9 +127,12 @@ return function(GH)
 								end
 								if root.Size ~= Vector3.new(sz, sz, sz) then
 									root.Size = Vector3.new(sz, sz, sz)
-									root.Transparency = 0.25
+									root.Transparency = 1
 									root.CanCollide = false
-									root.Color = Color3.fromRGB(255, 50, 50)
+								end
+								-- Garantir outline existe
+								if not GH.Cache.HitboxHighlights[player] then
+									AddHighlight(player, root)
 								end
 							end
 						end)
